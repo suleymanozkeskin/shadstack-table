@@ -343,3 +343,40 @@ When starting a new session:
 4. `cd material-react-table/packages/material-react-table` to consult the source whenever needed.
 5. Run `bun run typecheck && bun run lint && bun run build` after each batch.
 6. Tick boxes in this file as you complete files. Commit `PORT_PLAN.md` updates with the changes.
+
+---
+
+## MUI features that don't map cleanly to shadcn
+
+Tracked as we hit them. Each entry: the MUI surface, why it doesn't translate, and how we're handling it. Goal: visibility, not a blocker — every item below has a chosen path forward.
+
+| MUI surface | Issue | Handling |
+|---|---|---|
+| `Theme` object, `useTheme`, `theme.palette.*` | Shadcn has no Theme primitive; theming lives in CSS variables on `:root` / `.dark`. | Remove `theme: Theme` params. Read tokens via `var(--<name>)`. Done in `style.utils.ts`. |
+| `alpha()` / `darken()` / `lighten()` | Runtime color math from `@mui/material/styles`. | Replaced with CSS `color-mix(in oklch, …)` at the call site. |
+| `sx` prop | No equivalent — shadcn uses `className` + Tailwind. | `slotProps.<name>` shapes drop `sx`. Consumers pass `className`. |
+| `Tooltip` placement variants (`top-start`, `bottom-end`, …) | shadcn `<TooltipContent side>` only accepts `top \| right \| bottom \| left`. | Map first segment (`'top-start'` → `side='top'`); drop the alignment suffix. |
+| `Tooltip` `enterNextDelay`, `disableInteractive` | Not in Radix Tooltip. | Drop. We pass `delayDuration` only. |
+| `Pagination` (`boundaryCount`, `siblingCount`, `showFirstButton`, etc.) | shadcn `<Pagination>` is composable, not configurable. | Build a small page-window renderer in `MRT_TablePagination.tsx` (`Pagination` parts + a `getPageRange()` helper). |
+| `TextField` (built-in label + helperText + adornments + error) | shadcn splits Input/Label and has no adornments slot. | Compose `<Label>` + relative wrapper around `<Input>` with absolute-positioned span for adornments. Helper text → `<p class="text-sm text-muted-foreground">`. |
+| `Select` `native: true` | shadcn Select is Radix-only; no native fallback. | Always use Radix Select; document as a behavior change. |
+| `Skeleton` variants (`text` / `circular` / `rectangular` / `rounded`) | Single shadcn Skeleton. | Vary via `className`: `text` → `h-4 rounded`, `circular` → `rounded-full`, etc. |
+| `CircularProgress` determinate mode | Our `Spinner` is indeterminate-only. | For "rows loading" indicators use `Progress` instead; determinate spinner stays out of v1. |
+| `LinearProgress` indeterminate mode | Our `Progress` is determinate-only. | Add an `indeterminate` prop in `MRT_LinearProgressBar` that swaps in a CSS-keyframed stripe (lives in `_ui/styles.css`). |
+| `Collapse` orientation `horizontal` | Radix Collapsible animates `height` only. | If MRT uses horizontal collapse anywhere (e.g. side panels), do a `[data-state]`-driven width transition with Tailwind. |
+| `Fade`, `Grow` transition components | No standalone equivalents. | Use `tw-animate-css` data-state utilities (`data-[state=open]:animate-in fade-in-…`). |
+| `InputAdornment` (`start` / `end`) | Not a shadcn primitive. | Wrap `<Input>` in `<div class="relative">` and absolute-position the icon span. |
+| `Chip` (`onDelete`, `clickable`) | Our `Badge` is a non-interactive span. | When MRT renders a deletable filter chip, build a tiny `Chip` inline (Badge + close `<Button variant="ghost" size="icon">`). |
+| `Badge` overlap / anchor positioning | shadcn Badge is inline-only. | Manual wrapper: `<span class="relative">{icon}<Badge class="absolute -top-1 -right-1">…</Badge></span>`. |
+| `@mui/x-date-pickers` (Date/Time/DateTime) | No shadcn equivalent in v1. | Stub filter cells with `<input type="date" \| time \| datetime-local>`. Real picker is post-v1 (see GOAL.md non-goals). |
+| `Autocomplete` (filter mode) | Out of v1 scope per GOAL.md non-goals. | Fall back to `<Input>` text filter for autocomplete columns. Log a runtime `console.warn` once when the column requests autocomplete. |
+| `Slider` `marks` prop | Radix Slider has no marks API. | If MRT range filter uses marks, render them as absolute-positioned spans over the track. |
+| `Switch` custom track/thumb styling | shadcn Switch has fixed visuals; deep customization needs class overrides. | Allow `slotProps.<switch>` className overrides; document the constraint. |
+| `Menu` `dense`, `autoFocusItem` | Not direct DropdownMenu props. | `dense` → smaller class on `DropdownMenuItem`. `autoFocusItem` → use Radix Menu's `loop` + initial focus props. |
+| `Popover` `anchorOrigin` / `transformOrigin` | Radix uses `side` + `align`. | Map `{ vertical, horizontal }` → closest `{ side, align }` pair at call sites. |
+| `disableRipple`, `disableTouchRipple` | No ripple in shadcn. | Drop; shadcn has no equivalent visual. |
+| `Stack` (`direction`, `spacing`, `divider`) | No shadcn primitive. | Replace with `<div class="flex flex-col/row gap-N">`. `divider` becomes interleaved `<Separator>`. |
+| `Box` | Just a styled div. | Replace with `<div>` + `className`. |
+| `FormControlLabel` | Couples label position to control. | Replace with explicit `<Label class="flex items-center gap-2">` wrapping the control. |
+| `FormHelperText` | MUI form-control internals. | Replace with `<p class="text-sm text-muted-foreground">` (red variant via `text-destructive` on error). |
+| `theme.direction === 'rtl'` (RTL flips) | No Theme; we read direction from `document.dir`. | Helper `flipIconStyles(direction)` takes the string; component sites pass `useDirection()` (small hook reading `document.documentElement.dir`). |
