@@ -1,4 +1,4 @@
-import { MRT_Header, type MRT_Cell, type MRT_RowData, type MRT_TableInstance } from '../types';
+import { type MRT_Cell, type MRT_Header, type MRT_RowData, type MRT_TableInstance } from '../types';
 import { getMRT_RowSelectionHandler, getMRT_SelectAllHandler } from './row.utils';
 import { parseFromValuesOrFunc } from './utils';
 
