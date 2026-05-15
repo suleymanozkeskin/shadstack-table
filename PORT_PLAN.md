@@ -209,20 +209,20 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ### `src/hooks/` (8 files + 7 display-column hooks)
 
-- [ ] `useMaterialReactTable.ts`
-- [ ] `useMRT_ColumnVirtualizer.ts`
-- [ ] `useMRT_Effects.ts`
-- [ ] `useMRT_RowVirtualizer.ts`
-- [ ] `useMRT_Rows.ts`
-- [ ] `useMRT_TableInstance.ts`
-- [ ] `useMRT_TableOptions.ts`
-- [ ] `display-columns/getMRT_RowActionsColumnDef.tsx`
-- [ ] `display-columns/getMRT_RowDragColumnDef.tsx`
-- [ ] `display-columns/getMRT_RowExpandColumnDef.tsx`
-- [ ] `display-columns/getMRT_RowNumbersColumnDef.tsx`
-- [ ] `display-columns/getMRT_RowPinningColumnDef.tsx`
-- [ ] `display-columns/getMRT_RowSelectColumnDef.tsx`
-- [ ] `display-columns/getMRT_RowSpacerColumnDef.tsx`
+- [x] `useMaterialReactTable.ts`
+- [x] `useMRT_ColumnVirtualizer.ts`
+- [x] `useMRT_Effects.ts`
+- [x] `useMRT_RowVirtualizer.ts`
+- [x] `useMRT_Rows.ts`
+- [x] `useMRT_TableInstance.ts`
+- [x] `useMRT_TableOptions.ts`
+- [x] `display-columns/getMRT_RowActionsColumnDef.tsx`
+- [x] `display-columns/getMRT_RowDragColumnDef.tsx`
+- [x] `display-columns/getMRT_RowExpandColumnDef.tsx`
+- [x] `display-columns/getMRT_RowNumbersColumnDef.tsx`
+- [x] `display-columns/getMRT_RowPinningColumnDef.tsx`
+- [x] `display-columns/getMRT_RowSelectColumnDef.tsx`
+- [x] `display-columns/getMRT_RowSpacerColumnDef.tsx`
 
 ### `src/components/` (56 files — heaviest MUI swap)
 
@@ -298,8 +298,8 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 ### Top-level
 
 - [x] `src/icons.ts` (MUI icons → lucide)
-- [ ] `src/types.ts` (1289 LOC — most types are MUI-agnostic; the few `Mui*Props` references become `slotProps` accepting our shadcn equivalents)
-- [ ] `src/index.ts` (mirror MRT's barrel exports)
+- [x] `src/types.ts` (1289 LOC — most types are MUI-agnostic; the few `Mui*Props` references become `slotProps` accepting our shadcn equivalents)
+- [~] `src/index.ts` (mirror MRT's barrel exports) — only `export * from './types'` added; rest left for future batch
 
 ---
 
