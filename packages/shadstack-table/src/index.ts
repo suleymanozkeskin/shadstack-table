@@ -4,6 +4,8 @@
 // oxlint-disable-next-line no-unassigned-import -- CSS bundle is a side-effect import
 import './_ui/styles.css';
 
+export * from './types';
+
 export const VERSION = '0.0.0';
 
 export type ShadstackTableMarker = typeof VERSION;
