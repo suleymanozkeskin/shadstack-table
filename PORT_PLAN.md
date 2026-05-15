@@ -198,14 +198,14 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ### `src/utils/` (8 files)
 
-- [ ] `cell.utils.ts`
-- [ ] `column.utils.ts`
-- [ ] `displayColumn.utils.ts`
-- [ ] `row.utils.ts`
+- [x] `cell.utils.ts`
+- [x] `column.utils.ts`
+- [x] `displayColumn.utils.ts`
+- [x] `row.utils.ts`
 - [ ] `style.utils.ts` ← heaviest MUI swap (Theme → CSS vars, sx → tw classes)
-- [ ] `tanstack.helpers.ts`
-- [ ] `utils.ts`
-- [ ] `virtualization.utils.ts`
+- [x] `tanstack.helpers.ts`
+- [x] `utils.ts`
+- [x] `virtualization.utils.ts`
 
 ### `src/hooks/` (8 files + 7 display-column hooks)
 
