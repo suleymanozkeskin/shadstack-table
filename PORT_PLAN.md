@@ -17,20 +17,20 @@ Pair this with [GOAL.md](./GOAL.md) (product goal & architectural principles) an
 
 ## Stack
 
-| Layer | Choice |
-|-------|--------|
-| Package manager | bun 1.3.2 (workspaces) |
-| Bundler | Vite 7 (library mode in `packages/`, app in `apps/playground`) |
-| Linter | oxlint 1.63.0 |
-| Formatter | oxfmt 0.48.0 |
-| Language | TypeScript 5.9 (strict, ES2022) |
-| Table engine | `@tanstack/react-table` v8 (unchanged from MRT) |
-| Virtualization | `@tanstack/react-virtual` (unchanged from MRT) |
-| UI primitives | Radix UI (via shadcn-style wrappers in `src/_ui/`) |
-| Icons | lucide-react |
-| Styling | Tailwind CSS v4 + `tw-animate-css` |
-| Class merging | `clsx` + `tailwind-merge` (via `cn()` in `src/lib/utils.ts`) |
-| Other runtime | `@tanstack/match-sorter-utils`, `highlight-words` (both from MRT) |
+| Layer           | Choice                                                            |
+| --------------- | ----------------------------------------------------------------- |
+| Package manager | bun 1.3.2 (workspaces)                                            |
+| Bundler         | Vite 7 (library mode in `packages/`, app in `apps/playground`)    |
+| Linter          | oxlint 1.63.0                                                     |
+| Formatter       | oxfmt 0.48.0                                                      |
+| Language        | TypeScript 5.9 (strict, ES2022)                                   |
+| Table engine    | `@tanstack/react-table` v8 (unchanged from MRT)                   |
+| Virtualization  | `@tanstack/react-virtual` (unchanged from MRT)                    |
+| UI primitives   | Radix UI (via shadcn-style wrappers in `src/_ui/`)                |
+| Icons           | lucide-react                                                      |
+| Styling         | Tailwind CSS v4 + `tw-animate-css`                                |
+| Class merging   | `clsx` + `tailwind-merge` (via `cn()` in `src/lib/utils.ts`)      |
+| Other runtime   | `@tanstack/match-sorter-utils`, `highlight-words` (both from MRT) |
 
 `bun install` is constrained by `minimum-release-age: 864000s` (10 days). When pinning versions, find the newest release ≥10 days old via `curl https://registry.npmjs.org/<pkg>`.
 
@@ -71,40 +71,40 @@ shadstack-table/
 
 Used by every `components/**/*.tsx` port. Where shadcn lacks a direct equivalent, we either compose (`Stack` → flex div) or build a small custom (`Pagination`, spinner).
 
-| MUI import | Replacement | Notes |
-|---|---|---|
-| `Alert`, `AlertTitle` | `src/_ui/alert.tsx` (shadcn) | severity → variant |
-| `Badge` | `src/_ui/badge.tsx` | numeric badge needs custom render |
-| `Box` | `<div>` | MUI `sx` → Tailwind classes via `cn()` |
-| `Button` | `src/_ui/button.tsx` | `size="small"` → `size="sm"` |
-| `Checkbox` | `src/_ui/checkbox.tsx` | indeterminate via Radix data attr |
-| `Chip` | `src/_ui/badge.tsx` (variant) | chips are badges in shadcn |
-| `CircularProgress` | custom spinner in `_ui/spinner.tsx` | lucide `Loader2` + spin |
-| `Collapse` | `src/_ui/collapsible.tsx` | Radix Collapsible |
-| `Dialog`, `Dialog{Title,Content,Actions}` | `src/_ui/dialog.tsx` | shadcn Dialog* |
-| `Divider` | `src/_ui/separator.tsx` | orientation prop |
-| `Fade`, `Grow` | CSS transitions via tw-animate-css | `data-state=open/closed` driven |
-| `FormControlLabel` | `<Label>` + control composition | |
-| `FormHelperText` | `<p class="text-sm text-muted-foreground">` | |
-| `IconButton` | `<Button variant="ghost" size="icon">` | |
-| `InputAdornment` | absolute-positioned span in input wrapper | |
-| `InputLabel` | `src/_ui/label.tsx` | |
-| `LinearProgress` | `src/_ui/progress.tsx` | indeterminate variant via CSS |
-| `ListItemIcon` | `<span class="mr-2">` inside menu item | |
-| `Menu`, `MenuItem` | `src/_ui/dropdown-menu.tsx` | shadcn DropdownMenu* |
-| `Pagination`, `PaginationItem` | custom in `_ui/pagination.tsx` | |
-| `Paper` | `<div class="rounded-md border bg-card ...">` | |
-| `Popover` | `src/_ui/popover.tsx` | |
-| `Radio`, `RadioGroup` | `src/_ui/radio-group.tsx` | |
-| `Select` (incl. native) | `src/_ui/select.tsx` | |
-| `Skeleton` | `src/_ui/skeleton.tsx` | |
-| `Slider` | `src/_ui/slider.tsx` | range slider for filter |
-| `Stack` | `<div class="flex gap-... flex-col/row">` | direction → flex-direction |
-| `Switch` | `src/_ui/switch.tsx` | |
-| `Table`, `TableBody`, `TableCell`, `TableContainer`, `TableFooter`, `TableHead`, `TableRow` | `src/_ui/table.tsx` | shadcn Table parts |
-| `TextField` | `<Input>` + `<Label>` composition | + optional adornment |
-| `Tooltip` | `src/_ui/tooltip.tsx` | |
-| `useTheme`, `Theme` | removed; classes are static or driven by CSS vars | |
+| MUI import                                                                                  | Replacement                                       | Notes                                  |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------- | -------------------------------------- |
+| `Alert`, `AlertTitle`                                                                       | `src/_ui/alert.tsx` (shadcn)                      | severity → variant                     |
+| `Badge`                                                                                     | `src/_ui/badge.tsx`                               | numeric badge needs custom render      |
+| `Box`                                                                                       | `<div>`                                           | MUI `sx` → Tailwind classes via `cn()` |
+| `Button`                                                                                    | `src/_ui/button.tsx`                              | `size="small"` → `size="sm"`           |
+| `Checkbox`                                                                                  | `src/_ui/checkbox.tsx`                            | indeterminate via Radix data attr      |
+| `Chip`                                                                                      | `src/_ui/badge.tsx` (variant)                     | chips are badges in shadcn             |
+| `CircularProgress`                                                                          | custom spinner in `_ui/spinner.tsx`               | lucide `Loader2` + spin                |
+| `Collapse`                                                                                  | `src/_ui/collapsible.tsx`                         | Radix Collapsible                      |
+| `Dialog`, `Dialog{Title,Content,Actions}`                                                   | `src/_ui/dialog.tsx`                              | shadcn Dialog\*                        |
+| `Divider`                                                                                   | `src/_ui/separator.tsx`                           | orientation prop                       |
+| `Fade`, `Grow`                                                                              | CSS transitions via tw-animate-css                | `data-state=open/closed` driven        |
+| `FormControlLabel`                                                                          | `<Label>` + control composition                   |                                        |
+| `FormHelperText`                                                                            | `<p class="text-sm text-muted-foreground">`       |                                        |
+| `IconButton`                                                                                | `<Button variant="ghost" size="icon">`            |                                        |
+| `InputAdornment`                                                                            | absolute-positioned span in input wrapper         |                                        |
+| `InputLabel`                                                                                | `src/_ui/label.tsx`                               |                                        |
+| `LinearProgress`                                                                            | `src/_ui/progress.tsx`                            | indeterminate variant via CSS          |
+| `ListItemIcon`                                                                              | `<span class="mr-2">` inside menu item            |                                        |
+| `Menu`, `MenuItem`                                                                          | `src/_ui/dropdown-menu.tsx`                       | shadcn DropdownMenu\*                  |
+| `Pagination`, `PaginationItem`                                                              | custom in `_ui/pagination.tsx`                    |                                        |
+| `Paper`                                                                                     | `<div class="rounded-md border bg-card ...">`     |                                        |
+| `Popover`                                                                                   | `src/_ui/popover.tsx`                             |                                        |
+| `Radio`, `RadioGroup`                                                                       | `src/_ui/radio-group.tsx`                         |                                        |
+| `Select` (incl. native)                                                                     | `src/_ui/select.tsx`                              |                                        |
+| `Skeleton`                                                                                  | `src/_ui/skeleton.tsx`                            |                                        |
+| `Slider`                                                                                    | `src/_ui/slider.tsx`                              | range slider for filter                |
+| `Stack`                                                                                     | `<div class="flex gap-... flex-col/row">`         | direction → flex-direction             |
+| `Switch`                                                                                    | `src/_ui/switch.tsx`                              |                                        |
+| `Table`, `TableBody`, `TableCell`, `TableContainer`, `TableFooter`, `TableHead`, `TableRow` | `src/_ui/table.tsx`                               | shadcn Table parts                     |
+| `TextField`                                                                                 | `<Input>` + `<Label>` composition                 | + optional adornment                   |
+| `Tooltip`                                                                                   | `src/_ui/tooltip.tsx`                             |                                        |
+| `useTheme`, `Theme`                                                                         | removed; classes are static or driven by CSS vars |                                        |
 
 ---
 
@@ -112,42 +112,42 @@ Used by every `components/**/*.tsx` port. Where shadcn lacks a direct equivalent
 
 For `src/icons.ts`. Names on the right are lucide exports; the keys of `MRT_Default_Icons` keep MRT's naming (`ArrowDownwardIcon`, etc.) so downstream code is unchanged.
 
-| MRT key | lucide |
-|---|---|
-| `ArrowDownwardIcon` | `ArrowDown` |
-| `ArrowRightIcon` | `ArrowRight` |
-| `CancelIcon` | `XCircle` |
-| `ChevronLeftIcon` | `ChevronLeft` |
-| `ChevronRightIcon` | `ChevronRight` |
-| `ClearAllIcon` | `ListX` |
-| `CloseIcon` | `X` |
-| `ContentCopy` | `Copy` |
-| `DensityLargeIcon` | `Rows2` |
-| `DensityMediumIcon` | `Rows3` |
-| `DensitySmallIcon` | `Rows4` |
-| `DragHandleIcon` | `GripHorizontal` |
-| `DynamicFeedIcon` | `Layers` |
-| `EditIcon` | `Pencil` |
-| `ExpandMoreIcon` | `ChevronDown` |
-| `FilterAltIcon` | `Filter` |
-| `FilterListIcon` | `ListFilter` |
-| `FilterListOffIcon` | `FilterX` |
-| `FirstPageIcon` | `ChevronsLeft` |
-| `FullscreenIcon` | `Maximize2` |
-| `FullscreenExitIcon` | `Minimize2` |
-| `KeyboardDoubleArrowDownIcon` | `ChevronsDown` |
-| `LastPageIcon` | `ChevronsRight` |
-| `MoreHorizIcon` | `MoreHorizontal` |
-| `MoreVertIcon` | `MoreVertical` |
-| `PushPinIcon` | `Pin` |
-| `RestartAltIcon` | `RotateCcw` |
-| `SaveIcon` | `Save` |
-| `SearchIcon` | `Search` |
-| `SearchOffIcon` | `SearchX` |
-| `SortIcon` | `ArrowUpDown` |
-| `SyncAltIcon` | `ArrowLeftRight` |
-| `ViewColumnIcon` | `Columns3` |
-| `VisibilityOffIcon` | `EyeOff` |
+| MRT key                       | lucide           |
+| ----------------------------- | ---------------- |
+| `ArrowDownwardIcon`           | `ArrowDown`      |
+| `ArrowRightIcon`              | `ArrowRight`     |
+| `CancelIcon`                  | `XCircle`        |
+| `ChevronLeftIcon`             | `ChevronLeft`    |
+| `ChevronRightIcon`            | `ChevronRight`   |
+| `ClearAllIcon`                | `ListX`          |
+| `CloseIcon`                   | `X`              |
+| `ContentCopy`                 | `Copy`           |
+| `DensityLargeIcon`            | `Rows2`          |
+| `DensityMediumIcon`           | `Rows3`          |
+| `DensitySmallIcon`            | `Rows4`          |
+| `DragHandleIcon`              | `GripHorizontal` |
+| `DynamicFeedIcon`             | `Layers`         |
+| `EditIcon`                    | `Pencil`         |
+| `ExpandMoreIcon`              | `ChevronDown`    |
+| `FilterAltIcon`               | `Filter`         |
+| `FilterListIcon`              | `ListFilter`     |
+| `FilterListOffIcon`           | `FilterX`        |
+| `FirstPageIcon`               | `ChevronsLeft`   |
+| `FullscreenIcon`              | `Maximize2`      |
+| `FullscreenExitIcon`          | `Minimize2`      |
+| `KeyboardDoubleArrowDownIcon` | `ChevronsDown`   |
+| `LastPageIcon`                | `ChevronsRight`  |
+| `MoreHorizIcon`               | `MoreHorizontal` |
+| `MoreVertIcon`                | `MoreVertical`   |
+| `PushPinIcon`                 | `Pin`            |
+| `RestartAltIcon`              | `RotateCcw`      |
+| `SaveIcon`                    | `Save`           |
+| `SearchIcon`                  | `Search`         |
+| `SearchOffIcon`               | `SearchX`        |
+| `SortIcon`                    | `ArrowUpDown`    |
+| `SyncAltIcon`                 | `ArrowLeftRight` |
+| `ViewColumnIcon`              | `Columns3`       |
+| `VisibilityOffIcon`           | `EyeOff`         |
 
 ---
 
@@ -156,12 +156,14 @@ For `src/icons.ts`. Names on the right are lucide exports; the keys of `MRT_Defa
 Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ### Infrastructure
+
 - [x] Bun workspace, Vite, oxlint, oxfmt, tsconfig
 - [x] `src/lib/utils.ts` — `cn()` helper
-- [ ] `src/_ui/styles.css` — Tailwind v4 + theme vars + tw-animate-css
-- [ ] Vite library build emits `dist/style.css`
+- [x] `src/_ui/styles.css` — Tailwind v4 + theme vars + tw-animate-css
+- [x] Vite library build emits `dist/style.css` (9.4 kB / 2.3 kB gz) + `./style.css` export
 
 ### `src/_ui/` (shadcn primitives — new)
+
 - [ ] `alert.tsx`
 - [ ] `badge.tsx`
 - [ ] `button.tsx`
@@ -185,14 +187,17 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 - [ ] `tooltip.tsx`
 
 ### `src/locales/` (38 files — mechanical copy, no MUI)
+
 - [ ] All 38 locale files: `ar, az, bg, cs, da, de, el, en, es, et, fa, fi, fr, he, hr, hu, hy, id, it, ja, ko, mk, nl, no, np, pl, pt-BR, pt, ro, ru, sk, sr-Cyrl-RS, sr-Latn-RS, sv, tr, uk, vi, zh-Hans, zh-Hant`
 
 ### `src/fns/` (3 files — mostly pure)
+
 - [ ] `aggregationFns.ts`
 - [ ] `filterFns.ts`
 - [ ] `sortingFns.ts`
 
 ### `src/utils/` (8 files)
+
 - [ ] `cell.utils.ts`
 - [ ] `column.utils.ts`
 - [ ] `displayColumn.utils.ts`
@@ -203,6 +208,7 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 - [ ] `virtualization.utils.ts`
 
 ### `src/hooks/` (8 files + 7 display-column hooks)
+
 - [ ] `useMaterialReactTable.ts`
 - [ ] `useMRT_ColumnVirtualizer.ts`
 - [ ] `useMRT_Effects.ts`
@@ -219,6 +225,7 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 - [ ] `display-columns/getMRT_RowSpacerColumnDef.tsx`
 
 ### `src/components/` (56 files — heaviest MUI swap)
+
 - [ ] `MaterialReactTable.tsx`
 - **body/** (7)
   - [ ] `MRT_TableBody.tsx`
@@ -289,7 +296,8 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
   - [ ] `MRT_TopToolbar.tsx`
 
 ### Top-level
-- [ ] `src/icons.ts` (MUI icons → lucide)
+
+- [x] `src/icons.ts` (MUI icons → lucide)
 - [ ] `src/types.ts` (1289 LOC — most types are MUI-agnostic; the few `Mui*Props` references become `slotProps` accepting our shadcn equivalents)
 - [ ] `src/index.ts` (mirror MRT's barrel exports)
 
@@ -319,8 +327,8 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Open questions (resolve as they come up)
 
-- **Drag-and-drop reorder.** MRT uses HTML5 DnD natively. Keep as-is or swap to `@dnd-kit/*`? — *Default: keep HTML5 DnD verbatim for the literal port.*
-- **Date picker.** MRT depends on `@mui/x-date-pickers`. Date filter cells need a shadcn alternative (e.g. shadcn calendar via Radix). — *Default: stub with `<Input type="date">` for v1.*
+- **Drag-and-drop reorder.** MRT uses HTML5 DnD natively. Keep as-is or swap to `@dnd-kit/*`? — _Default: keep HTML5 DnD verbatim for the literal port._
+- **Date picker.** MRT depends on `@mui/x-date-pickers`. Date filter cells need a shadcn alternative (e.g. shadcn calendar via Radix). — _Default: stub with `<Input type="date">` for v1._
 - **`Mui*Props` passthroughs in `types.ts`.** Rename to `slotProps.<element>` taking our shadcn equivalent's props.
 
 ---
