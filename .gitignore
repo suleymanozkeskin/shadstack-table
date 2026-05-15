@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+coverage
+*.tsbuildinfo
+.turbo
+.vite
+.DS_Store
+.env
+.env.local
+*.log
+
+# Cloned reference repo (kept locally for parity research, not part of this project)
+material-react-table/
