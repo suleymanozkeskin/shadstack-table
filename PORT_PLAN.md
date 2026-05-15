@@ -188,7 +188,7 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ### `src/locales/` (38 files — mechanical copy, no MUI)
 
-- [ ] All 38 locale files: `ar, az, bg, cs, da, de, el, en, es, et, fa, fi, fr, he, hr, hu, hy, id, it, ja, ko, mk, nl, no, np, pl, pt-BR, pt, ro, ru, sk, sr-Cyrl-RS, sr-Latn-RS, sv, tr, uk, vi, zh-Hans, zh-Hant`
+- [x] All 38 locale files: `ar, az, bg, cs, da, de, el, en, es, et, fa, fi, fr, he, hr, hu, hy, id, it, ja, ko, mk, nl, no, np, pl, pt-BR, pt, ro, ru, sk, sr-Cyrl-RS, sr-Latn-RS, sv, tr, uk, vi, zh-Hans, zh-Hant`
 
 ### `src/fns/` (3 files — mostly pure)
 
