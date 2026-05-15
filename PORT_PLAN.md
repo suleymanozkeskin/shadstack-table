@@ -192,9 +192,9 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ### `src/fns/` (3 files — mostly pure)
 
-- [ ] `aggregationFns.ts`
-- [ ] `filterFns.ts`
-- [ ] `sortingFns.ts`
+- [x] `aggregationFns.ts`
+- [x] `filterFns.ts`
+- [x] `sortingFns.ts`
 
 ### `src/utils/` (8 files)
 
