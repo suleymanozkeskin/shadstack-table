@@ -92,8 +92,10 @@ export const MRT_ShowHideColumnsMenu = <TData extends MRT_RowData>({
 
   const hasColumnOrderChanged = useMemo(
     () =>
-      columnOrder.length !== initialState.columnOrder.length ||
-      !columnOrder.every((column, index) => column === initialState.columnOrder[index]),
+      !(
+        columnOrder.length === initialState.columnOrder.length &&
+        columnOrder.every((column, index) => column === initialState.columnOrder[index])
+      ),
 
     [columnOrder, initialState.columnOrder],
   );
