@@ -14,7 +14,7 @@ import { SST_TableBodyCellValue } from './SST_TableBodyCellValue';
 import { cn } from '../../lib/utils';
 import { type SST_Cell, type SST_RowData, type SST_TableInstance } from '../../types';
 import { isCellEditable, cellKeyboardShortcuts, openEditingCell } from '../../utils/cell.utils';
-import { getCommonMRTCellStyles } from '../../utils/style.utils';
+import { getCellPinShadow, getCommonMRTCellStyles } from '../../utils/style.utils';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 import { SST_CopyButton } from '../buttons/SST_CopyButton';
 import { SST_EditCellTextField } from '../inputs/SST_EditCellTextField';
@@ -245,6 +245,7 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
     <td
       data-index={staticColumnIndex}
       data-pinned={!!isColumnPinned || undefined}
+      data-pin-shadow={getCellPinShadow(column, isColumnPinned)}
       tabIndex={enableKeyboardShortcuts ? 0 : undefined}
       {...tableCellProps}
       onKeyDown={handleKeyDown}

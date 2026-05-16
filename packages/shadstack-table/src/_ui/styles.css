@@ -136,3 +136,31 @@
   outline: 2px solid var(--sst-cell-outline-color, var(--ring));
   outline-offset: -2px;
 }
+
+/*
+ * Pinned-cell overlay. Originally returned as a nested sx-style object from
+ * `getCommonPinnedCellStyles` and silently dropped by React (see 0.1.2). Now
+ * expressed as a real stylesheet rule so the overlay actually paints.
+ *
+ * Pinned cells are `position: sticky`, which creates a positioning context for
+ * the absolute `::before`. `z-index: -1` keeps the overlay behind the cell's
+ * own painted content but above the table body it sticks over (TanStack sets
+ * sticky cells to `z-index: 1` via `pinnedStyles` in `getCommonMRTCellStyles`).
+ */
+:where([data-slot='sst-table-container']) :where(th, td)[data-pinned]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: var(
+    --sst-pinned-cell-overlay-bg,
+    color-mix(in oklch, var(--background) 95%, var(--foreground))
+  );
+  pointer-events: none;
+}
+:where([data-slot='sst-table-container']) :where(th, td)[data-pin-shadow='left']::before {
+  box-shadow: -4px 0 4px -4px color-mix(in oklch, var(--foreground) 50%, transparent) inset;
+}
+:where([data-slot='sst-table-container']) :where(th, td)[data-pin-shadow='right']::before {
+  box-shadow: 4px 0 4px -4px color-mix(in oklch, var(--foreground) 50%, transparent) inset;
+}
