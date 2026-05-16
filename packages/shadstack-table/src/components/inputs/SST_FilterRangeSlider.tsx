@@ -1,4 +1,4 @@
-// oxlint-disable eslint/no-underscore-dangle -- verbatim port of upstream MRT
+// oxlint-disable eslint/no-underscore-dangle -- intentional; revisit when refactoring
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Slider } from '../../_ui/slider';

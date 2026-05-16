@@ -1,4 +1,4 @@
-// oxlint-disable eslint/no-underscore-dangle -- verbatim port of upstream MRT
+// oxlint-disable eslint/no-underscore-dangle -- intentional; revisit when refactoring
 import * as React from 'react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../../_ui/dialog';
 import { cn } from '../../lib/utils';

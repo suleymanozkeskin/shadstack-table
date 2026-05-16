@@ -1,4 +1,4 @@
-// oxlint-disable react-hooks/exhaustive-deps -- verbatim port of upstream MRT
+// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
 import * as React from 'react';
 import { Popover, PopoverAnchor, PopoverContent } from '../../_ui/popover';
 import { SST_ActionMenuItem } from './SST_ActionMenuItem';

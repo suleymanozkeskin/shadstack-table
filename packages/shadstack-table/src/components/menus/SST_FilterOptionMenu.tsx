@@ -1,6 +1,6 @@
-// oxlint-disable eslint/no-underscore-dangle -- verbatim port of upstream MRT
-// oxlint-disable react-hooks/exhaustive-deps -- verbatim port of upstream MRT
-// oxlint-disable react/no-array-index-key -- verbatim port of upstream MRT
+// oxlint-disable eslint/no-underscore-dangle -- intentional; revisit when refactoring
+// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
+// oxlint-disable react/no-array-index-key -- intentional; revisit when refactoring
 import * as React from 'react';
 import { useMemo } from 'react';
 import { Popover, PopoverAnchor, PopoverContent } from '../../_ui/popover';

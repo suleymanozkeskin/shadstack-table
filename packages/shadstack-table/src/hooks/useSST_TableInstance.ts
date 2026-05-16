@@ -1,4 +1,4 @@
-// oxlint-disable react-hooks/exhaustive-deps -- verbatim port of upstream MRT hook dep arrays
+// oxlint-disable react-hooks/exhaustive-deps -- intentional narrow dep array; revisit when refactoring
 import { useMemo, useRef, useState } from 'react';
 import { useReactTable } from '@tanstack/react-table';
 import {

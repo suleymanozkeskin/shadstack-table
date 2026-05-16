@@ -1,4 +1,4 @@
-// oxlint-disable react-hooks/exhaustive-deps -- verbatim port of upstream MRT hook dep arrays
+// oxlint-disable react-hooks/exhaustive-deps -- intentional narrow dep array; revisit when refactoring
 import { useCallback, useMemo } from 'react';
 import { type Range, useVirtualizer } from '@tanstack/react-virtual';
 import { type SST_ColumnVirtualizer, type SST_RowData, type SST_TableInstance } from '../types';

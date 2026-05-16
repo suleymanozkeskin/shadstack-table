@@ -1,5 +1,5 @@
-// oxlint-disable jsx-a11y/click-events-have-key-events -- verbatim port of upstream MRT
-// oxlint-disable jsx-a11y/prefer-tag-over-role -- verbatim port of upstream MRT
+// oxlint-disable jsx-a11y/click-events-have-key-events -- intentional; revisit when refactoring
+// oxlint-disable jsx-a11y/prefer-tag-over-role -- intentional; revisit when refactoring
 import * as React from 'react';
 import { type MouseEvent, type ReactNode } from 'react';
 import { Separator } from '../../_ui/separator';

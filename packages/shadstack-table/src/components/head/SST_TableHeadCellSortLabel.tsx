@@ -1,5 +1,5 @@
-// oxlint-disable jsx-a11y/click-events-have-key-events -- verbatim port of upstream MRT
-// oxlint-disable jsx-a11y/no-static-element-interactions -- verbatim port of upstream MRT
+// oxlint-disable jsx-a11y/click-events-have-key-events -- intentional; revisit when refactoring
+// oxlint-disable jsx-a11y/no-static-element-interactions -- intentional; revisit when refactoring
 import * as React from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
 import { cn } from '../../lib/utils';

@@ -1,4 +1,4 @@
-// oxlint-disable eslint/no-underscore-dangle -- verbatim port of upstream MRT
+// oxlint-disable eslint/no-underscore-dangle -- intentional; revisit when refactoring
 import { type ReactNode, type RefObject } from 'react';
 import highlightWords from 'highlight-words';
 import { type SST_Cell, type SST_RowData, type SST_TableInstance } from '../../types';

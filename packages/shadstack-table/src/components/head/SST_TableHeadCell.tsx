@@ -1,7 +1,7 @@
-// oxlint-disable jsx-a11y/click-events-have-key-events -- verbatim port of upstream MRT
-// oxlint-disable jsx-a11y/no-static-element-interactions -- verbatim port of upstream MRT
-// oxlint-disable react-hooks/exhaustive-deps -- verbatim port of upstream MRT
-// oxlint-disable typescript/no-non-null-asserted-optional-chain -- verbatim port of upstream MRT
+// oxlint-disable jsx-a11y/click-events-have-key-events -- intentional; revisit when refactoring
+// oxlint-disable jsx-a11y/no-static-element-interactions -- intentional; revisit when refactoring
+// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
+// oxlint-disable typescript/no-non-null-asserted-optional-chain -- intentional; revisit when refactoring
 import * as React from 'react';
 import { type DragEvent, useMemo, useCallback } from 'react';
 import { SST_TableHeadCellColumnActionsButton } from './SST_TableHeadCellColumnActionsButton';

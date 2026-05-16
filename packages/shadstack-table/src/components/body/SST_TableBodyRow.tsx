@@ -1,4 +1,4 @@
-// oxlint-disable react-hooks/exhaustive-deps -- verbatim port of upstream MRT
+// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
 import * as React from 'react';
 import { type DragEvent, memo, useMemo, useRef } from 'react';
 import { type VirtualItem } from '@tanstack/react-virtual';

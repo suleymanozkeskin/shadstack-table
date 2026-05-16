@@ -1,4 +1,4 @@
-// oxlint-disable react-hooks/exhaustive-deps -- verbatim port of upstream MRT
+// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
 import * as React from 'react';
 import { useMemo } from 'react';
 import { useSST_ColumnVirtualizer } from '../../hooks/useSST_ColumnVirtualizer';

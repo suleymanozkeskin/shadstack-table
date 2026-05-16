@@ -1,4 +1,4 @@
-// oxlint-disable react-hooks/exhaustive-deps -- verbatim port of upstream MRT hook dep arrays
+// oxlint-disable react-hooks/exhaustive-deps -- intentional narrow dep array; revisit when refactoring
 import { useMemo } from 'react';
 import { type SST_Row, type SST_RowData, type SST_TableInstance } from '../types';
 import { getSST_Rows } from '../utils/row.utils';
