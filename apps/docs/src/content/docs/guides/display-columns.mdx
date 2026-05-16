@@ -1,0 +1,77 @@
+---
+title: Display columns
+description: Built-in sst-row-* columns and how to add your own. Display columns render UI, not row values.
+---
+
+A _display column_ renders UI that isn't a value pulled from a row — checkboxes, expand chevrons, action buttons, row numbers. `shadstack-table` ships a built-in set, all of them named with the `sst-row-` prefix, and turns each one on automatically when you enable the corresponding feature in `SST_TableOptions`.
+
+## The built-in set
+
+| Column ID         | Enabled by                                 | What it renders                                                 |
+| ----------------- | ------------------------------------------ | --------------------------------------------------------------- |
+| `sst-row-select`  | `enableRowSelection: true`                 | Per-row checkbox + select-all checkbox in the header.           |
+| `sst-row-expand`  | `enableExpanding: true` (or detail panels) | Expand chevron + optional expand-all in the header.             |
+| `sst-row-actions` | `enableRowActions: true`                   | Row-level kebab menu (populated by `renderRowActionMenuItems`). |
+| `sst-row-drag`    | `enableRowDragging: true`                  | Drag handle for row reorder.                                    |
+| `sst-row-numbers` | `enableRowNumbers: true`                   | 1-indexed row counter.                                          |
+| `sst-row-pin`     | `enableRowPinning: true`                   | Pin / unpin button per row.                                     |
+| `sst-row-spacer`  | (internal)                                 | Spacer column used by virtualization in some layout modes.      |
+
+You don't typically declare these yourself — the table inserts them when the feature is on. You _can_ reference them by ID in `state.columnOrder` / `state.columnPinning` to control where they appear:
+
+```tsx
+useShadStackTable({
+  columns,
+  data,
+  enableRowSelection: true,
+  enableRowActions: true,
+  initialState: {
+    columnPinning: {
+      left: ['sst-row-select'],
+      right: ['sst-row-actions'],
+    },
+  },
+});
+```
+
+## Custom display columns
+
+For UI that isn't covered by the built-ins, write your own. The pattern is: a column with an `id` (no `accessorKey` / `accessorFn`) and a `Cell` renderer that returns the UI for each row:
+
+```tsx
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
+
+const columns: SST_ColumnDef<Person>[] = [
+  // ...data columns
+  {
+    id: 'delete',
+    header: '',
+    size: 48,
+    enableSorting: false,
+    enableColumnFilter: false,
+    Cell: ({ row, table }) => (
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => onDelete(row.original.id)}
+        aria-label="Delete row"
+      >
+        <Trash2 className="size-4" />
+      </Button>
+    ),
+  },
+];
+```
+
+Display columns are non-sortable and non-filterable by default — there's no row value to compare. Set `enableSorting: false` / `enableColumnFilter: false` explicitly if you want to silence the column-actions menu entries for them.
+
+## Display columns in `columnOrder`
+
+The default order is: data columns first, then display columns at the right edge in the order they were enabled. Override with `state.columnOrder` / `initialState.columnOrder` — list every column ID (data and display) in the order you want.
+
+## See also
+
+- [Data columns](../data-columns/) — the other column kind
+- [Column options reference](../../api/column-options/)
+- [Table options](../../api/props/) — `enableRowSelection`, `enableRowActions`, `enableExpanding`, etc.

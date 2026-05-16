@@ -1,0 +1,99 @@
+---
+title: Column options
+description: SST_ColumnDef — how to define data columns, display columns, and grouped columns.
+---
+
+`SST_ColumnDef<TData, TValue>` describes a single column. It extends the underlying [TanStack Table v8 `ColumnDef`](https://tanstack.com/table/v8/docs/api/core/column-def) with extra options for filtering UI, editing, slot props, and column-level enable flags.
+
+```tsx
+import { type SST_ColumnDef } from 'shadstack-table';
+
+const columns: SST_ColumnDef<Person>[] = [
+  { accessorKey: 'id', header: 'ID', size: 60 },
+  { accessorKey: 'firstName', header: 'First name' },
+  { accessorKey: 'lastName', header: 'Last name' },
+];
+```
+
+Memoize the array (`useMemo`) — re-creating it re-renders the whole table.
+
+## The three column kinds
+
+| Kind    | How you declare it                                       | What it's for                                                       |
+| ------- | -------------------------------------------------------- | ------------------------------------------------------------------- |
+| Data    | `accessorKey: 'firstName'` or `accessorFn: (row) => …`   | Renders a value from each row.                                      |
+| Display | `id: 'actions'` with `Cell: ({ row }) => …`, no accessor | Renders UI that isn't a row field — actions, custom selection, etc. |
+| Group   | `header: 'Name'`, `columns: [colA, colB]`                | A parent header spanning two or more child columns.                 |
+
+See the [data columns guide](../../guides/data-columns/) and [display columns guide](../../guides/display-columns/) for the full pattern reference, including the built-in `sst-row-*` display columns.
+
+## Required and identifying
+
+| Option        | Type                             | Description                                                                                           |
+| ------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `id`          | `string`                         | Stable identifier. Required for display columns. Defaults to `accessorKey` (string) for data columns. |
+| `accessorKey` | `keyof TData`                    | Reads a value via `row[key]`. Use for data columns.                                                   |
+| `accessorFn`  | `(row: TData) => unknown`        | Reads a value via a function — derived/composed values, computed fields.                              |
+| `header`      | `string \| (props) => ReactNode` | Header content. String form goes through `getHeader()`; function form returns the rendered node.      |
+
+## Cell rendering
+
+| Option   | Type                   | Description                                                                             |
+| -------- | ---------------------- | --------------------------------------------------------------------------------------- |
+| `Cell`   | `(props) => ReactNode` | Override the entire cell. Receives `{ row, cell, column, table, renderedCellValue }`.   |
+| `Header` | `(props) => ReactNode` | Override the header. Receives `{ column, header, table }`.                              |
+| `Footer` | `(props) => ReactNode` | Override the footer cell. Same shape as `Header`.                                       |
+| `Edit`   | `(props) => ReactNode` | Override the edit-mode editor for this column. Receives `{ cell, column, row, table }`. |
+| `Filter` | `(props) => ReactNode` | Override the filter input rendered in the column header.                                |
+
+## Sorting
+
+| Option          | Type                                              | Description                                                             |
+| --------------- | ------------------------------------------------- | ----------------------------------------------------------------------- |
+| `enableSorting` | `boolean`                                         | Allow sorting on this column. Default `true` for data columns.          |
+| `sortingFn`     | `SST_SortingFn<TData> \| keyof typeof sortingFns` | Pick a built-in (`'alphanumeric'`, `'datetime'`, …) or supply your own. |
+| `sortUndefined` | `1 \| -1 \| false`                                | Where to place undefined values when sorting.                           |
+| `invertSorting` | `boolean`                                         | Reverse the comparator output (useful for "rank" columns).              |
+
+## Filtering
+
+| Option                 | Type                                                                                                                          | Description                                                                                                                                                                                          |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enableColumnFilter`   | `boolean`                                                                                                                     | Show the in-header filter for this column. Default `true` for data columns.                                                                                                                          |
+| `filterFn`             | `SST_FilterFn<TData> \| keyof typeof filterFns`                                                                               | Pick a built-in (`'fuzzy'`, `'contains'`, `'equals'`, `'between'`, …) or supply your own.                                                                                                            |
+| `filterVariant`        | `'text' \| 'select' \| 'multi-select' \| 'range' \| 'range-slider' \| 'checkbox' \| 'date' \| 'date-range' \| 'autocomplete'` | Which filter UI to render. Defaults to `'text'`. Date variants stub to `<input type="date">` in v1 (see [GOAL.md](https://github.com/suleymanozkeskin/shadstack-table/blob/main/GOAL.md) non-goals). |
+| `filterSelectOptions`  | `string[] \| { label, value }[]`                                                                                              | Options for `select` / `multi-select` / `autocomplete` filter variants.                                                                                                                              |
+| `filterFnRangeOptions` | `{ min, max, step? }`                                                                                                         | Range bounds for `range-slider` filter variant.                                                                                                                                                      |
+
+## Editing
+
+| Option              | Type                             | Description                                                                                  |
+| ------------------- | -------------------------------- | -------------------------------------------------------------------------------------------- |
+| `enableEditing`     | `boolean \| ((row) => boolean)`  | Allow editing on cells of this column. Combine with `editDisplayMode` in `SST_TableOptions`. |
+| `editVariant`       | `'text' \| 'select'`             | Which editor to render — text input or select.                                               |
+| `editSelectOptions` | `string[] \| { label, value }[]` | Options for `select` editor.                                                                 |
+
+## Slot customization
+
+Every cell, header, footer, filter input, and edit input accepts `slotProps` for per-column className / prop overrides. These accept either a plain object or a `(props) => object` callback:
+
+```tsx
+{
+  accessorKey: 'status',
+  header: 'Status',
+  slotProps: {
+    tableBodyCell: ({ cell }) => ({
+      className: cell.getValue() === 'active' ? 'text-success' : 'text-muted-foreground',
+    }),
+  },
+}
+```
+
+Common slot props on a column: `tableHeadCell`, `tableBodyCell`, `tableFooterCell`, `filterTextField`, `editCellTextField`, `columnActionsButton`, `expandButton`.
+
+## See also
+
+- [`SST_TableOptions`](../props/) — top-level options
+- [Data columns](../../guides/data-columns/)
+- [Display columns](../../guides/display-columns/)
+- [TanStack Table column-def docs](https://tanstack.com/table/v8/docs/api/core/column-def) (underlying engine)

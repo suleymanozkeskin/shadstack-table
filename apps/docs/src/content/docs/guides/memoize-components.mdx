@@ -1,0 +1,45 @@
+---
+title: Memoize components
+description: For large datasets, opt into cell / row / table-body memoization to skip unnecessary re-renders.
+---
+
+By default `shadstack-table` re-renders cells whenever the table state changes — which is fine for small tables but expensive when you're rendering thousands of rows. The `memoMode` option lets you opt into one of three memoization strategies for those cases.
+
+```tsx
+useShadStackTable({
+  columns,
+  data,
+  memoMode: 'cells', // 'cells' | 'rows' | 'table-body'
+});
+```
+
+## When to reach for it
+
+| Symptom                                                                                   | Try                      |
+| ----------------------------------------------------------------------------------------- | ------------------------ |
+| Sorting / filtering a 1k+ row table feels slow.                                           | `memoMode: 'rows'`       |
+| Editing one cell shouldn't repaint thousands of unrelated cells.                          | `memoMode: 'cells'`      |
+| Almost the entire body is static and you only mutate one row's selection state at a time. | `memoMode: 'table-body'` |
+| Table is under ~200 rows and feels fine.                                                  | Don't set `memoMode`.    |
+
+## What each mode skips
+
+- **`'cells'`** — wraps each cell in `React.memo`. A cell re-renders only when its column/row state changes (the cell's value, its selection state, its expanded state, etc.). Other cells in the same row are untouched. Most useful when individual cell state mutates often (cell editing, click-to-copy).
+- **`'rows'`** — wraps each row in `React.memo`. A row re-renders only when something inside that row changes. Best for very wide tables where you don't want column-state changes to ripple across every row.
+- **`'table-body'`** — memoizes the entire `<tbody>`. Almost no re-renders inside the body once it's painted. Use sparingly — most state changes you actually care about (selection, expansion, edit, density) will then need explicit invalidation.
+
+## Tradeoffs
+
+Memoization isn't free. The comparison runs on every render; for cheap rows it can cost more than the re-render itself. Measure before reaching for `'table-body'` — the more aggressive the mode, the more likely you'll find a state mutation that should update the DOM but doesn't, because the memo says "nothing changed".
+
+The general progression:
+
+1. Start with no `memoMode`.
+2. If you have a perf problem, add virtualization first (`enableRowVirtualization`, `enableColumnVirtualization`).
+3. If you still have a perf problem, then add `memoMode: 'cells'`.
+4. Only escalate to `'rows'` / `'table-body'` after measuring.
+
+## See also
+
+- [Table options](../../api/props/) — `memoMode`, `enableRowVirtualization`, `enableColumnVirtualization`
+- [TanStack Table reactivity model](https://tanstack.com/table/v8/docs/guide/data) (the underlying engine)

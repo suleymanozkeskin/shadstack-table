@@ -1,0 +1,80 @@
+---
+title: Localization
+description: Use one of the 39 shipped locales, or override individual strings — every piece of UI copy is replaceable.
+---
+
+`shadstack-table` ships every piece of internal UI copy (toolbar tooltips, filter mode names, sort labels, empty-row text, pagination, etc.) behind a single `SST_Localization` object. The default is English. To switch languages, pass a locale to the `localization` option:
+
+```tsx
+import { useShadStackTable } from 'shadstack-table';
+import enLocale from 'shadstack-table/locales/en';
+
+useShadStackTable({
+  columns,
+  data,
+  localization: enLocale,
+});
+```
+
+## Shipped locales
+
+39 locales are shipped under `shadstack-table/locales/`:
+
+`ar`, `az`, `bg`, `cs`, `da`, `de`, `el`, `en`, `es`, `et`, `fa`, `fi`, `fr`, `he`, `hr`, `hu`, `hy`, `id`, `it`, `ja`, `ko`, `mk`, `nl`, `no`, `np`, `pl`, `pt-BR`, `pt`, `ro`, `ru`, `sk`, `sr-Cyrl-RS`, `sr-Latn-RS`, `sv`, `tr`, `uk`, `vi`, `zh-Hans`, `zh-Hant`.
+
+Each is exported as a default-export `SST_Localization` object you can drop in directly.
+
+## Override individual strings
+
+You don't have to swap the whole object. Pass a partial — anything you omit falls back to the default:
+
+```tsx
+useShadStackTable({
+  columns,
+  data,
+  localization: {
+    actions: 'More',
+    noRecordsToDisplay: 'No people match your filters.',
+    rowsPerPage: 'People per page',
+  },
+});
+```
+
+## Mix and match
+
+Spread a shipped locale and override specific keys on top:
+
+```tsx
+import frLocale from 'shadstack-table/locales/fr';
+
+useShadStackTable({
+  columns,
+  data,
+  localization: {
+    ...frLocale,
+    actions: 'Plus', // project-specific override on top of French
+  },
+});
+```
+
+## RTL languages
+
+`ar`, `fa`, `he` are right-to-left. The table reads `document.documentElement.dir` and flips icon directionality (sort indicators, pinning chevrons, expand arrows) accordingly — no extra config beyond setting `dir="rtl"` on the document root.
+
+## Custom keys for fully custom locale
+
+The `SST_Localization` shape is exported as a type. Use it to author a complete custom locale (e.g. a regional dialect not shipped):
+
+```tsx
+import type { SST_Localization } from 'shadstack-table';
+
+const myLocale: SST_Localization = {
+  actions: '...',
+  // ...all keys
+};
+```
+
+## See also
+
+- [Table options reference](../../api/props/) — the `localization` option
+- All locale message keys: see the source under `packages/shadstack-table/src/locales/` (the `en.ts` file is the authoritative key list).

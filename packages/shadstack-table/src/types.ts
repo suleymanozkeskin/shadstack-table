@@ -748,11 +748,11 @@ export type SST_DisplayColumnIds =
 /**
  * `columns` and `data` props are the only required props, but there are over 170 other optional props.
  *
- * See more info on creating columns and data on the official docs site:
- * @link https://suleymanozkeskin.github.io/shadstack-table/
+ * See more info on creating columns and data:
+ * @link https://suleymanozkeskin.github.io/shadstack-table/getting-started/
  *
- * See the full props list on the official docs site:
- * @link https://suleymanozkeskin.github.io/shadstack-table/
+ * Full props list (table options):
+ * @link https://suleymanozkeskin.github.io/shadstack-table/api/props/
  */
 export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
   Partial<TableOptions<TData>>,
@@ -772,12 +772,12 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
   /**
    * The columns to display in the table. `accessorKey`s or `accessorFn`s must match keys in the `data` table option.
    *
-   * See more info on creating columns on the official docs site:
-   * @link https://suleymanozkeskin.github.io/shadstack-table/
-   * @link https://suleymanozkeskin.github.io/shadstack-table/
+   * Guides for the two column kinds:
+   * @link https://suleymanozkeskin.github.io/shadstack-table/guides/data-columns/
+   * @link https://suleymanozkeskin.github.io/shadstack-table/guides/display-columns/
    *
-   * See all Columns Options on the official docs site:
-   * @link https://suleymanozkeskin.github.io/shadstack-table/
+   * Full column options reference:
+   * @link https://suleymanozkeskin.github.io/shadstack-table/api/column-options/
    */
   columns: SST_ColumnDef<TData, any>[];
   columnVirtualizerInstanceRef?: RefObject<SST_ColumnVirtualizer | null>;
@@ -790,8 +790,8 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
   /**
    * Pass your data as an array of objects. Objects can theoretically be any shape, but it's best to keep them consistent.
    *
-   * See the usage guide for more info on creating columns and data:
-   * @link https://suleymanozkeskin.github.io/shadstack-table/
+   * Usage guide:
+   * @link https://suleymanozkeskin.github.io/shadstack-table/getting-started/
    */
   data: TData[];
   /**
@@ -855,15 +855,15 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
   /**
    * Pass in either a locale imported from `shadstack-table/locales/*` or a custom locale object.
    *
-   * See the localization (i18n) guide for more info:
-   * @link https://suleymanozkeskin.github.io/shadstack-table/
+   * Localization (i18n) guide:
+   * @link https://suleymanozkeskin.github.io/shadstack-table/guides/localization/
    */
   localization?: Partial<SST_Localization>;
   /**
    * Memoize cells, rows, or the entire table body to potentially improve render performance.
    *
-   * @warning This will break some dynamic rendering features. See the memoization guide for more info:
-   * @link https://suleymanozkeskin.github.io/shadstack-table/
+   * @warning This will break some dynamic rendering features. See the memoization guide:
+   * @link https://suleymanozkeskin.github.io/shadstack-table/guides/memoize-components/
    */
   memoMode?: 'cells' | 'rows' | 'table-body';
   // TODO: theme-aware styling moved to CSS vars in _ui/styles.css

@@ -1,0 +1,95 @@
+---
+title: Data columns
+description: How accessorKey, accessorFn, and the TData generic line up to give you a type-safe column tree.
+---
+
+A _data column_ reads a value from each row and renders it. It's the default kind — set an `accessorKey` (or `accessorFn`), give it a `header`, and you've got a sortable, filterable, editable column.
+
+## accessorKey — the common case
+
+When the value is a top-level property of your row type, use `accessorKey`. TypeScript narrows the allowed strings to the keys of `TData`:
+
+```tsx
+type Person = { id: number; firstName: string; lastName: string };
+
+const columns: SST_ColumnDef<Person>[] = [
+  { accessorKey: 'id', header: 'ID' },
+  { accessorKey: 'firstName', header: 'First' },
+  { accessorKey: 'lastName', header: 'Last' },
+];
+```
+
+`accessorKey` doubles as the column `id` unless you override it explicitly.
+
+## accessorFn — for computed / nested / joined values
+
+For anything that isn't a direct property read — a derived value, a deep path, a joined string — use `accessorFn`. Pair it with an explicit `id`:
+
+```tsx
+const columns: SST_ColumnDef<Person>[] = [
+  {
+    id: 'fullName',
+    accessorFn: (row) => `${row.firstName} ${row.lastName}`,
+    header: 'Full name',
+  },
+  {
+    id: 'isAdult',
+    accessorFn: (row) => row.age >= 18,
+    header: 'Adult?',
+  },
+];
+```
+
+The accessed value is what sorting, filtering, and grouping operate on. The `Cell` renderer (if provided) gets the same value via `getValue()`.
+
+## Custom rendering — separating data from presentation
+
+`accessorKey` / `accessorFn` decide _what_ the value is. `Cell` decides _how it looks_:
+
+```tsx
+{
+  accessorKey: 'status',
+  header: 'Status',
+  Cell: ({ cell }) => {
+    const value = cell.getValue<'active' | 'paused'>();
+    return <Badge variant={value === 'active' ? 'default' : 'secondary'}>{value}</Badge>;
+  },
+}
+```
+
+Keep `Cell` for presentation. Sorting + filtering still use the raw accessed value (faster, more predictable). If you need filtering on the rendered string instead of the raw value, use the column's `filterFn`.
+
+## Grouped columns
+
+A column with a `columns` array becomes a header group:
+
+```tsx
+{
+  header: 'Name',
+  columns: [
+    { accessorKey: 'firstName', header: 'First' },
+    { accessorKey: 'lastName',  header: 'Last' },
+  ],
+}
+```
+
+Grouped headers render as a banner row above their child columns. The group itself isn't sortable or filterable — the children are.
+
+## Stable references matter
+
+The `columns` array and the `data` array passed to `useShadStackTable` must be referentially stable across renders. Re-creating them on every render re-runs the entire table engine:
+
+```tsx
+const columns = useMemo(() => [...], []);   // ✅
+const data    = useMemo(() => fetched, [fetched]);  // ✅
+```
+
+```tsx
+const columns = [...];   // ❌ new array every render
+```
+
+## See also
+
+- [Column options reference](../../api/column-options/)
+- [Display columns](../display-columns/) — the other column kind
+- [Table options](../../api/props/) — `columns` / `data` / `defaultColumn`

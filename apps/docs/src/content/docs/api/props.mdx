@@ -1,0 +1,130 @@
+---
+title: Table options
+description: The full set of options accepted by useShadStackTable / ShadStackTable — what each one does, when you need it, what it defaults to.
+---
+
+`SST_TableOptions<TData>` is the single configuration object passed to [`useShadStackTable`](../../getting-started/). Everything the table does — what data it renders, which features are on, how state is held, what slots get overridden — flows through it.
+
+```tsx
+import {
+  ShadStackTable,
+  useShadStackTable,
+  type SST_ColumnDef,
+  type SST_TableOptions,
+} from 'shadstack-table';
+
+const options: SST_TableOptions<Person> = {
+  columns,
+  data,
+  // ...everything else is optional, documented below
+};
+
+const table = useShadStackTable(options);
+return <ShadStackTable table={table} />;
+```
+
+## Required
+
+| Option    | Type                     | Description                                                                                                                                                 |
+| --------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `columns` | `SST_ColumnDef<TData>[]` | Column definitions. See [`SST_ColumnDef`](../column-options/) for the full shape. Memoize this with `useMemo` — re-creating the array re-renders the table. |
+| `data`    | `TData[]`                | Row data. Same array identity stability rule as `columns` — keep it referentially stable when nothing has changed.                                          |
+
+Both are typed against the same `TData` generic, so `accessorKey` on a column is narrowed to the keys of your row type.
+
+## Defaults & initial state
+
+| Option          | Type                             | Description                                                                                                            |
+| --------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `defaultColumn` | `Partial<SST_ColumnDef<TData>>`  | Default props merged into every column. Set things like `size`, `enableSorting`, `enableColumnFilter` once.            |
+| `initialState`  | `Partial<SST_TableState<TData>>` | Starting state — `columnVisibility`, `columnOrder`, `columnPinning`, `sorting`, `pagination.pageSize`, `density`, etc. |
+| `state`         | `Partial<SST_TableState<TData>>` | Controlled state. Pair with the corresponding `on*Change` handlers to manage state outside the table.                  |
+
+## Feature toggles
+
+Every major feature has an `enable*` boolean. They default sensibly — start with what you need and turn things off as you scope down. Selected highlights:
+
+| Group          | Options                                                                                                                                                                                      |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sorting        | `enableSorting`, `enableMultiSort`, `enableMultiRemove`, `enableSortingRemoval`                                                                                                              |
+| Filtering      | `enableColumnFilters`, `enableGlobalFilter`, `enableColumnFilterModes`, `enableGlobalFilterModes`, `enableGlobalFilterRankedResults`, `enableFacetedValues`, `enableFilterMatchHighlighting` |
+| Row selection  | `enableRowSelection`, `enableSelectAll`, `enableMultiRowSelection`, `enableBatchRowSelection`                                                                                                |
+| Pagination     | `enablePagination`                                                                                                                                                                           |
+| Expansion      | `enableExpanding`, `enableExpandAll`                                                                                                                                                         |
+| Editing        | `enableEditing`, `enableCellActions`                                                                                                                                                         |
+| Virtualization | `enableRowVirtualization`, `enableColumnVirtualization`                                                                                                                                      |
+| Pinning        | `enableColumnPinning`, `enableRowPinning`, `enablePinning`                                                                                                                                   |
+| Reorder & drag | `enableColumnDragging`, `enableRowDragging`, `enableColumnOrdering`, `enableRowOrdering`                                                                                                     |
+| Column resize  | `enableColumnResizing`                                                                                                                                                                       |
+| Visibility     | `enableHiding`, `enableColumnActions`                                                                                                                                                        |
+| Toolbars       | `enableTopToolbar`, `enableBottomToolbar`, `enableToolbarInternalActions`, `enableDensityToggle`, `enableFullScreenToggle`                                                                   |
+| Layout polish  | `enableTableHead`, `enableTableFooter`, `enableStickyHeader`, `enableStickyFooter`, `enableRowNumbers`                                                                                       |
+| Misc           | `enableClickToCopy`, `enableRowActions`, `enableKeyboardShortcuts`                                                                                                                           |
+
+Most of these accept `boolean` or, for row-targeted features, `(row: SST_Row<TData>) => boolean` — handy for "selectable only when X" / "editable only when Y" rules.
+
+## State change handlers
+
+Every state slice you might want to control externally has a matching `on*Change` handler. Pair them with a corresponding entry in `state` to drive state from your own store:
+
+```tsx
+const [sorting, setSorting] = useState<SST_SortingState>([]);
+
+const table = useShadStackTable({
+  columns,
+  data,
+  state: { sorting },
+  onSortingChange: setSorting,
+});
+```
+
+The handler signature is TanStack's `OnChangeFn<T>` — it takes the next value _or_ an updater function `(prev) => next`. Apply it the same way `useState`'s setter applies updates.
+
+Common change handlers: `onSortingChange`, `onColumnFiltersChange`, `onGlobalFilterChange`, `onPaginationChange`, `onColumnVisibilityChange`, `onColumnOrderChange`, `onColumnPinningChange`, `onRowSelectionChange`, `onExpandedChange`, `onDensityChange`, `onIsFullScreenChange`.
+
+## Slot customization
+
+`slotProps` is the single passthrough for styling and prop-overriding every internal slot — toolbars, head cells, body cells, buttons, dialogs, etc. Each slot's `slotProps` shape accepts the same props the underlying shadcn primitive does.
+
+```tsx
+useShadStackTable({
+  columns,
+  data,
+  slotProps: {
+    tablePaper: { className: 'rounded-xl' },
+    tableContainer: { className: 'max-h-[480px]' },
+    tableHeadCell: { className: 'bg-muted/40' },
+  },
+});
+```
+
+Slots also accept callbacks of the form `(props) => className | object` when the override depends on the current row, column, or cell.
+
+## Renderers
+
+For deep customization of a specific surface — toolbar layout, empty state, action menu, etc. — provide a `render*` callback in place of overriding via `slotProps`. The renderer is passed `{ table, ... }` and returns a `ReactNode`:
+
+- `renderTopToolbar(props)` / `renderBottomToolbar(props)`
+- `renderEmptyRowsFallback(props)`
+- `renderRowActions(props)`, `renderRowActionMenuItems(props)`
+- `renderCellActionMenuItems(props)`, `renderColumnActionsMenuItems(props)`
+- `renderDetailPanel(props)`
+- `renderColumnFilterModeMenuItems(props)`, `renderGlobalFilterModeMenuItems(props)`
+
+## Other options worth knowing
+
+| Option                       | Description                                                                                                                |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `localization`               | Override individual UI strings. See the [localization guide](../../guides/localization/).                                  |
+| `memoMode`                   | Memoize cells / rows / the whole body for very large datasets. See [memoize-components](../../guides/memoize-components/). |
+| `layoutMode`                 | `'semantic'` (default) renders `<table>` semantics; `'grid'` / `'grid-no-grow'` uses CSS Grid for tighter layout control.  |
+| `positionToolbarAlertBanner` | `'top'` / `'bottom'` / `'none'`. Controls where the selection/filter banner appears.                                       |
+| `icons`                      | Override the default lucide icon set with your own components. Keys match the `SST_Default_Icons` shape.                   |
+
+## See also
+
+- [`SST_ColumnDef`](../column-options/) — every column option
+- [Data columns guide](../../guides/data-columns/) — accessor patterns
+- [Display columns guide](../../guides/display-columns/) — built-in selection / expand / actions columns
+- [Localization](../../guides/localization/)
+- [Memoize components](../../guides/memoize-components/)
