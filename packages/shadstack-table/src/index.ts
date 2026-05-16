@@ -1,5 +1,5 @@
-// shadstack-table — shadcn-native React data table with material-react-table feature parity.
-// Built on TanStack Table v8 + TanStack Virtual. Zero MUI dependency.
+// shadstack-table — shadcn-native React data table.
+// Full data-table feature surface on TanStack Table v8 + TanStack Virtual + shadcn/ui primitives. Zero MUI dependency.
 
 // The CSS bundle is shipped as a fallback theme: tokens are declared with
 // `:where(:root)` / `:where(.dark)` (specificity 0,0,0) so any host

@@ -56,7 +56,7 @@ shadstack-table/
 │   └── shadstack-table/    # the library
 │       └── src/
 │           ├── _ui/        # shadcn primitives (Radix wrappers)
-│           ├── components/ # SST_* components — mirrors upstream paths 1:1
+│           ├── components/ # SST_* table components (body / buttons / footer / head / inputs / menus / modals / table / toolbar)
 │           ├── fns/        # filter / sort / aggregation fns
 │           ├── hooks/      # useShadStackTable + internal hooks
 │           ├── locales/    # 39 locales
@@ -68,7 +68,7 @@ shadstack-table/
 │   └── playground/         # Vite + React 19 dev sandbox / smoke test
 ├── GOAL.md                 # product goal, principles, non-goals, future work
 ├── PORT_PLAN.md            # architecture & contributor reference (MUI→shadcn mapping, quirks, decisions)
-└── LICENSE                 # MIT, with upstream MRT attribution
+└── LICENSE                 # MIT, with material-react-table attribution
 ```
 
 ## Local development
