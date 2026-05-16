@@ -81,13 +81,12 @@ export const MRT_SelectCheckbox = <TData extends MRT_RowData>({
     checkboxProps?.onClick?.(e);
   };
 
-  const sizeClasses = density === 'compact' ? 'h-7 w-7' : 'h-10 w-10';
-  const marginClass = density !== 'compact' ? '-m-1.5' : undefined;
+  const sizeClasses = density === 'compact' ? 'h-7 w-7' : 'h-8 w-8';
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className={cn('inline-flex items-center justify-center', sizeClasses, marginClass)}>
+        <span className={cn('inline-flex items-center justify-center', sizeClasses)}>
           {enableMultiRowSelection === false ? (
             <RadioGroup
               value={isChecked ? 'on' : ''}
