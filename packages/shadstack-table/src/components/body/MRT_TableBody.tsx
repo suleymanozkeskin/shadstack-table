@@ -59,9 +59,11 @@ export const MRT_TableBody = <TData extends MRT_RowData>({
 
   const pinnedRowIds = useMemo(() => {
     if (!rowPinning.bottom?.length && !rowPinning.top?.length) return [];
-    return getRowModel()
-      .rows.filter((row) => row.getIsPinned())
-      .map((r) => r.id);
+    const ids: string[] = [];
+    for (const row of getRowModel().rows) {
+      if (row.getIsPinned()) ids.push(row.id);
+    }
+    return ids;
   }, [rowPinning, getRowModel().rows]);
 
   const rows = useMRT_Rows(table);

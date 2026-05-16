@@ -125,9 +125,9 @@ export const MRT_ColumnActionMenu = <TData extends MRT_RowData>({
   };
 
   const handleShowAllColumns = () => {
-    getAllLeafColumns()
-      .filter((col) => col.columnDef.enableHiding !== false)
-      .forEach((col) => col.toggleVisibility(true));
+    for (const col of getAllLeafColumns()) {
+      if (col.columnDef.enableHiding !== false) col.toggleVisibility(true);
+    }
     setAnchorEl(null);
   };
 
