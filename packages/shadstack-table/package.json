@@ -3,29 +3,29 @@
   "version": "0.1.0",
   "description": "shadcn-native React data table — full data-table feature surface on TanStack Table v8 + shadcn/ui primitives.",
   "keywords": [
-    "react",
-    "table",
     "data-table",
     "datatable",
-    "tanstack-table",
+    "material-react-table",
+    "radix-ui",
+    "react",
     "shadcn",
     "shadcn-ui",
+    "table",
     "tailwindcss",
-    "radix-ui",
+    "tanstack-table",
     "typescript",
-    "virtualization",
-    "material-react-table"
+    "virtualization"
   ],
+  "homepage": "https://github.com/suleymanozkeskin/shadstack-table#readme",
+  "bugs": {
+    "url": "https://github.com/suleymanozkeskin/shadstack-table/issues"
+  },
   "license": "MIT",
   "author": "Suleyman Ozkeskin",
-  "homepage": "https://github.com/suleymanozkeskin/shadstack-table#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/suleymanozkeskin/shadstack-table.git",
     "directory": "packages/shadstack-table"
-  },
-  "bugs": {
-    "url": "https://github.com/suleymanozkeskin/shadstack-table/issues"
   },
   "files": [
     "dist",
