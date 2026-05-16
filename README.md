@@ -77,9 +77,11 @@ bun run lint         # oxlint
 bun run format       # oxfmt write
 bun run format:check # oxfmt check (CI-equivalent)
 bun run typecheck    # tsc --noEmit across both workspaces
+bun run test         # vitest run (smoke tests for v1 priority features)
+bun run test:coverage # vitest run --coverage (V8 reporter)
 ```
 
-CI runs the full `lint / format:check / typecheck / build` chain on every PR and push to `main`.
+CI runs the full `lint / format:check / typecheck / test / build` chain on every PR and push to `main`.
 
 ## Acknowledgements
 
