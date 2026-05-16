@@ -1,10 +1,18 @@
 // oxlint-disable eslint/no-underscore-dangle -- verbatim port of upstream MRT
 import * as React from 'react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../../_ui/dialog';
+import { cn } from '../../lib/utils';
 import { type MRT_Row, type MRT_RowData, type MRT_TableInstance } from '../../types';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 import { MRT_EditActionButtons } from '../buttons/MRT_EditActionButtons';
 import { MRT_EditCellTextField } from '../inputs/MRT_EditCellTextField';
+
+// Sensible defaults for the edit-row dialog size. Consumers can override via
+// `slotProps.editRowDialog.className` (e.g. `h-[60vh] sm:max-w-[60vw]`) — the
+// className flows through `cn()` + `tailwind-merge` so user classes take
+// precedence over these defaults.
+const DEFAULT_EDIT_DIALOG_CLASSNAME =
+  'flex h-[80vh] w-[80vw] max-w-[80vw] flex-col gap-0 p-0 sm:max-w-[80vw]';
 
 export interface MRT_EditRowModalProps<TData extends MRT_RowData> extends React.ComponentProps<
   typeof Dialog
@@ -34,11 +42,14 @@ export const MRT_EditRowModal = <TData extends MRT_RowData>({
   const { creatingRow, editingRow } = getState();
   const row = (creatingRow ?? editingRow) as MRT_Row<TData>;
 
-  const dialogProps = {
+  // slotProps.editRowDialog / slotProps.createRowDialog flow onto DialogContent,
+  // where Tailwind className overrides (e.g. `h-[60vh] sm:max-w-[60vw]`) actually
+  // affect the visual surface. Dialog root only takes behavioral props.
+  const slotContentProps = {
     ...parseFromValuesOrFunc(slotProps?.editRowDialog, { row, table }),
     ...(creatingRow && parseFromValuesOrFunc(slotProps?.createRowDialog, { row, table })),
-    ...rest,
   };
+  const { className: slotClassName, ...slotContentRest } = slotContentProps ?? {};
 
   const internalEditComponents: React.ReactNode[] = [];
   for (const cell of row.getAllCells()) {
@@ -63,9 +74,9 @@ export const MRT_EditRowModal = <TData extends MRT_RowData>({
           }
           row._valuesCache = {} as any;
         }
-        dialogProps.onOpenChange?.(nextOpen);
+        rest.onOpenChange?.(nextOpen);
       }}
-      {...dialogProps}
+      {...rest}
     >
       {((creatingRow &&
         renderCreateRowDialogContent?.({
@@ -78,7 +89,10 @@ export const MRT_EditRowModal = <TData extends MRT_RowData>({
           row,
           table,
         })) ?? (
-        <DialogContent className="flex h-[80vh] w-[80vw] max-w-[80vw] flex-col gap-0 p-0 sm:max-w-[80vw]">
+        <DialogContent
+          className={cn(DEFAULT_EDIT_DIALOG_CLASSNAME, slotClassName)}
+          {...slotContentRest}
+        >
           <DialogHeader className="border-b px-6 py-4">
             <DialogTitle className="text-center">{localization.edit}</DialogTitle>
           </DialogHeader>

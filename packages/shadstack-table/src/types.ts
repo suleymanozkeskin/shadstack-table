@@ -39,7 +39,7 @@ import type { Alert } from './_ui/alert';
 import type { Badge } from './_ui/badge';
 import type { Button } from './_ui/button';
 import type { Checkbox } from './_ui/checkbox';
-import type { Dialog } from './_ui/dialog';
+import type { DialogContent } from './_ui/dialog';
 import type { Input } from './_ui/input';
 import type { Pagination } from './_ui/pagination';
 import type { Progress } from './_ui/progress';
@@ -896,8 +896,8 @@ export interface MRT_TableOptions<TData extends MRT_RowData> extends Omit<
       | ((props: {
           row: MRT_Row<TData>;
           table: MRT_TableInstance<TData>;
-        }) => React.ComponentProps<typeof Dialog>)
-      | React.ComponentProps<typeof Dialog>;
+        }) => React.ComponentProps<typeof DialogContent>)
+      | React.ComponentProps<typeof DialogContent>;
     detailPanel?:
       | ((props: {
           row: MRT_Row<TData>;
@@ -916,8 +916,8 @@ export interface MRT_TableOptions<TData extends MRT_RowData> extends Omit<
       | ((props: {
           row: MRT_Row<TData>;
           table: MRT_TableInstance<TData>;
-        }) => React.ComponentProps<typeof Dialog>)
-      | React.ComponentProps<typeof Dialog>;
+        }) => React.ComponentProps<typeof DialogContent>)
+      | React.ComponentProps<typeof DialogContent>;
     expandAllButton?:
       | ((props: { table: MRT_TableInstance<TData> }) => React.ComponentProps<typeof Button>)
       | React.ComponentProps<typeof Button>;
