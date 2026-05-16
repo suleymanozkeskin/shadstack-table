@@ -125,7 +125,7 @@ export const MRT_ToolbarAlertBanner = <TData extends MRT_RowData>({
             ...alertProps?.style,
           }}
           className={cn(
-            'rounded-none p-0 w-full text-base',
+            'rounded-none border-0 p-0 w-full text-base bg-transparent',
             stackAlertBanner ? 'mb-0' : positionToolbarAlertBanner === 'bottom' && '-mb-4',
             className,
             alertProps?.className,
