@@ -1,0 +1,5 @@
+[install]
+# Supply-chain cooldown: refuse package versions younger than 7 days.
+# Mirrors uv's `exclude-newer` / Dependabot's `cooldown.default-days`.
+# 7 days = 7 * 24 * 60 * 60 seconds.
+minimumReleaseAge = 604800
