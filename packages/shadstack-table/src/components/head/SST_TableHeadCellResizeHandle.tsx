@@ -1,6 +1,5 @@
 // oxlint-disable jsx-a11y/no-static-element-interactions -- intentional; revisit when refactoring
 import * as React from 'react';
-import { Separator } from '../../_ui/separator';
 import { cn } from '../../lib/utils';
 import { type SST_Header, type SST_RowData, type SST_TableInstance } from '../../types';
 
@@ -36,7 +35,10 @@ export const SST_TableHeadCellResizeHandle = <TData extends SST_RowData>({
   return (
     <div
       className={cn(
-        'Mui-TableHeadCell-ResizeHandle-Wrapper absolute cursor-col-resize px-1',
+        // inset-y-0 anchors the wrapper to the full vertical extent of the
+        // th — without it the absolute-positioned wrapper collapses to 0
+        // height and the divider inside (h-full) renders invisible.
+        'Mui-TableHeadCell-ResizeHandle-Wrapper absolute inset-y-0 flex items-center cursor-col-resize px-1 group',
         className,
       )}
       onDoubleClick={() => {
@@ -60,16 +62,19 @@ export const SST_TableHeadCellResizeHandle = <TData extends SST_RowData>({
       }}
       {...rest}
     >
-      <Separator
-        orientation="vertical"
+      {/*
+       * Plain div instead of <Separator> — Separator's
+       * `data-[orientation=vertical]:h-full` rule won (higher specificity
+       * than `h-6`) and pulled height from a 0-height parent.
+       */}
+      <div
         className={cn(
           'Mui-TableHeadCell-ResizeHandle-Divider rounded touch-none select-none translate-x-1 z-[4]',
-          'h-6 w-0.5',
-          column.getIsResizing() ? '' : 'transition-all duration-150 ease-in-out',
-          'active:bg-primary',
-          header.subHeaders.length || columnResizeMode === 'onEnd'
-            ? 'active:opacity-100'
-            : 'active:opacity-0',
+          'h-6 w-0.5 bg-border',
+          'group-hover:bg-primary',
+          column.getIsResizing() ? '' : 'transition-colors duration-150 ease-in-out',
+          column.getIsResizing() && 'bg-primary',
+          header.subHeaders.length || columnResizeMode === 'onEnd' ? '' : 'group-active:opacity-0',
         )}
       />
     </div>
