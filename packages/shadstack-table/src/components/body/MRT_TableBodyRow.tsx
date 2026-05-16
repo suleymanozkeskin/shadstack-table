@@ -152,7 +152,6 @@ export const MRT_TableBodyRow = <TData extends MRT_RowData>({
                   bottomPinnedIndex * rowHeight + (enableStickyFooter ? tableFooterHeight - 1 : 0)
                 }px`
               : undefined,
-          boxSizing: 'border-box',
           opacity: isRowPinned ? 0.97 : isDraggingRow || isHoveredRow ? 0.5 : 1,
           top: virtualRow
             ? 0
@@ -163,12 +162,12 @@ export const MRT_TableBodyRow = <TData extends MRT_RowData>({
                 }px`
               : undefined,
           transition: virtualRow ? 'none' : 'all 150ms ease-in-out',
-          width: '100%',
           zIndex: rowPinningDisplayMode?.includes('sticky') && isRowPinned ? 2 : 0,
           transform: virtualRow ? `translateY(${virtualRow.start}px)` : undefined,
           ...tableRowProps?.style,
         }}
         className={cn(
+          'box-border w-full',
           isGrid && 'flex',
           virtualRow
             ? 'absolute'

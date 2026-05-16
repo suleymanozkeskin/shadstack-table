@@ -223,9 +223,6 @@ export const MRT_TableHeadCell = <TData extends MRT_RowData>({
         padding,
         paddingBottom,
         paddingTop,
-        verticalAlign: 'top',
-        fontWeight: 'bold',
-        overflow: 'visible',
         userSelect: enableMultiSort && column.getCanSort() ? 'none' : undefined,
         flexDirection: isGrid ? 'column' : undefined,
         ...(getCommonMRTCellStyles({
@@ -237,7 +234,7 @@ export const MRT_TableHeadCell = <TData extends MRT_RowData>({
         ...draggingBorders,
         ...tableCellProps?.style,
       }}
-      className={cn(className, tableCellProps?.className)}
+      className={cn('align-top font-bold overflow-visible', className, tableCellProps?.className)}
     >
       {header.isPlaceholder
         ? null
