@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { AdvancedExample } from './AdvancedExample';
 import { BasicExample } from './BasicExample';
-import { ThemedExample } from './ThemedExample';
+import { applyTheme, clearTheme, themes } from './themes';
 
-type ExampleKey = 'basic' | 'advanced' | 'themed';
+type ExampleKey = 'basic' | 'advanced';
 
 const examples: Array<{ key: ExampleKey; label: string; description: string }> = [
   {
@@ -17,69 +17,95 @@ const examples: Array<{ key: ExampleKey; label: string; description: string }> =
     description:
       '30 employees · grouped column headers · custom Cell + Header renderers · row pinning · row actions · detail panel · custom toolbar with selection-aware bulk actions. Modeled on MRT’s canonical advanced demo.',
   },
-  {
-    key: 'themed',
-    label: 'Themed',
-    description:
-      'Swap host CSS-variable presets at runtime (shaped like tweakcn.com themes) to verify the table picks up consumer tokens — surface, primary, radius, borders all flow through.',
-  },
+];
+
+function ChipGroup<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: ReadonlyArray<{ key: T; label: string; description?: string }>;
+  onChange: (next: T) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-muted-foreground text-xs uppercase tracking-wide">{label}</span>
+      <div className="bg-muted/50 inline-flex items-center gap-1 rounded-md border p-0.5">
+        {options.map((o) => {
+          const active = o.key === value;
+          return (
+            <button
+              key={o.key}
+              type="button"
+              onClick={() => onChange(o.key)}
+              title={o.description}
+              aria-pressed={active}
+              className={
+                active
+                  ? 'bg-primary text-primary-foreground rounded-sm px-2.5 py-1 text-xs font-medium shadow-xs'
+                  : 'text-foreground hover:bg-accent hover:text-accent-foreground rounded-sm bg-transparent px-2.5 py-1 text-xs font-medium transition-colors'
+              }
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const modeOptions = [
+  { key: 'light' as const, label: 'Light' },
+  { key: 'dark' as const, label: 'Dark' },
 ];
 
 export function App() {
   const [dark, setDark] = useState(false);
   const [example, setExample] = useState<ExampleKey>('basic');
+  const [themeKey, setThemeKey] = useState<string>(themes[0].key);
   const current = examples.find((e) => e.key === example) ?? examples[0];
+  const preset = themes.find((t) => t.key === themeKey) ?? themes[0];
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark);
   }, [dark]);
 
+  useEffect(() => {
+    applyTheme(preset, dark ? 'dark' : 'light');
+    return () => clearTheme();
+  }, [preset, dark]);
+
   return (
     <div className="overflow-x-hidden">
       <main className="bg-background text-foreground min-h-screen p-6">
-        <header className="mx-auto mb-6 flex max-w-7xl items-start justify-between gap-6">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight">shadstack-table</h1>
-            <p className="text-muted-foreground text-sm">playground · smoke test for the port</p>
+        <header className="bg-card text-card-foreground mx-auto mb-6 max-w-7xl rounded-lg border p-4 shadow-xs">
+          <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+            <div className="min-w-0">
+              <h1 className="text-xl font-semibold tracking-tight">shadstack-table</h1>
+              <p className="text-muted-foreground text-xs">playground · smoke test for the port</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <ChipGroup label="Example" value={example} options={examples} onChange={setExample} />
+              <ChipGroup
+                label="Mode"
+                value={dark ? 'dark' : 'light'}
+                options={modeOptions}
+                onChange={(next) => setDark(next === 'dark')}
+              />
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <label className="text-muted-foreground text-sm" htmlFor="example-select">
-              Example
-            </label>
-            <select
-              id="example-select"
-              value={example}
-              onChange={(e) => setExample(e.target.value as ExampleKey)}
-              className="border-input bg-background hover:bg-accent rounded-md border px-2 py-1 text-sm shadow-xs transition-colors"
-            >
-              {examples.map((e) => (
-                <option key={e.key} value={e.key}>
-                  {e.label}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={() => setDark((d) => !d)}
-              className="border-input hover:bg-accent rounded-md border bg-transparent px-3 py-1.5 text-sm shadow-xs transition-colors"
-            >
-              {dark ? 'Light' : 'Dark'} mode
-            </button>
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t pt-3">
+            <ChipGroup label="Theme" value={themeKey} options={themes} onChange={setThemeKey} />
           </div>
+          <p className="text-muted-foreground mt-3 text-xs">{current.description}</p>
         </header>
 
-        <section className="mx-auto mb-3 max-w-7xl">
-          <p className="text-muted-foreground text-xs">{current.description}</p>
-        </section>
-
         <section className="mx-auto max-w-7xl min-w-0 overflow-hidden">
-          {example === 'basic' ? (
-            <BasicExample />
-          ) : example === 'advanced' ? (
-            <AdvancedExample />
-          ) : (
-            <ThemedExample dark={dark} />
-          )}
+          {example === 'basic' ? <BasicExample /> : <AdvancedExample />}
         </section>
       </main>
     </div>
