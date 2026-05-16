@@ -114,12 +114,16 @@ export const MRT_FilterTextField = <TData extends MRT_RowData>({
         ? localization.max
         : '';
 
-  const showChangeModeButton = !!(
+  // The mode button itself only renders on the non-range input (or the Min
+  // side of a range pair) — one mode controls the column as a whole.
+  // `reserveModeButtonSpace` is true on BOTH sides of a range so the inputs
+  // line up visually even though only Min carries the actual icon button.
+  const reserveModeButtonSpace = !!(
     enableColumnFilterModes &&
     columnDef.enableColumnFilterModes !== false &&
-    !rangeFilterIndex &&
     (allowedColumnFilterOptions === undefined || !!allowedColumnFilterOptions?.length)
   );
+  const showChangeModeButton = reserveModeButtonSpace && !rangeFilterIndex;
 
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [filterValue, setFilterValue] = useState<string | string[]>(() =>
@@ -224,7 +228,7 @@ export const MRT_FilterTextField = <TData extends MRT_RowData>({
         : null;
 
   const helperText = showChangeModeButton ? (
-    <p className="text-xs leading-[0.8rem] whitespace-nowrap text-muted-foreground mt-0.5">
+    <p className="text-muted-foreground mt-2 text-xs leading-tight whitespace-nowrap">
       {localization.filterMode.replace(
         '{filterType}',
         localization[
@@ -303,7 +307,7 @@ export const MRT_FilterTextField = <TData extends MRT_RowData>({
 
   const inputClass = cn(
     'w-full',
-    showChangeModeButton && 'pl-9',
+    reserveModeButtonSpace && 'pl-9',
     showClearButton && (isSelectFilter || isMultiSelectFilter ? 'pr-14' : 'pr-9'),
     className,
     textFieldProps?.className,
