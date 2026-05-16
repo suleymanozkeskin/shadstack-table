@@ -26,13 +26,7 @@ export default defineConfig({
       sidebar: [
         { label: 'Overview', slug: 'index' },
         { label: 'Getting started', slug: 'getting-started' },
-        {
-          label: 'Examples',
-          items: [
-            { label: 'Basic', slug: 'examples/basic' },
-            { label: 'Advanced', slug: 'examples/advanced' },
-          ],
-        },
+        { label: 'Live demo', slug: 'example' },
       ],
     }),
   ],
@@ -44,6 +38,7 @@ export default defineConfig({
         'shadstack-table': fileURLToPath(
           new URL('../../packages/shadstack-table/src/index.ts', import.meta.url),
         ),
+        '@playground': fileURLToPath(new URL('../../apps/playground/src', import.meta.url)),
       },
     },
   },

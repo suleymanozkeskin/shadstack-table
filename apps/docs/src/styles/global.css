@@ -3,16 +3,16 @@
 /* Source the docs app AND the library so any class either uses gets compiled. */
 @source '../**/*.{ts,tsx,astro,md,mdx}';
 @source '../../../../packages/shadstack-table/src/**/*.{ts,tsx}';
+@source '../../../../apps/playground/src/**/*.{ts,tsx}';
 
-@custom-variant dark (&:is([data-theme='dark'] *));
+@custom-variant dark (&:is(.dark *));
 
 /*
- * Library tokens — wrapped in :where() (0,0,0 specificity) so Starlight's own
- * theme variables stay authoritative on its chrome, and we only paint the
- * tables / example components with these. Mirrors packages/shadstack-table/src/_ui/styles.css.
- *
- * Starlight uses [data-theme='dark'] on <html>, not the `.dark` class shadcn
- * defaults to, so the dark scope is rewritten to match.
+ * Library tokens — wrapped in :where() (0,0,0 specificity) so the playground's
+ * inline `<html style="--background: …">` declarations and any host theme can
+ * still win. Mirrors packages/shadstack-table/src/_ui/styles.css verbatim,
+ * including the `.dark` class for the dark scope — the Playground component
+ * toggles that class when its Mode chip is set to Dark.
  */
 :where(:root) {
   --radius: 0.625rem;
@@ -36,7 +36,7 @@
   --ring: oklch(0.708 0 0);
 }
 
-:where([data-theme='dark']) {
+:where(.dark) {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -82,21 +82,38 @@
   --color-ring: var(--ring);
 }
 
-/* Give embedded examples breathing room — table HTML inside MDX otherwise
- * collides with Starlight's own prose styles for <table>. */
-.sst-example {
+/*
+ * Full-bleed Playground host. The /example/ page sets `tableOfContents: false`
+ * and wraps the Playground in `.not-content .sst-playground-host`. We then
+ * blow up Starlight's content width and zero out the main column padding for
+ * pages that contain this host, so the playground fills the entire region
+ * next to the left sidebar — same look as localhost:5173.
+ */
+.sst-playground-host {
+  /* Paint a background that matches the playground’s own surface so the area
+   * outside the inner max-w-7xl card still reads as one continuous canvas. */
+  background: var(--background);
+  color: var(--foreground);
+  padding: 1.5rem;
+  margin: 0;
+}
+
+main:has(> .sl-container > .sst-playground-host),
+main:has(.sst-playground-host) {
+  /* Starlight caps main content at --sl-content-width (~50rem). Inflate it
+   * just for this page so the playground can use the entire main column. */
+  --sl-content-width: 100%;
+  --sl-content-pad-x: 0;
+}
+
+/* A lighter touch for embedded demos inside ordinary doc pages
+ * (e.g. the BasicExample on /getting-started/). Keeps them inside the
+ * prose column but gives the table room to breathe. */
+.sst-doc-example {
   margin: 1.25rem 0;
   padding: 0.75rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--background);
   color: var(--foreground);
-}
-
-.sst-example table,
-.sst-example th,
-.sst-example td {
-  border: 0;
-  margin: 0;
-  padding: 0;
 }

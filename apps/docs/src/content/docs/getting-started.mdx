@@ -3,7 +3,7 @@ title: Getting started
 description: Install shadstack-table and render your first table.
 ---
 
-import { BasicTable } from '../../components/examples/BasicTable.tsx';
+import { BasicExample } from '@playground/BasicExample';
 
 ## Install
 
@@ -57,4 +57,9 @@ export function People() {
 
 ## Live result
 
-<BasicTable client:visible />
+<div class="not-content sst-doc-example">
+  <BasicExample client:only="react" />
+</div>
+
+For the full playground — theme switcher, every example, every config — see
+[the live demo](/example/).
