@@ -83,13 +83,14 @@ export function App() {
     <div className="overflow-x-hidden">
       <main className="bg-background text-foreground min-h-screen p-6">
         <header className="bg-card text-card-foreground mx-auto mb-6 max-w-7xl rounded-lg border p-4 shadow-xs">
-          <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
             <div className="min-w-0">
               <h1 className="text-xl font-semibold tracking-tight">shadstack-table</h1>
               <p className="text-muted-foreground text-xs">playground · smoke test for the port</p>
             </div>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div className="flex flex-col items-end gap-y-2">
               <ChipGroup label="Example" value={example} options={examples} onChange={setExample} />
+              <ChipGroup label="Theme" value={themeKey} options={themes} onChange={setThemeKey} />
               <ChipGroup
                 label="Mode"
                 value={dark ? 'dark' : 'light'}
@@ -98,10 +99,7 @@ export function App() {
               />
             </div>
           </div>
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t pt-3">
-            <ChipGroup label="Theme" value={themeKey} options={themes} onChange={setThemeKey} />
-          </div>
-          <p className="text-muted-foreground mt-3 text-xs">{current.description}</p>
+          <p className="text-muted-foreground mt-3 border-t pt-3 text-xs">{current.description}</p>
         </header>
 
         <section className="mx-auto max-w-7xl min-w-0 overflow-hidden">
