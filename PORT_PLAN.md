@@ -317,6 +317,7 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Decisions
 
+- 2026-05-16 — **Test suite scaffolded.** Vitest + `@testing-library/react` + happy-dom; tests live in `packages/shadstack-table/src/__tests__/`. 10 smoke tests cover the v1 priority feature surface. Wired into the `check` CI job; coverage workflow exists but is `workflow_dispatch`-only until the suite stabilizes. Pinning/resize/virtualization deferred to a Playwright pass (viewport-dependent behavior that happy-dom does not simulate).
 - **Component & file names unchanged from MRT** (`MRT_TableBody`, `MaterialReactTable`, etc.). Rationale: cheapest migration path for MRT users; easiest upstream-diff for ongoing parity. Rename in a future pass if desired.
 - **Ship pre-compiled CSS** (`dist/style.css`) so consumers don't need a Tailwind setup. Consumers `import 'shadstack-table/style.css'` once.
 - **Radix primitives stay external** (peer or runtime deps), but our wrappers live in `src/_ui/` and are bundled. This keeps the public API a single `shadstack-table` import.

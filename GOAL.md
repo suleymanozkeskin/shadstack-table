@@ -33,10 +33,11 @@ Build a shadcn-native React data table that delivers the same feature surface as
 These are not optional. They are gating items for shipping any v1.x and beyond. Add to CI as gates as each lands.
 
 1. **Comprehensive test suite.** Upstream MRT has zero unit/integration tests — only 54 Storybook stories as de-facto specs. We need our own. Targets:
-   - Vitest + `@testing-library/react` for unit + integration coverage of every feature in the v1 priority list (sort, filter, paginate, select, expand, column visibility/pinning/density/resize, virtualization, editing).
-   - Playwright (or equivalent) for cross-browser smoke + keyboard accessibility.
-   - Each MRT Storybook story → at least one equivalent test asserting the same observable behavior; the stories are our behavioral oracle until tests exist.
-   - Visual regression (Chromatic / Playwright snapshots) for the rendered table at a small set of canonical states.
+   - [x] Vitest + `@testing-library/react` scaffolded with happy-dom; smoke tests cover sort, paginate, row-select, column-filter, global-filter, column-visibility, density, editing (modal), expanding. Wired into the `check` CI job.
+   - [ ] Unit + integration coverage of the remaining v1 features (column pinning, column resize, virtualization).
+   - [ ] Playwright (or equivalent) for cross-browser smoke + keyboard accessibility. Pinning/resize and other viewport-dependent behavior that happy-dom can't simulate go here.
+   - [ ] Each MRT Storybook story → at least one equivalent test asserting the same observable behavior; the stories are our behavioral oracle until tests exist.
+   - [ ] Visual regression (Chromatic / Playwright snapshots) for the rendered table at a small set of canonical states.
 
 2. **react-doctor in CI.** Run the [react-doctor](https://www.npmjs.com/package/react-doctor) skill / equivalent linting on every PR. Catches common React 19 anti-patterns (stale closures, derived state, key misuse, missed memoization in virtualized lists).
 
@@ -58,3 +59,4 @@ Branch protection rulesets aren't a free feature on private repos. The hardening
 - 2026-05-16 — v1 scoped to shadcn only; Kumo and MUI adapters deferred.
 - 2026-05-16 — rejected runtime `uiLibChoice` config (bundle size); adapter boundary stays as an internal contract.
 - 2026-05-16 — comprehensive test suite + react-doctor + enforced oxlint/oxfmt added as post-v1 gating items (no MRT tests to inherit; quality bar is ours to set).
+- 2026-05-16 — Vitest + RTL + happy-dom scaffolded with 10 smoke tests covering the v1 priority surface (sort/paginate/select/filter/global-filter/column-visibility/density/edit/expand). Coverage workflow wired but kept on `workflow_dispatch` until the suite stabilizes.

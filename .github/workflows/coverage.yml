@@ -1,15 +1,12 @@
-# Placeholder coverage workflow.
-# Manual dispatch only until a test suite exists. When tests land:
-#   1. Replace the placeholder step with `bun test --coverage`
-#      (or `vitest run --coverage` if vitest is added).
-#   2. Re-enable the nightly cron schedule below.
-#   3. Wire the badge commit job if a coverage badge is desired
-#      (see task-lib/.github/workflows/coverage.yml for a template).
+# Coverage workflow.
+# Manual-dispatch only for now — coverage runs are slower than the standard
+# CI gate. When the suite stabilizes, re-enable the nightly cron schedule
+# and (optionally) wire a coverage-badge commit job.
 
 name: Coverage
 
 on:
-  # TODO: re-enable once tests exist
+  # TODO: re-enable once the suite stabilizes and we want a nightly trend.
   # schedule:
   #   - cron: '0 2 * * *'
   workflow_dispatch:
@@ -36,5 +33,4 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run coverage
-        run: |
-          echo "TODO: replace with 'bun test --coverage' once unit tests exist"
+        run: bun run test:coverage
