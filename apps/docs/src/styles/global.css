@@ -101,18 +101,33 @@
 }
 
 /*
- * On wider screens the splash prose column (capped at --sl-content-width,
- * ~50rem) is way narrower than the table needs. Break the playground out of
- * the column so it can use most of the viewport — capped at 1400px so it
- * still has page-edge breathing room on ultra-wide displays. Prose above
- * stays at its readable width, only the demo widens.
+ * Inside the docs host, the playground's own `max-w-7xl` cap on its header
+ * card and example section keeps the inner content at 80rem even when the
+ * host (and the page column above it) are wider. Override it here — the
+ * host already controls overall width, so the inner sections should fill
+ * the available space. Class + tag combo (0,1,1) outranks Tailwind's
+ * `max-w-7xl` (0,1,0) without resorting to !important.
+ */
+.sst-playground-host > header,
+.sst-playground-host > section,
+.sst-playground-host > * > header,
+.sst-playground-host > * > section {
+  max-width: none;
+}
+
+/*
+ * On wider viewports widen the whole splash content column so the hero,
+ * prose, and Live demo all share the same column width. The default
+ * Starlight content width caps at ~50rem which clipped the demo's table
+ * columns; the previous fix widened only the playground via a breakout,
+ * which made the demo visibly broader than the prose above it. Widening
+ * `--sl-content-width` instead keeps all three sections coherent.
+ *
+ * Scoped to pages with a playground host (i.e. the landing) so the API
+ * pages keep a narrower, more readable column.
  */
 @media (min-width: 64rem) {
-  .sst-playground-host {
-    position: relative;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(calc(100vw - 3rem), 1400px);
-    max-width: none;
+  main:has(.sst-playground-host) {
+    --sl-content-width: 75vw;
   }
 }
