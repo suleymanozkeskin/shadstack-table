@@ -20,11 +20,7 @@ export const MRT_FilterRangeFields = <TData extends MRT_RowData>({
     <div {...rest} className={cn('flex items-center gap-2 w-full', className)}>
       {[0, 1].map((rangeFilterIndex) => (
         <div key={rangeFilterIndex} className="flex-1 min-w-0">
-          <MRT_FilterTextField
-            header={header}
-            rangeFilterIndex={rangeFilterIndex}
-            table={table}
-          />
+          <MRT_FilterTextField header={header} rangeFilterIndex={rangeFilterIndex} table={table} />
         </div>
       ))}
     </div>
