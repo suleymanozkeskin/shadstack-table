@@ -45,6 +45,14 @@ These are not optional. They are gating items for shipping any v1.x and beyond. 
    - CI workflow: `bun run lint && bun run format:check && bun run typecheck && bun run build` blocks merge.
    - Zero warnings, zero errors policy on PR merge.
 
+## When the repo goes public
+
+Branch protection rulesets aren't a free feature on private repos. The hardening PR (#10) exported them to `.github/rulesets/*.json` but they don't auto-apply. When the repo is flipped to public:
+
+1. Settings → Rules → Rulesets → Import → upload each JSON in `.github/rulesets/`. At minimum: require PR + 1 review + CI green on `main`, block force-pushes, block deletion.
+2. Settings → Actions → General → Workflow permissions: confirm "Read repository contents permission" (matches the per-job `permissions:` blocks in our workflows).
+3. Trusted Publishing for npm: set up the OIDC trust relationship on npmjs.com, then flip `release.yml`'s `if: false` gate to `if: github.event.inputs.publish == 'true'`.
+
 ## Decision log
 
 - 2026-05-16 — v1 scoped to shadcn only; Kumo and MUI adapters deferred.
