@@ -1,152 +1,101 @@
 @import 'tailwindcss';
 
-/* Source the docs app AND the library so any class either uses gets compiled. */
 @source '../**/*.{ts,tsx,astro,md,mdx}';
 @source '../../../../packages/shadstack-table/src/**/*.{ts,tsx}';
 @source '../../../../apps/playground/src/**/*.{ts,tsx}';
 
 /*
- * The library uses `.dark`, Starlight uses `[data-theme='dark']`. In docs we
- * treat them as the same scope so the same token block lights up either way
- * — Starlight's chrome toggle and the playground's Mode chip both end up
- * driving the same set of library tokens below.
+ * `.dark` is what the library expects; `[data-theme='dark']` is what Starlight
+ * toggles. Treat them as the same scope so dark-variant utility classes from
+ * the library light up whichever way the page got into dark mode.
  */
 @custom-variant dark (&:is(.dark *, [data-theme='dark'] *));
 
-/*
- * Library tokens — wrapped in :where() (0,0,0 specificity) so the playground's
- * inline `<html style="--background: …">` declarations and any host theme can
- * still win. Mirrors packages/shadstack-table/src/_ui/styles.css verbatim,
- * with the dark scope expanded to cover Starlight's `[data-theme='dark']`
- * attribute as well as the library's own `.dark` class.
- */
-:where(:root) {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-}
-
-:where(.dark, [data-theme='dark']) {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.371 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-}
-
-@theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-}
-
-/*
- * Tie Starlight's chrome tokens to the library tokens. The playground's
- * Mode/Theme chips already write `--background`, `--card`, `--foreground`,
- * etc. inline on `<html>` (specificity 1,0,0,0), so by aliasing the
- * `--sl-color-*` vars to them, the entire docs surface — sidebar, top nav,
- * page background — re-themes in lockstep with the embedded playground.
+/* ============================================================================
+ * Starlight chrome — written directly, fully independent from library tokens
+ * ============================================================================
  *
- * The cascade survives Starlight's own dark/light toggle too: Starlight
- * flips `data-theme` on `<html>`, which (above) flips the library tokens,
- * which flow through to `--sl-color-*` here.
+ * The horsies pattern: don't alias `--sl-color-*` back to `--background` /
+ * `--card` / etc. — that's what made Starlight's Light/Dark toggle fight the
+ * playground's inline overrides earlier and lose. Instead, write concrete
+ * colour values to Starlight's own variables per `[data-theme='…']`, picked
+ * to harmonise with the Northern Lights preset (the library's docs default).
  *
- * Defined as a normal `:root` rule (not `:where()`) so it overrides
- * Starlight's own `--sl-color-*: var(--sl-color-gray-…)` defaults — which
- * are written without `:where()` and therefore carry specificity 0,0,1.
+ * The library's own tokens (`--background`, `--card`, …) keep their shadcn-
+ * neutral defaults from `packages/shadstack-table/src/_ui/styles.css` — we do
+ * NOT redeclare them here, so the library remains the single source of truth
+ * for its own tokens, and the playground's inline writes remain authoritative
+ * within the embedded demo area.
  */
-:root {
-  --sl-color-bg: var(--background);
-  --sl-color-bg-nav: var(--card);
-  --sl-color-bg-sidebar: var(--card);
-  --sl-color-bg-inline-code: var(--muted);
-  --sl-color-text: var(--foreground);
-  --sl-color-text-accent: var(--primary);
-  --sl-color-hairline: var(--border);
-  --sl-color-hairline-light: var(--border);
-  --sl-color-hairline-shade: var(--border);
+:root,
+[data-theme='light'] {
+  --sl-color-white: oklch(0.3211 0 0);
+  --sl-color-gray-1: oklch(0.3211 0 0);
+  --sl-color-gray-2: oklch(0.5382 0 0);
+  --sl-color-gray-3: oklch(0.5382 0 0);
+  --sl-color-gray-4: oklch(0.7155 0 0);
+  --sl-color-gray-5: oklch(0.8699 0 0);
+  --sl-color-gray-6: oklch(1 0 0);
+  --sl-color-gray-7: oklch(0.9824 0.0013 286.3757);
+  --sl-color-black: oklch(0.9824 0.0013 286.3757);
+
+  --sl-color-bg: oklch(0.9824 0.0013 286.3757);
+  --sl-color-bg-nav: oklch(1 0 0);
+  --sl-color-bg-sidebar: oklch(1 0 0);
+  --sl-color-bg-inline-code: oklch(0.927 0.0058 264.5313);
+  --sl-color-text: oklch(0.3211 0 0);
+  --sl-color-text-accent: oklch(0.6487 0.1538 150.3071);
+  --sl-color-text-invert: oklch(1 0 0);
+  --sl-color-hairline: oklch(0.8699 0 0);
+  --sl-color-hairline-light: oklch(0.8699 0 0);
+  --sl-color-hairline-shade: oklch(0.8699 0 0);
+  --sl-color-accent-low: oklch(0.927 0.0058 264.5313);
+  --sl-color-accent: oklch(0.6487 0.1538 150.3071);
+  --sl-color-accent-high: oklch(0.4787 0.1116 150.3071);
 }
 
-/*
- * Full-bleed Playground host. The /example/ page sets `tableOfContents: false`
- * and wraps the Playground in `.not-content .sst-playground-host`. We then
- * blow up Starlight's content width and zero out the main column padding for
- * pages that contain this host, so the playground fills the entire region
- * next to the left sidebar — same look as localhost:5173.
+[data-theme='dark'] {
+  --sl-color-white: oklch(0.9219 0 0);
+  --sl-color-gray-1: oklch(0.9219 0 0);
+  --sl-color-gray-2: oklch(0.7155 0 0);
+  --sl-color-gray-3: oklch(0.5382 0 0);
+  --sl-color-gray-4: oklch(0.3867 0 0);
+  --sl-color-gray-5: oklch(0.321 0.0078 223.6661);
+  --sl-color-gray-6: oklch(0.2303 0.0125 264.2926);
+  --sl-color-gray-7: oklch(0.1903 0.0125 264.2926);
+  --sl-color-black: oklch(0.1903 0.0125 264.2926);
+
+  --sl-color-bg: oklch(0.2303 0.0125 264.2926);
+  --sl-color-bg-nav: oklch(0.321 0.0078 223.6661);
+  --sl-color-bg-sidebar: oklch(0.321 0.0078 223.6661);
+  --sl-color-bg-inline-code: oklch(0.3867 0 0);
+  --sl-color-text: oklch(0.9219 0 0);
+  --sl-color-text-accent: oklch(0.6487 0.1538 150.3071);
+  --sl-color-text-invert: oklch(0.2303 0.0125 264.2926);
+  --sl-color-hairline: oklch(1 0 0 / 10%);
+  --sl-color-hairline-light: oklch(1 0 0 / 10%);
+  --sl-color-hairline-shade: oklch(1 0 0 / 10%);
+  --sl-color-accent-low: oklch(0.321 0.0078 223.6661);
+  --sl-color-accent: oklch(0.6487 0.1538 150.3071);
+  --sl-color-accent-high: oklch(0.7487 0.1538 150.3071);
+}
+
+/* ============================================================================
+ * Embedded playground (`/`)
+ * ============================================================================
+ *
+ * The landing wraps `<Playground/>` in `.not-content .sst-playground-host`.
+ * We give it a contained look (background, padding, rounded border) so the
+ * surrounding hero + prose keep their normal Starlight margins. Background
+ * is sourced from the library tokens so the empty band around the playground's
+ * own `max-w-7xl` card stays in lockstep with whatever theme the chip selector
+ * (or Starlight's dark toggle, via the host MutationObserver) is driving.
  */
 .sst-playground-host {
-  /* Paint a background that matches the playground’s own surface so the area
-   * outside the inner max-w-7xl card still reads as one continuous canvas. */
   background: var(--background);
   color: var(--foreground);
   padding: 1.5rem;
-  margin: 0;
-}
-
-main:has(> .sl-container > .sst-playground-host),
-main:has(.sst-playground-host) {
-  /* Starlight caps main content at --sl-content-width (~50rem). Inflate it
-   * just for this page so the playground can use the entire main column. */
-  --sl-content-width: 100%;
-  --sl-content-pad-x: 0;
-}
-
-/* A lighter touch for embedded demos inside ordinary doc pages
- * (e.g. the BasicExample on /getting-started/). Keeps them inside the
- * prose column but gives the table room to breathe. */
-.sst-doc-example {
-  margin: 1.25rem 0;
-  padding: 0.75rem;
+  margin: 1.5rem 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: var(--background);
-  color: var(--foreground);
 }

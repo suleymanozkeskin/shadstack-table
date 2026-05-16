@@ -25,9 +25,8 @@ export default defineConfig({
         // accepts an array of social entries; empty array hides the icon row.
       ],
       sidebar: [
-        { label: 'Overview', slug: 'index' },
+        { label: 'Live demo', slug: 'index' },
         { label: 'Getting started', slug: 'getting-started' },
-        { label: 'Live demo', slug: 'example' },
       ],
     }),
   ],

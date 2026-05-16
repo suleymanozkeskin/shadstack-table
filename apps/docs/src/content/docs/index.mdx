@@ -11,8 +11,10 @@ hero:
       icon: right-arrow
       variant: primary
     - text: Live demo
-      link: /example/
+      link: '#live-demo'
 ---
+
+import { Playground } from '@playground/Playground';
 
 ## Why this exists
 
@@ -25,3 +27,9 @@ hero:
 - Full data-table feature surface: filtering, sorting, grouping, row selection,
   pinning, editing, virtualization, detail panels
 - Zero MUI in your bundle
+
+## Live demo
+
+<div class="not-content sst-playground-host">
+  <Playground client:only="react" modeSource="host" />
+</div>
