@@ -1,6 +1,6 @@
 // oxlint-disable eslint/no-underscore-dangle -- verbatim port of upstream MRT
 import * as React from 'react';
-import { type ChangeEvent, type FocusEvent, type KeyboardEvent, useState } from 'react';
+import { type ChangeEvent, type FocusEvent, type KeyboardEvent, useRef, useState } from 'react';
 import { Input } from '../../_ui/input';
 import { Label } from '../../_ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../_ui/select';
@@ -38,7 +38,7 @@ export const MRT_EditCellTextField = <TData extends MRT_RowData>({
   const isEditing = editingRow?.id === row.id;
 
   const [value, setValue] = useState(() => cell.getValue<string>());
-  const [completesComposition, setCompletesComposition] = useState(true);
+  const completesCompositionRef = useRef(true);
 
   const inputProps = {
     ...parseFromValuesOrFunc(slotProps?.editInput, {
@@ -91,7 +91,7 @@ export const MRT_EditCellTextField = <TData extends MRT_RowData>({
 
   const handleEnterKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     inputProps.onKeyDown?.(event);
-    if (event.key === 'Enter' && !event.shiftKey && completesComposition) {
+    if (event.key === 'Enter' && !event.shiftKey && completesCompositionRef.current) {
       editInputRefs.current?.[column.id]?.blur();
     }
   };
@@ -163,8 +163,12 @@ export const MRT_EditCellTextField = <TData extends MRT_RowData>({
           inputProps?.onClick?.(e);
         }}
         onKeyDown={handleEnterKeyDown}
-        onCompositionStart={() => setCompletesComposition(false)}
-        onCompositionEnd={() => setCompletesComposition(true)}
+        onCompositionStart={() => {
+          completesCompositionRef.current = false;
+        }}
+        onCompositionEnd={() => {
+          completesCompositionRef.current = true;
+        }}
         className={cn(className, inputProps?.className)}
       />
     </div>
