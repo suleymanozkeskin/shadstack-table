@@ -76,7 +76,7 @@ export const MRT_SelectCheckbox = <TData extends MRT_RowData>({
     }
   };
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const forwardCheckboxClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     checkboxProps?.onClick?.(e);
   };
@@ -99,7 +99,7 @@ export const MRT_SelectCheckbox = <TData extends MRT_RowData>({
                 aria-label={ariaLabel}
                 disabled={disabled}
                 value="on"
-                onClick={handleClick}
+                onClick={forwardCheckboxClick}
                 className={cn(className, checkboxProps?.className)}
               />
             </RadioGroup>
@@ -122,7 +122,7 @@ export const MRT_SelectCheckbox = <TData extends MRT_RowData>({
                   stopPropagation: () => {},
                 })
               }
-              onClick={handleClick}
+              onClick={forwardCheckboxClick}
               {...checkboxProps}
               className={cn(className, checkboxProps?.className)}
             />

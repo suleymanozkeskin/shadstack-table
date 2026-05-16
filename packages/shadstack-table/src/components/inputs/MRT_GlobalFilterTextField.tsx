@@ -64,7 +64,7 @@ export const MRT_GlobalFilterTextField = <TData extends MRT_RowData>({
     [],
   );
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const applyGlobalFilterValue = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchValue(event.target.value);
     handleChangeDebounced(event.target.value);
   };
@@ -118,7 +118,7 @@ export const MRT_GlobalFilterTextField = <TData extends MRT_RowData>({
           )}
           <Input
             autoComplete="off"
-            onChange={handleChange}
+            onChange={applyGlobalFilterValue}
             placeholder={localization.search}
             value={searchValue ?? ''}
             {...inputProps}
