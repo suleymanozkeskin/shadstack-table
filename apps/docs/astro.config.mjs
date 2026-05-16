@@ -27,6 +27,22 @@ export default defineConfig({
       sidebar: [
         { label: 'Live demo', slug: 'index' },
         { label: 'Getting started', slug: 'getting-started' },
+        {
+          label: 'API reference',
+          items: [
+            { label: 'Table options', slug: 'api/props' },
+            { label: 'Column options', slug: 'api/column-options' },
+          ],
+        },
+        {
+          label: 'Guides',
+          items: [
+            { label: 'Data columns', slug: 'guides/data-columns' },
+            { label: 'Display columns', slug: 'guides/display-columns' },
+            { label: 'Localization', slug: 'guides/localization' },
+            { label: 'Memoize components', slug: 'guides/memoize-components' },
+          ],
+        },
       ],
     }),
   ],
