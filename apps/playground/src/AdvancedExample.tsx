@@ -123,6 +123,11 @@ export function AdvancedExample() {
   const table = useShadStackTable({
     columns,
     data: employees,
+    // Grid layout makes each cell a flex item (`flex: <size> 0 auto`), so
+    // columns grow proportionally to fill the container instead of summing
+    // to a fixed pixel width and leaving slack on wider hosts. See
+    // packages/shadstack-table/src/utils/style.utils.ts:111.
+    layoutMode: 'grid',
     enableColumnFilterModes: true,
     // TODO(post-v1): column drag-reorder is deferred per GOAL.md non-goals.
     // Flag wired here so the toolbar button renders, but the drag handle is a no-op.
