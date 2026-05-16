@@ -1,16 +1,25 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
-
-@source '../**/*.{ts,tsx}';
-
-@custom-variant dark (&:is(.dark *));
-
 /*
- * Token defaults are wrapped in `:where()` so they carry 0,0,0 specificity.
- * Any host stylesheet declaring tokens at `:root { ... }` or `.dark { ... }`
- * wins automatically regardless of bundle order — host themes (tweakcn
- * presets, custom design systems) stay authoritative. Consumers who ship no
- * tokens still get a usable shadcn baseline.
+ * shadstack-table — library-specific CSS.
+ *
+ * This file ships verbatim as `dist/style.css`. It deliberately does NOT
+ * contain Tailwind preflight, theme, or utilities — consumers run their own
+ * Tailwind build and tell it to scan the shadstack-table source via
+ * `@source`. Shipping a full Tailwind build here would collide with the
+ * consumer's cascade and silently override their utilities (see 0.1.x where
+ * `hidden md:block` was permanently hidden because the library's `.hidden`
+ * won the cascade).
+ *
+ * What this file DOES contain:
+ *   - shadcn token defaults (`:where(:root)` / `:where(.dark)`) at 0,0,0
+ *     specificity so any host theme tokens win automatically.
+ *   - Library-specific component CSS — scrollbar, keyboard-focus ring, and
+ *     pinned-cell ::before overlay — keyed off the `data-slot` /
+ *     `data-pinned` / `data-pin-shadow` attributes the React components emit.
+ *
+ * Consumer setup (Tailwind v4):
+ *   @import 'tailwindcss';
+ *   @import 'tw-animate-css';
+ *   @source '../node_modules/shadstack-table/dist';
  */
 
 :where(:root) {
@@ -66,42 +75,6 @@
   --chart-5: oklch(0.645 0.246 16.439);
 }
 
-@theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-}
-
 [data-slot='sst-table-container']::-webkit-scrollbar,
 [data-slot='sst-edit-modal-body']::-webkit-scrollbar {
   height: 10px;
@@ -135,32 +108,4 @@
 :where([data-slot='sst-table-container']) :where(th, td):focus-visible {
   outline: 2px solid var(--sst-cell-outline-color, var(--ring));
   outline-offset: -2px;
-}
-
-/*
- * Pinned-cell overlay. Originally returned as a nested sx-style object from
- * `getCommonPinnedCellStyles` and silently dropped by React (see 0.1.2). Now
- * expressed as a real stylesheet rule so the overlay actually paints.
- *
- * Pinned cells are `position: sticky`, which creates a positioning context for
- * the absolute `::before`. `z-index: -1` keeps the overlay behind the cell's
- * own painted content but above the table body it sticks over (TanStack sets
- * sticky cells to `z-index: 1` via `pinnedStyles` in `getCommonMRTCellStyles`).
- */
-:where([data-slot='sst-table-container']) :where(th, td)[data-pinned]::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background-color: var(
-    --sst-pinned-cell-overlay-bg,
-    color-mix(in oklch, var(--background) 95%, var(--foreground))
-  );
-  pointer-events: none;
-}
-:where([data-slot='sst-table-container']) :where(th, td)[data-pin-shadow='left']::before {
-  box-shadow: -4px 0 4px -4px color-mix(in oklch, var(--foreground) 50%, transparent) inset;
-}
-:where([data-slot='sst-table-container']) :where(th, td)[data-pin-shadow='right']::before {
-  box-shadow: 4px 0 4px -4px color-mix(in oklch, var(--foreground) 50%, transparent) inset;
 }

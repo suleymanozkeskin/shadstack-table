@@ -10,12 +10,76 @@ bun add shadstack-table
 # or: npm install shadstack-table
 ```
 
-Peer dependencies: `react >= 18` and `react-dom >= 18`.
+Peer dependencies: `react >= 18`, `react-dom >= 18`, `tailwindcss` v4, and `tw-animate-css`.
+
+## Wire Tailwind to scan the library
+
+As of 0.1.4, `shadstack-table` no longer bundles a full Tailwind utility build
+into its stylesheet (that collided with the consumer cascade — see the
+[changelog](https://github.com/suleymanozkeskin/shadstack-table/blob/main/CHANGELOG.md)).
+Your own Tailwind build generates the utilities the library needs by scanning
+its source via `@source`. In your app's globals.css:
+
+```css
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* path relative to globals.css */
+@source '../node_modules/shadstack-table/dist';
+
+@custom-variant dark (&:is(.dark *));
+
+/* Map library tokens onto Tailwind v4's named-color theme. */
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+}
+
+/* shadcn baseline — already in your globals.css if you ran `shadcn init`. */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+}
+```
+
+If you ran `shadcn init`, the `@theme inline` + `@layer base` blocks are
+already there. The token *values* (`--background`, `--foreground`, etc.) come
+from `shadstack-table/style.css`, so anything you don't override falls
+through to the library's defaults. Without the `@theme inline` mapping, Tailwind
+utilities like `bg-background` and `border-border` are unknown to the
+compiler and the table renders unstyled.
 
 ## Import the stylesheet
 
-`shadstack-table` ships a single stylesheet of Tailwind v4 utilities and CSS-variable
-defaults. Import it once at the entry point of your app:
+The library ships a small (~5 KB) stylesheet with shadcn token defaults,
+table-scoped scrollbar styles, the keyboard-focus ring, and the pinned-cell
+overlay. Import it once at the entry point of your app:
 
 ```ts
 import 'shadstack-table/style.css';

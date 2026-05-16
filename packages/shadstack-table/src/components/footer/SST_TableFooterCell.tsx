@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { cn } from '../../lib/utils';
 import { type SST_Header, type SST_RowData, type SST_TableInstance } from '../../types';
-import { getCellPinShadow, getCommonMRTCellStyles } from '../../utils/style.utils';
+import { getCommonMRTCellStyles } from '../../utils/style.utils';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 import { cellKeyboardShortcuts } from '../../utils/cell.utils';
 
@@ -58,7 +58,6 @@ export const SST_TableFooterCell = <TData extends SST_RowData>({
       colSpan={footer.colSpan}
       data-index={staticColumnIndex}
       data-pinned={!!isColumnPinned || undefined}
-      data-pin-shadow={getCellPinShadow(column, isColumnPinned)}
       tabIndex={enableKeyboardShortcuts ? 0 : undefined}
       {...tableCellProps}
       onKeyDown={handleKeyDown}

@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 
 @source '../**/*.{ts,tsx,astro,md,mdx}';
 @source '../../../../packages/shadstack-table/src/**/*.{ts,tsx}';
@@ -10,6 +11,56 @@
  * the library light up whichever way the page got into dark mode.
  */
 @custom-variant dark (&:is(.dark *, [data-theme='dark'] *));
+
+/*
+ * Map the library's CSS-variable tokens (defined in shadstack-table's
+ * _ui/styles.css) onto Tailwind v4's named-color theme so utilities like
+ * `bg-background`, `text-foreground`, `border-border` resolve. Mirrors the
+ * block in apps/playground/src/globals.css.
+ */
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+}
+
+/*
+ * shadcn baseline (mirrors the one in apps/playground/src/globals.css):
+ * every element borrows `--border` / `--ring` so Tailwind's `border` and
+ * focus-ring utilities paint with the theme tokens instead of falling back
+ * to `currentColor`. Without this, the playground's table dividers and
+ * input outlines paint in the body text color and the embedded demo looks
+ * bare. Consumers add this same block to their own globals.css.
+ */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+}
 
 /* ============================================================================
  * Starlight chrome — written directly, fully independent from library tokens

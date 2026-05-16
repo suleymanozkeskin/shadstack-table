@@ -1,13 +1,17 @@
 import { resolve } from 'node:path';
-import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 
+// `_ui/styles.css` is hand-authored library CSS only — no `@import "tailwindcss"`
+// and no `@source` scanning, so the Tailwind Vite plugin is intentionally NOT
+// loaded here. Including it would re-bundle the full Tailwind preflight, theme,
+// and utilities into `dist/style.css` and collide with the consumer's own
+// Tailwind cascade (see 0.2.0 changelog). Consumers' Tailwind builds generate
+// utilities for shadstack-table by adding `@source` to their own globals.
 export default defineConfig({
   plugins: [
     react(),
-    tailwindcss(),
     dts({
       include: ['src'],
       rollupTypes: true,

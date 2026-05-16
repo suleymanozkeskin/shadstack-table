@@ -28,7 +28,7 @@ export const SST_TableContainer = <TData extends SST_RowData>({
       editDisplayMode,
       enableCellActions,
       enableStickyHeader,
-      mrtTheme: { baseBackgroundColor, cellNavigationOutlineColor },
+      mrtTheme: { cellNavigationOutlineColor },
       slotProps,
     },
     refs: { bottomToolbarRef, tableContainerRef, topToolbarRef },
@@ -78,12 +78,6 @@ export const SST_TableContainer = <TData extends SST_RowData>({
         // _ui/styles.css. Cells used to set this via a nested selector inside
         // inline style, which React warns about and silently drops.
         ['--sst-cell-outline-color' as string]: cellNavigationOutlineColor,
-        // Background of the pinned-cell `::before` overlay. Consumed by the
-        // `[data-pinned]::before` rule in _ui/styles.css. Derived from
-        // `mrtTheme.baseBackgroundColor` so consumers who override the theme
-        // base keep a coherent overlay tint.
-        ['--sst-pinned-cell-overlay-bg' as string]:
-          `color-mix(in oklch, ${baseBackgroundColor} 95%, var(--foreground))`,
         maxHeight: isFullScreen
           ? `calc(100vh - ${totalToolbarHeight}px)`
           : enableStickyHeader

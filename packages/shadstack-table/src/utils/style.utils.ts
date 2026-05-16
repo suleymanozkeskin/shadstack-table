@@ -24,27 +24,6 @@ type CommonTableCellProps = {
 
 export const parseCSSVarId = (id: string) => id.replace(/[^a-zA-Z0-9]/g, '_');
 
-/**
- * Returns the side of the pinned-cell overlay shadow for this column, or
- * `undefined` if the cell isn't on the boundary between pinned and unpinned
- * content. Consumed by the `[data-pin-shadow]::before` rules in
- * `_ui/styles.css`. Cells should spread the return value into the
- * `data-pin-shadow` attribute on the th/td.
- *
- * - `'left'`  → cell is the last column in the left-pinned group → inset
- *               shadow on its right edge
- * - `'right'` → cell is the first column in the right-pinned group → inset
- *               shadow on its left edge
- */
-export const getCellPinShadow = <TData extends SST_RowData>(
-  column: SST_Column<TData>,
-  isPinned: false | 'left' | 'right' | undefined,
-): 'left' | 'right' | undefined => {
-  if (isPinned === 'left' && column.getIsLastColumn('left')) return 'left';
-  if (isPinned === 'right' && column.getIsFirstColumn('right')) return 'right';
-  return undefined;
-};
-
 export const getMRTTheme = <TData extends SST_RowData>(
   mrtTheme: SST_TableOptions<TData>['mrtTheme'],
 ): SST_Theme => {
@@ -73,17 +52,18 @@ export const commonCellBeforeAfterStyles: CSSProperties = {
 };
 
 /**
- * @deprecated Returns an empty object as of 0.1.2; the overlay it used to
- * describe is now rendered by the `[data-pinned]::before` rule in
- * `_ui/styles.css` (restored in 0.1.3).
+ * @deprecated Returns an empty object. Pinned-cell visual differentiation is
+ * deliberately not rendered (see 0.1.4 — the 0.1.3 overlay restoration was
+ * reverted because it diverged from the v0.1.1 look consumers expected).
  *
  * The original implementation returned a nested `&[data-pinned="true"] &:before`
  * sx-style object that was spread into React's inline `style={…}`. React inline
  * styles support neither nested selectors nor pseudo-elements, so the result
  * was silently dropped and produced a console warning for every pinned cell.
  *
- * The export is preserved at empty for API compatibility with any consumer
- * that imported it. New code should not call this.
+ * The export is preserved at empty for API compatibility. Consumers who want
+ * pinned columns to be visually distinct can add a CSS rule keyed off the
+ * `[data-pinned]` attribute that the head/body/footer cells emit.
  */
 export const getCommonPinnedCellStyles = <TData extends SST_RowData>(_args: {
   column?: SST_Column<TData>;

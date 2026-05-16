@@ -17,7 +17,7 @@ import {
   type SST_RowData,
   type SST_TableInstance,
 } from '../../types';
-import { getCellPinShadow, getCommonMRTCellStyles } from '../../utils/style.utils';
+import { getCommonMRTCellStyles } from '../../utils/style.utils';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 import { cellKeyboardShortcuts } from '../../utils/cell.utils';
 
@@ -215,7 +215,6 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
       data-can-sort={column.getCanSort() || undefined}
       data-index={staticColumnIndex}
       data-pinned={!!isColumnPinned || undefined}
-      data-pin-shadow={getCellPinShadow(column, isColumnPinned)}
       data-sort={column.getIsSorted() || undefined}
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
