@@ -15,9 +15,11 @@ import { parseFromValuesOrFunc } from './utils';
 // by the `.dark` class flipping the CSS vars).
 
 type CommonTableCellProps = {
-  align?: 'inherit' | 'left' | 'center' | 'right' | 'justify';
+  align?: 'inherit' | 'left' | 'center' | 'right' | 'justify' | 'char';
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any -- slot passthrough may forward sx-style objects from consumers
   sx?: any;
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any -- generic React cell prop bag for slot passthrough
+  [key: string]: any;
 };
 
 export const parseCSSVarId = (id: string) => id.replace(/[^a-zA-Z0-9]/g, '_');
@@ -26,19 +28,15 @@ export const getMRTTheme = <TData extends MRT_RowData>(
   mrtTheme: MRT_TableOptions<TData>['mrtTheme'],
 ): MRT_Theme => {
   const mrtThemeOverrides = parseFromValuesOrFunc(mrtTheme, undefined);
-  const baseBackgroundColor =
-    mrtThemeOverrides?.baseBackgroundColor ?? 'var(--background)';
+  const baseBackgroundColor = mrtThemeOverrides?.baseBackgroundColor ?? 'var(--background)';
   return {
     baseBackgroundColor,
     cellNavigationOutlineColor: 'var(--ring)',
     draggingBorderColor: 'var(--primary)',
-    matchHighlightColor:
-      'color-mix(in oklch, var(--chart-4) 60%, var(--background))',
+    matchHighlightColor: 'color-mix(in oklch, var(--chart-4) 60%, var(--background))',
     menuBackgroundColor: 'var(--popover)',
-    pinnedRowBackgroundColor:
-      'color-mix(in oklch, var(--primary) 10%, transparent)',
-    selectedRowBackgroundColor:
-      'color-mix(in oklch, var(--primary) 20%, transparent)',
+    pinnedRowBackgroundColor: 'color-mix(in oklch, var(--primary) 10%, transparent)',
+    selectedRowBackgroundColor: 'color-mix(in oklch, var(--primary) 20%, transparent)',
     ...mrtThemeOverrides,
   };
 };
@@ -59,7 +57,7 @@ export const getCommonPinnedCellStyles = <TData extends MRT_RowData>({
 }: {
   column?: MRT_Column<TData>;
   table: MRT_TableInstance<TData>;
-}) => {
+}): Record<string, Record<string, unknown>> => {
   const { baseBackgroundColor } = table.options.mrtTheme;
   const isPinned = column?.getIsPinned();
 
@@ -99,8 +97,7 @@ export const getCommonMRTCellStyles = <TData extends MRT_RowData>({
   const { columnDef } = column;
   const { columnDefType } = columnDef;
 
-  const isColumnPinned =
-    columnDef.columnDefType !== 'group' && column.getIsPinned();
+  const isColumnPinned = columnDef.columnDefType !== 'group' && column.getIsPinned();
 
   const widthStyles: CSSProperties = {
     minWidth: `max(calc(var(--${header ? 'header' : 'col'}-${parseCSSVarId(
@@ -115,9 +112,7 @@ export const getCommonMRTCellStyles = <TData extends MRT_RowData>({
     widthStyles.flex = `${
       [0, false].includes(columnDef.grow!)
         ? 0
-        : `var(--${header ? 'header' : 'col'}-${parseCSSVarId(
-            header?.id ?? column.id,
-          )}-size)`
+        : `var(--${header ? 'header' : 'col'}-${parseCSSVarId(header?.id ?? column.id)}-size)`
     } 0 auto`;
   } else if (layoutMode === 'grid-no-grow') {
     widthStyles.flex = `${+(columnDef.grow || 0)} 0 auto`;
@@ -126,16 +121,10 @@ export const getCommonMRTCellStyles = <TData extends MRT_RowData>({
   const pinnedStyles = isColumnPinned
     ? {
         ...getCommonPinnedCellStyles({ column, table }),
-        left:
-          isColumnPinned === 'left'
-            ? `${column.getStart('left')}px`
-            : undefined,
+        left: isColumnPinned === 'left' ? `${column.getStart('left')}px` : undefined,
         opacity: 0.97,
         position: 'sticky',
-        right:
-          isColumnPinned === 'right'
-            ? `${column.getAfter('right')}px`
-            : undefined,
+        right: isColumnPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
       }
     : {};
 
@@ -155,9 +144,7 @@ export const getCommonMRTCellStyles = <TData extends MRT_RowData>({
         ? 0.5
         : 1,
     position: 'relative',
-    transition: enableColumnVirtualization
-      ? 'none'
-      : 'padding 150ms ease-in-out',
+    transition: enableColumnVirtualization ? 'none' : 'padding 150ms ease-in-out',
     zIndex:
       column.getIsResizing() || draggingColumn?.id === column.id
         ? 2
@@ -197,9 +184,7 @@ export const flipIconStyles = (direction?: 'ltr' | 'rtl') =>
 // shadcn Tooltip's surface differs from MUI's — we expose just the side
 // (placement) and a generous delay. Consumers pass these straight to
 // `<TooltipProvider delayDuration>` and `<TooltipContent side>`.
-export const getCommonTooltipProps = (
-  placement?: 'top' | 'right' | 'bottom' | 'left',
-) => ({
+export const getCommonTooltipProps = (placement?: 'top' | 'right' | 'bottom' | 'left') => ({
   side: placement,
   delayDuration: 1000,
 });
