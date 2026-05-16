@@ -13,6 +13,7 @@ import { type SST_Header, type SST_RowData, type SST_TableInstance } from '../..
 import { getColumnFilterInfo, useDropdownOptions } from '../../utils/column.utils';
 import { getValueAndLabel, parseFromValuesOrFunc } from '../../utils/utils';
 import { SST_FilterOptionMenu } from '../menus/SST_FilterOptionMenu';
+import { SST_DateFilter } from './SST_DateFilter';
 
 function debounce<F extends (...args: any[]) => void>(fn: F, ms: number) {
   let timer: ReturnType<typeof setTimeout> | null = null;
@@ -42,7 +43,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
   const {
     options: {
       enableColumnFilterModes,
-      icons: { CloseIcon, FilterListIcon },
+      icons: { CalendarIcon, CloseIcon, FilterListIcon },
       localization,
       manualFiltering,
       slotProps,
@@ -218,14 +219,15 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
     return <>{columnDef.Filter?.({ column, header, rangeFilterIndex, table })}</>;
   }
 
-  // Date/time pickers → fallback to native input types
+  // `date` and `date-range` use a shadcn Popover + Calendar (built below).
+  // `datetime`/`time` variants still fall back to native input types — shadcn
+  // has no canonical time picker, so the native input remains in v1.
+  const isCalendarFilter = filterVariant === 'date' || filterVariant === 'date-range';
   const dateInputType = filterVariant?.startsWith('datetime')
     ? 'datetime-local'
-    : filterVariant?.startsWith('date')
-      ? 'date'
-      : filterVariant?.startsWith('time')
-        ? 'time'
-        : null;
+    : filterVariant?.startsWith('time')
+      ? 'time'
+      : null;
 
   const helperText = showChangeModeButton ? (
     <p className="text-muted-foreground mt-2 text-xs leading-tight whitespace-nowrap">
@@ -240,8 +242,15 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
     </p>
   ) : null;
 
-  const showClearButton = !isAutocompleteFilter && !isDateFilter && !filterChipLabel;
-  const clearVisible = (filterValue?.length ?? 0) > 0;
+  // Native datetime/time inputs have their own clear affordance; calendar-based
+  // date filters do not, so we render our own clear button for them.
+  const isNativeDateFilter = isDateFilter && !isCalendarFilter;
+  const showClearButton = !isAutocompleteFilter && !isNativeDateFilter && !filterChipLabel;
+  const clearVisible = isCalendarFilter
+    ? !!filterValue
+    : (typeof filterValue === 'string' || Array.isArray(filterValue)
+        ? filterValue.length
+        : 0) > 0;
 
   const startAdornment = showChangeModeButton ? (
     <span className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-1">
@@ -323,7 +332,31 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
 
   const onSelectChange = (newValue: string) => handleChange(newValue);
 
-  const filterField = dateInputType ? (
+  const buttonRefFn = (el: HTMLButtonElement | null) => {
+    filterInputRefs.current![`${column.id}-${rangeFilterIndex ?? 0}`] = el as any;
+  };
+
+  const filterField = isCalendarFilter ? (
+    <div className={wrapperClass}>
+      {startAdornment}
+      <SST_DateFilter
+        ariaLabel={filterPlaceholder}
+        calendarIcon={<CalendarIcon className="size-3.5 opacity-60" />}
+        className={cn(
+          reserveModeButtonSpace && 'pl-9',
+          showClearButton && 'pr-9',
+          className,
+        )}
+        disabled={!!filterChipLabel}
+        inputRef={buttonRefFn}
+        onChange={handleChange}
+        placeholder={filterChipLabel ? undefined : filterPlaceholder}
+        title={filterPlaceholder}
+        value={filterValue as Date | string | undefined}
+      />
+      {endAdornment}
+    </div>
+  ) : dateInputType ? (
     <div className={wrapperClass}>
       {startAdornment}
       <Input

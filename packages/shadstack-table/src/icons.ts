@@ -3,6 +3,7 @@ import {
   ArrowLeftRight as SyncAltIcon,
   ArrowRight as ArrowRightIcon,
   ArrowUpDown as SortIcon,
+  Calendar as CalendarIcon,
   ChevronDown as ExpandMoreIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
@@ -38,6 +39,7 @@ import {
 export const SST_Default_Icons = {
   ArrowDownwardIcon,
   ArrowRightIcon,
+  CalendarIcon,
   CancelIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
