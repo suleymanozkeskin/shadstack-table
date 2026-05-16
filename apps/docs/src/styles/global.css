@@ -99,3 +99,20 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
 }
+
+/*
+ * On wider screens the splash prose column (capped at --sl-content-width,
+ * ~50rem) is way narrower than the table needs. Break the playground out of
+ * the column so it can use most of the viewport — capped at 1400px so it
+ * still has page-edge breathing room on ultra-wide displays. Prose above
+ * stays at its readable width, only the demo widens.
+ */
+@media (min-width: 64rem) {
+  .sst-playground-host {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(calc(100vw - 3rem), 1400px);
+    max-width: none;
+  }
+}
