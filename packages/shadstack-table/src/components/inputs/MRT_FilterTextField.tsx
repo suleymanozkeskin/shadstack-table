@@ -270,7 +270,7 @@ export const MRT_FilterTextField = <TData extends MRT_RowData>({
     <span
       className={cn(
         'pointer-events-none absolute inset-y-0 z-10 flex items-center',
-        (isSelectFilter || isMultiSelectFilter) ? 'right-6' : 'right-1',
+        isSelectFilter || isMultiSelectFilter ? 'right-6' : 'right-1',
         clearVisible ? 'visible' : 'invisible',
       )}
     >
