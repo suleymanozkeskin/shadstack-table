@@ -75,6 +75,7 @@ export * from './components/head/SST_TableHeadRow';
 export * from './components/inputs/SST_EditCellTextField';
 export * from './components/inputs/SST_FilterCheckbox';
 export * from './components/inputs/SST_FilterRangeFields';
+export * from './components/inputs/SST_FilterRangePopover';
 export * from './components/inputs/SST_FilterRangeSlider';
 export * from './components/inputs/SST_FilterTextField';
 export * from './components/inputs/SST_GlobalFilterTextField';
