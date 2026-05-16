@@ -17,12 +17,13 @@ const usd = (n: number) =>
     maximumFractionDigits: 0,
   });
 
-// Color band for salary chip — bucket boundaries chosen so the demo
-// data spreads across all three buckets visibly.
-const salaryColor = (n: number) => {
+// Salary tier — low/mid/high mapped to shadcn semantic tokens so the
+// chip reads cleanly in both light and dark mode without hardcoding
+// chart-* data-viz colors.
+const salaryTier = (n: number) => {
   if (n < 100_000) return 'bg-muted text-muted-foreground';
-  if (n < 180_000) return 'bg-chart-2/30 text-foreground';
-  return 'bg-chart-1/30 text-foreground';
+  if (n < 180_000) return 'bg-secondary text-secondary-foreground';
+  return 'bg-primary/10 text-foreground border border-primary/20';
 };
 
 export function AdvancedExample() {
@@ -76,7 +77,7 @@ export function AdvancedExample() {
               const v = cell.getValue<number>();
               return (
                 <span
-                  className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${salaryColor(v)}`}
+                  className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${salaryTier(v)}`}
                 >
                   {usd(v)}
                 </span>
@@ -212,7 +213,7 @@ export function AdvancedExample() {
               type="button"
               disabled={!hasSelection}
               onClick={onBulk('Deactivate')}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium shadow-xs transition-colors disabled:pointer-events-none disabled:opacity-50"
+              className="bg-destructive hover:bg-destructive/90 inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-white shadow-xs transition-colors disabled:pointer-events-none disabled:opacity-50"
             >
               <UserX className="size-4" />
               Deactivate
@@ -221,7 +222,7 @@ export function AdvancedExample() {
               type="button"
               disabled={!hasSelection}
               onClick={onBulk('Activate')}
-              className="bg-chart-2 text-foreground hover:bg-chart-2/90 inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium shadow-xs transition-colors disabled:pointer-events-none disabled:opacity-50"
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/80 inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm font-medium shadow-xs transition-colors disabled:pointer-events-none disabled:opacity-50"
             >
               <UserCheck className="size-4" />
               Activate
