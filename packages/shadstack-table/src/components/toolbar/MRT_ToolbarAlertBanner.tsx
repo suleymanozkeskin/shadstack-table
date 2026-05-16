@@ -84,7 +84,7 @@ export const MRT_ToolbarAlertBanner = <TData extends MRT_RowData>({
       <span>
         {localization.groupedBy}{' '}
         {grouping.map((columnId, index) => (
-          <Fragment key={`${index}-${columnId}`}>
+          <Fragment key={columnId}>
             {index > 0 ? localization.thenBy : ''}
             <Badge variant="secondary" className="gap-1 mx-1" {...chipProps}>
               {table.getColumn(columnId).columnDef.header}

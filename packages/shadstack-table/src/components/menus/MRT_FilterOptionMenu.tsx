@@ -268,11 +268,11 @@ export const MRT_FilterOptionMenu = <TData extends MRT_RowData>({
               onSelectFilterMode: handleSelectFilterMode,
               table,
             })) ??
-          internalFilterOptions.map(({ divider, label, option, symbol }, index) => (
+          internalFilterOptions.map(({ divider, label, option, symbol }) => (
             <MRT_ActionMenuItem
               divider={divider}
               icon={symbol}
-              key={index}
+              key={option}
               label={label}
               onClick={() => handleSelectFilterMode(option as MRT_FilterOption)}
               selected={option === filterOption}

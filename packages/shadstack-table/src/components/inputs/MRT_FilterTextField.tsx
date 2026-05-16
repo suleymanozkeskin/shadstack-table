@@ -366,10 +366,10 @@ export const MRT_FilterTextField = <TData extends MRT_RowData>({
           <SelectValue placeholder={filterPlaceholder} />
         </SelectTrigger>
         <SelectContent>
-          {dropdownOptions?.map((option, index) => {
+          {dropdownOptions?.map((option) => {
             const { label, value } = getValueAndLabel(option);
             return (
-              <SelectItem key={`${index}-${value}`} value={value}>
+              <SelectItem key={value} value={value}>
                 <span className="flex items-center gap-2">
                   {isMultiSelectFilter && (
                     <Checkbox

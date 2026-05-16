@@ -158,13 +158,13 @@ export const MRT_ShowHideColumnsMenu = <TData extends MRT_RowData>({
           )}
         </div>
         <Separator />
-        {allColumns.map((column, index) => (
+        {allColumns.map((column) => (
           <MRT_ShowHideColumnsMenuItems
             allColumns={allColumns}
             column={column}
             hoveredColumn={hoveredColumn}
             isNestedColumns={isNestedColumns}
-            key={`${index}-${column.id}`}
+            key={column.id}
             setHoveredColumn={setHoveredColumn}
             table={table}
           />
