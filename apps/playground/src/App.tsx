@@ -1,9 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef } from 'shadstack-table';
 import { type Person, people } from './data/people';
 
 export function App() {
   const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark);
+  }, [dark]);
 
   const columns = useMemo<MRT_ColumnDef<Person>[]>(
     () => [
@@ -52,7 +56,7 @@ export function App() {
   });
 
   return (
-    <div className={dark ? 'dark' : ''}>
+    <div className="overflow-x-hidden">
       <main className="bg-background text-foreground min-h-screen p-6">
         <header className="mx-auto mb-6 flex max-w-6xl items-center justify-between">
           <div>
@@ -68,7 +72,7 @@ export function App() {
           </button>
         </header>
 
-        <section className="mx-auto max-w-6xl">
+        <section className="mx-auto max-w-6xl min-w-0 overflow-hidden">
           <MaterialReactTable table={table} />
         </section>
       </main>

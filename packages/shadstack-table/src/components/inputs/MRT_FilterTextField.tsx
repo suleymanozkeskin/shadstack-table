@@ -8,7 +8,6 @@ import { Button } from '../../_ui/button';
 import { Checkbox } from '../../_ui/checkbox';
 import { Input } from '../../_ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../_ui/select';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
 import { cn } from '../../lib/utils';
 import { type MRT_Header, type MRT_RowData, type MRT_TableInstance } from '../../types';
 import { getColumnFilterInfo, useDropdownOptions } from '../../utils/column.utils';
@@ -237,82 +236,75 @@ export const MRT_FilterTextField = <TData extends MRT_RowData>({
     </p>
   ) : null;
 
+  const showClearButton = !isAutocompleteFilter && !isDateFilter && !filterChipLabel;
+  const clearVisible = (filterValue?.length ?? 0) > 0;
+
   const startAdornment = showChangeModeButton ? (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span className="absolute left-0 z-10 flex items-center pl-1">
-          <Button
-            aria-label={localization.changeFilterMode}
-            onClick={handleFilterMenuOpen}
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7"
+    <span className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-1">
+      <Button
+        aria-label={localization.changeFilterMode}
+        onClick={handleFilterMenuOpen}
+        size="icon"
+        variant="ghost"
+        title={localization.changeFilterMode}
+        className="pointer-events-auto h-7 w-7"
+      >
+        <FilterListIcon />
+      </Button>
+      {filterChipLabel ? (
+        <Badge variant="secondary" className="pointer-events-auto ml-1 gap-1 pr-1">
+          {filterChipLabel}
+          <button
+            type="button"
+            onClick={handleClearEmptyFilterChip}
+            className="ml-1 inline-flex items-center justify-center hover:opacity-80"
           >
-            <FilterListIcon />
-          </Button>
-          {filterChipLabel ? (
-            <Badge variant="secondary" className="ml-1 gap-1 pr-1">
-              {filterChipLabel}
-              <button
-                type="button"
-                onClick={handleClearEmptyFilterChip}
-                className="ml-1 inline-flex items-center justify-center hover:opacity-80"
-              >
-                <CloseIcon className="h-3 w-3" />
-              </button>
-            </Badge>
-          ) : null}
-        </span>
-      </TooltipTrigger>
-      <TooltipContent>{localization.changeFilterMode}</TooltipContent>
-    </Tooltip>
+            <CloseIcon className="h-3 w-3" />
+          </button>
+        </Badge>
+      ) : null}
+    </span>
   ) : null;
 
-  const endAdornment =
-    !isAutocompleteFilter && !isDateFilter && !filterChipLabel ? (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span
-            className={cn(
-              'absolute right-0 z-10 flex items-center pr-1',
-              (filterValue?.length ?? 0) > 0 ? 'visible' : 'invisible',
-              (isSelectFilter || isMultiSelectFilter) && 'mr-5',
-            )}
-          >
-            <Button
-              aria-label={localization.clearFilter}
-              disabled={!filterValue?.toString()?.length}
-              onClick={handleClear}
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 scale-90"
-            >
-              <CloseIcon />
-            </Button>
-          </span>
-        </TooltipTrigger>
-        <TooltipContent side="right">{localization.clearFilter ?? ''}</TooltipContent>
-      </Tooltip>
-    ) : null;
+  const endAdornment = showClearButton ? (
+    <span
+      className={cn(
+        'pointer-events-none absolute inset-y-0 z-10 flex items-center',
+        (isSelectFilter || isMultiSelectFilter) ? 'right-6' : 'right-1',
+        clearVisible ? 'visible' : 'invisible',
+      )}
+    >
+      <Button
+        aria-label={localization.clearFilter}
+        disabled={!filterValue?.toString()?.length}
+        onClick={handleClear}
+        size="icon"
+        variant="ghost"
+        title={localization.clearFilter}
+        className="pointer-events-auto h-7 w-7"
+      >
+        <CloseIcon className="size-3.5" />
+      </Button>
+    </span>
+  ) : null;
 
   const wrapperClass = cn(
-    'relative inline-flex items-center w-full',
+    'relative flex items-center w-full',
     isDateFilter
       ? 'min-w-[160px]'
       : enableColumnFilterModes && rangeFilterIndex === 0
         ? 'min-w-[110px]'
         : isRangeFilter
-          ? 'min-w-[100px]'
+          ? 'min-w-[90px]'
           : !filterChipLabel
             ? 'min-w-[120px]'
             : 'min-w-fit',
-    '-mx-0.5',
   );
 
   const inputClass = cn(
     'w-full',
     showChangeModeButton && 'pl-9',
-    endAdornment && 'pr-9',
+    showClearButton && (isSelectFilter || isMultiSelectFilter ? 'pr-14' : 'pr-9'),
     className,
     textFieldProps?.className,
   );

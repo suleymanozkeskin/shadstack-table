@@ -14,6 +14,7 @@ export const getMRT_RowActionsColumnDef = <TData extends MRT_RowData>(
         table={table}
       />
     ),
+    grow: false,
     ...defaultDisplayColumnProps({
       header: 'actions',
       id: 'mrt-row-actions',

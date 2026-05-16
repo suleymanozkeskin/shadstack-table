@@ -61,13 +61,13 @@ export const MRT_TableHeadCellColumnActionsButton = <TData extends MRT_RowData>(
             variant="ghost"
             {...iconButtonProps}
             className={cn(
-              'h-8 w-8 -my-2 -mx-1 opacity-30 transition-all duration-150 hover:opacity-100',
+              'h-6 w-6 opacity-50 transition-opacity duration-150 hover:opacity-100',
               className,
               iconButtonProps?.className,
             )}
             title={undefined}
           >
-            {iconButtonProps?.children ?? <MoreVertIcon style={{ transform: 'scale(0.9)' }} />}
+            {iconButtonProps?.children ?? <MoreVertIcon className="size-3.5" />}
           </Button>
         </TooltipTrigger>
         <TooltipContent side="top">

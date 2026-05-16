@@ -41,10 +41,9 @@ export const MRT_TableHead = <TData extends MRT_RowData>({
         if (typeof tableHeadProps?.ref === 'function') tableHeadProps.ref(ref!);
       }}
       className={cn(
-        'opacity-[0.97]',
+        'bg-card',
         isGrid && 'grid',
-        stickyHeader ? 'sticky z-10' : 'relative',
-        stickyHeader && isGrid && 'top-0',
+        stickyHeader ? 'sticky top-0 z-10' : 'relative',
         className,
         tableHeadProps?.className,
       )}

@@ -78,7 +78,11 @@ export const MRT_TableContainer = <TData extends MRT_RowData>({
             : undefined,
         ...tableContainerProps?.style,
       }}
-      className={cn('max-w-full overflow-auto relative', className, tableContainerProps?.className)}
+      className={cn(
+        'w-full max-w-full min-w-0 overflow-x-auto overflow-y-auto relative',
+        className,
+        tableContainerProps?.className,
+      )}
     >
       {loading ? <MRT_TableLoadingOverlay table={table} /> : null}
       <MRT_Table table={table} />

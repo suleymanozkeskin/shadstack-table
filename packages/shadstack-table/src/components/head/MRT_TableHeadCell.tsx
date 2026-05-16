@@ -234,14 +234,18 @@ export const MRT_TableHeadCell = <TData extends MRT_RowData>({
         ...draggingBorders,
         ...tableCellProps?.style,
       }}
-      className={cn('align-top font-bold overflow-visible', className, tableCellProps?.className)}
+      className={cn(
+        'border-b bg-card align-top font-medium text-foreground overflow-visible',
+        className,
+        tableCellProps?.className,
+      )}
     >
       {header.isPlaceholder
         ? null
         : (tableCellProps.children ?? (
             <div
               className={cn(
-                'Mui-TableHeadCell-Content relative w-full flex items-center',
+                'Mui-TableHeadCell-Content relative w-full flex items-center gap-2',
                 tableCellProps?.style?.textAlign === 'right' ? 'flex-row-reverse' : 'flex-row',
                 columnDefType === 'group' || (tableCellProps as any)?.align === 'center'
                   ? 'justify-center'
@@ -252,7 +256,7 @@ export const MRT_TableHeadCell = <TData extends MRT_RowData>({
             >
               <div
                 className={cn(
-                  'Mui-TableHeadCell-Content-Labels flex items-center',
+                  'Mui-TableHeadCell-Content-Labels flex items-center gap-1.5 min-w-0',
                   tableCellProps?.style?.textAlign === 'right' ? 'flex-row-reverse' : 'flex-row',
                   columnDefType === 'data' && 'overflow-hidden',
                   column.getCanSort() && columnDefType !== 'group' && 'cursor-pointer',
@@ -285,7 +289,7 @@ export const MRT_TableHeadCell = <TData extends MRT_RowData>({
                 )}
               </div>
               {columnDefType !== 'group' && (
-                <div className="Mui-TableHeadCell-Content-Actions whitespace-nowrap">
+                <div className="Mui-TableHeadCell-Content-Actions flex items-center gap-0.5 whitespace-nowrap">
                   {showDragHandle && (
                     <MRT_TableHeadCellGrabHandle
                       column={column}

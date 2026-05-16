@@ -35,7 +35,7 @@ export const MRT_ToolbarInternalButtons = <TData extends MRT_RowData>({
   } = table;
 
   return (
-    <div {...rest} className={cn('flex items-center z-[3]', className)}>
+    <div {...rest} className={cn('flex items-center gap-1 z-[3]', className)}>
       {renderToolbarInternalActions?.({
         table,
       }) ?? (

@@ -167,7 +167,7 @@ export const MRT_TableBodyRow = <TData extends MRT_RowData>({
           ...tableRowProps?.style,
         }}
         className={cn(
-          'box-border w-full',
+          'box-border w-full border-b transition-colors hover:bg-muted/50 data-[selected]:bg-muted',
           isGrid && 'flex',
           virtualRow
             ? 'absolute'

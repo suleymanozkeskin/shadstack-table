@@ -21,7 +21,7 @@ export const MRT_TableHeadCellSortLabel = <TData extends MRT_RowData>({
   const {
     getState,
     options: {
-      icons: { ArrowDownwardIcon, SyncAltIcon },
+      icons: { ArrowDownwardIcon, SortIcon },
       localization,
     },
   } = table;
@@ -46,7 +46,7 @@ export const MRT_TableHeadCellSortLabel = <TData extends MRT_RowData>({
 
   const sortIndex = sorting.length > 1 ? column.getSortIndex() + 1 : 0;
 
-  const Icon = !isSorted ? SyncAltIcon : ArrowDownwardIcon;
+  const Icon = !isSorted ? SortIcon : ArrowDownwardIcon;
 
   return (
     <Tooltip>
@@ -59,21 +59,17 @@ export const MRT_TableHeadCellSortLabel = <TData extends MRT_RowData>({
           }}
           {...rest}
           className={cn(
-            'relative inline-flex items-center flex-none w-[3ch] transition-all duration-150 ease-in-out',
-            isSorted ? 'opacity-100' : 'opacity-30',
+            'relative inline-flex items-center justify-center flex-none size-3.5 transition-all duration-150 ease-in-out',
+            isSorted ? 'opacity-100' : 'opacity-50',
             className,
           )}
         >
           <Icon
             style={{
-              transform: !isSorted
-                ? 'rotate(-90deg) scaleX(0.9) translateX(-1px)'
-                : direction === 'asc'
-                  ? 'rotate(180deg)'
-                  : undefined,
+              transform: isSorted && direction === 'asc' ? 'rotate(180deg)' : undefined,
               transition: 'transform 150ms',
             }}
-            className="text-muted-foreground"
+            className="size-3.5 text-muted-foreground"
           />
           {sortIndex > 0 && (
             <span className="absolute -top-1 -right-1 inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground px-1">

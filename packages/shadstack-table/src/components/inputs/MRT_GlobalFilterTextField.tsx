@@ -4,7 +4,6 @@ import { type ChangeEvent, type MouseEvent, useCallback, useEffect, useRef, useS
 import { Button } from '../../_ui/button';
 import { Collapsible, CollapsibleContent } from '../../_ui/collapsible';
 import { Input } from '../../_ui/input';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
 import { cn } from '../../lib/utils';
 import { type MRT_RowData, type MRT_TableInstance } from '../../types';
 import { parseFromValuesOrFunc } from '../../utils/utils';
@@ -92,29 +91,22 @@ export const MRT_GlobalFilterTextField = <TData extends MRT_RowData>({
   return (
     <Collapsible open={showGlobalFilter}>
       <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:slide-out-to-left-2 data-[state=open]:slide-in-from-left-2">
-        <div className="relative inline-flex items-center">
+        <div className="relative flex items-center w-full min-w-[200px]">
           {enableGlobalFilterModes ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="absolute left-0 z-10 flex items-center">
-                  <Button
-                    aria-label={localization.changeSearchMode}
-                    onClick={handleGlobalFilterMenuOpen}
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7"
-                  >
-                    <SearchIcon />
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>{localization.changeSearchMode}</TooltipContent>
-            </Tooltip>
+            <span className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-1">
+              <Button
+                aria-label={localization.changeSearchMode}
+                onClick={handleGlobalFilterMenuOpen}
+                size="icon"
+                variant="ghost"
+                title={localization.changeSearchMode}
+                className="pointer-events-auto h-7 w-7"
+              >
+                <SearchIcon />
+              </Button>
+            </span>
           ) : (
-            <SearchIcon
-              className="absolute left-2 text-muted-foreground"
-              style={{ marginRight: '4px' }}
-            />
+            <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           )}
           <Input
             autoComplete="off"
@@ -127,29 +119,31 @@ export const MRT_GlobalFilterTextField = <TData extends MRT_RowData>({
               if (typeof inputProps?.ref === 'function') inputProps.ref(inputRef);
             }}
             className={cn(
+              'w-full',
               enableGlobalFilterModes ? 'pl-9' : 'pl-8',
               'pr-9',
               className,
               inputProps?.className,
             )}
           />
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="absolute right-0 z-10 flex items-center">
-                <Button
-                  aria-label={localization.clearSearch}
-                  disabled={!searchValue?.length}
-                  onClick={handleClear}
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8"
-                >
-                  <CloseIcon />
-                </Button>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>{localization.clearSearch ?? ''}</TooltipContent>
-          </Tooltip>
+          <span
+            className={cn(
+              'pointer-events-none absolute inset-y-0 right-1 z-10 flex items-center',
+              (searchValue?.length ?? 0) > 0 ? 'visible' : 'invisible',
+            )}
+          >
+            <Button
+              aria-label={localization.clearSearch}
+              disabled={!searchValue?.length}
+              onClick={handleClear}
+              size="icon"
+              variant="ghost"
+              title={localization.clearSearch}
+              className="pointer-events-auto h-7 w-7"
+            >
+              <CloseIcon className="size-3.5" />
+            </Button>
+          </span>
         </div>
         <MRT_FilterOptionMenu
           anchorEl={anchorEl}
