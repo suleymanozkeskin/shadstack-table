@@ -18,15 +18,21 @@ import { Playground } from '@playground/Playground';
 
 ## Why this exists
 
-[`material-react-table`](https://github.com/KevinVandy/material-react-table) is one of the most complete React data tables ever shipped, but it ships MUI as a hard dependency and is no longer being maintained upstream. If your design system is shadcn/ui + Tailwind, you either pulled in MUI for one component or rebuilt a table from scratch. `shadstack-table` is the third option: a shadcn-native fork that ports every MUI primitive to its shadcn/ui equivalent and continues forward as its own library.
+> [`material-react-table`](https://github.com/KevinVandy/material-react-table) is one of the most complete React data tables ever shipped — but it ships MUI as a hard dependency and is no longer maintained upstream.
+
+> If your design system is shadcn/ui + Tailwind, you either pulled in MUI for one component or rebuilt a table from scratch.
+
+> `shadstack-table` is the third option: a shadcn-native fork that ports every MUI primitive to its shadcn/ui equivalent and continues forward as its own library.
 
 ## What you get
 
-- TanStack Table v8 under the hood
-- shadcn/ui primitives — Tailwind v4, Radix, your own CSS variables drive theming
-- Full data-table feature surface: filtering, sorting, grouping, row selection,
-  pinning, editing, virtualization, detail panels
-- Zero MUI in your bundle
+> **TanStack Table v8 under the hood** — the same engine the upstream library used.
+
+> **shadcn/ui primitives, end-to-end.** Tailwind v4 utilities, Radix headless components, your own CSS variables driving theming.
+
+> **The full data-table feature surface** — filtering, sorting, grouping, row selection, pinning, editing, virtualization, detail panels.
+
+> **Zero MUI in your bundle.** No `@mui/*`, no Emotion, no theme provider to wire up.
 
 ## Live demo
 
