@@ -64,9 +64,9 @@ const modeOptions = [
 ];
 
 export function App() {
-  const [dark, setDark] = useState(false);
-  const [example, setExample] = useState<ExampleKey>('basic');
-  const [themeKey, setThemeKey] = useState<string>(themes[0].key);
+  const [dark, setDark] = useState(true);
+  const [example, setExample] = useState<ExampleKey>('advanced');
+  const [themeKey, setThemeKey] = useState<string>('northern-lights');
   const current = examples.find((e) => e.key === example) ?? examples[0];
   const preset = themes.find((t) => t.key === themeKey) ?? themes[0];
 
