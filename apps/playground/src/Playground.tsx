@@ -9,7 +9,7 @@ const examples: Array<{ key: ExampleKey; label: string; description: string }> =
   {
     key: 'basic',
     label: 'Basic',
-    description: '20-row dataset, v1 priority features enabled. Minimum smoke test.',
+    description: 'pick the theme and the example combination',
   },
   {
     key: 'advanced',
@@ -129,7 +129,7 @@ export function Playground({
         <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
           <div className="min-w-0">
             <h1 className="text-xl font-semibold tracking-tight">shadstack-table</h1>
-            <p className="text-muted-foreground text-xs">playground · smoke test for the port</p>
+            <p className="text-muted-foreground text-xs">playground examples</p>
           </div>
           <div className="flex flex-col items-end gap-y-2">
             <ChipGroup label="Example" value={example} options={examples} onChange={setExample} />
