@@ -144,7 +144,8 @@ export const MRT_TablePagination = <TData extends MRT_RowData>({
           </Button>
           {getPageRange(pageIndex + 1, numberOfPages).map((page, i) =>
             page === 'ellipsis' ? (
-              <span key={`e-${i}`} className="px-2 text-muted-foreground">
+              // stable by position — getPageRange emits at most 2 ellipses (left, right) in fixed order
+              <span key={`ellipsis-${i}`} className="px-2 text-muted-foreground">
                 …
               </span>
             ) : (
