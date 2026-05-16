@@ -1,36 +1,31 @@
-# shadstack-table — port plan
+# shadstack-table — architecture & contributor reference
 
-This document is the source of truth for the literal port of `material-react-table` (MRT) → `shadstack-table`. It is designed to be resumable: any session can read this and know exactly what's done, what's next, and what conventions to follow.
+This document is the long-lived companion to [GOAL.md](./GOAL.md) (product goals & non-goals). It describes the stack, the repo layout, and — most importantly — the MUI→shadcn substitution rules that encode design decisions a contributor needs when touching anything under `packages/shadstack-table/src/`.
 
-Pair this with [GOAL.md](./GOAL.md) (product goal & architectural principles) and the cloned upstream at `material-react-table/` (gitignored reference; do not edit).
+> **Origin note.** This file began as the port plan for the initial fork from [`material-react-table`](https://github.com/KevinVandy/material-react-table). The port is complete; upstream is unmaintained and is no longer a workflow input. The file checklist, "open MRT source → mirror" workflow, and cross-session resume protocol that once lived here have been retired. The reference tables below remain the canonical record of why the component tree is shaped the way it is.
 
----
-
-## Strategy: literal port
-
-- **File-for-file mirror.** Every file under `material-react-table/packages/material-react-table/src/**` has a corresponding file at `packages/shadstack-table/src/**` with the same path and same filename.
-- **Renamed exports (2026-05-16).** The `MRT_*` prefix is renamed to `SST_*` (ShadStack Table); the main component is `ShadStackTable` and the hook is `useShadStackTable`. Consumers migrate by renaming the import path, renaming `MaterialReactTable` → `ShadStackTable`, and find-replacing `MRT_*` → `SST_*` for type/component imports. Rationale: the library no longer ships MUI and the consumer API is shadcn-shaped — keeping upstream's MRT identifiers would be misleading branding.
-- **Only MUI is replaced.** MUI components → shadcn (Radix + Tailwind). MUI icons → lucide-react. MUI `sx` props / `Theme` → Tailwind class strings via `cn()`. Everything else (logic, hooks, TanStack Table usage, filter fns, locales) is copied verbatim.
-- **No drop-in `muiXxxProps` compat.** Per GOAL.md, consumer-facing prop names become `slotProps`/shadcn-shaped. The internal component tree mirrors MRT exactly so we can diff upstream PRs.
+For consumer-facing documentation, see the docs site at `apps/docs/` (Starlight on Astro).
 
 ---
 
 ## Stack
 
-| Layer           | Choice                                                            |
-| --------------- | ----------------------------------------------------------------- |
-| Package manager | bun 1.3.2 (workspaces)                                            |
-| Bundler         | Vite 7 (library mode in `packages/`, app in `apps/playground`)    |
-| Linter          | oxlint 1.63.0                                                     |
-| Formatter       | oxfmt 0.48.0                                                      |
-| Language        | TypeScript 5.9 (strict, ES2022)                                   |
-| Table engine    | `@tanstack/react-table` v8 (unchanged from MRT)                   |
-| Virtualization  | `@tanstack/react-virtual` (unchanged from MRT)                    |
-| UI primitives   | Radix UI (via shadcn-style wrappers in `src/_ui/`)                |
-| Icons           | lucide-react                                                      |
-| Styling         | Tailwind CSS v4 + `tw-animate-css`                                |
-| Class merging   | `clsx` + `tailwind-merge` (via `cn()` in `src/lib/utils.ts`)      |
-| Other runtime   | `@tanstack/match-sorter-utils`, `highlight-words` (both from MRT) |
+| Layer           | Choice                                                       |
+| --------------- | ------------------------------------------------------------ |
+| Package manager | bun 1.3.2 (workspaces)                                       |
+| Bundler         | Vite 7 (library mode in `packages/`, app in `apps/*`)        |
+| Linter          | oxlint 1.63.0                                                |
+| Formatter       | oxfmt 0.48.0                                                 |
+| Language        | TypeScript 5.9 (strict, ES2022)                              |
+| Table engine    | `@tanstack/react-table` v8                                   |
+| Virtualization  | `@tanstack/react-virtual`                                    |
+| UI primitives   | Radix UI (via shadcn-style wrappers in `src/_ui/`)           |
+| Icons           | lucide-react                                                 |
+| Styling         | Tailwind CSS v4 + `tw-animate-css`                           |
+| Class merging   | `clsx` + `tailwind-merge` (via `cn()` in `src/lib/utils.ts`) |
+| Other runtime   | `@tanstack/match-sorter-utils`, `highlight-words`            |
+| Test runner     | Vitest 4 + `@testing-library/react` + happy-dom              |
+| Docs            | Astro 6 + Starlight 0.38                                     |
 
 `bun install` is constrained by `minimum-release-age: 864000s` (10 days). When pinning versions, find the newest release ≥10 days old via `curl https://registry.npmjs.org/<pkg>`.
 
@@ -41,45 +36,49 @@ Pair this with [GOAL.md](./GOAL.md) (product goal & architectural principles) an
 ```
 shadstack-table/
 ├── GOAL.md                        # product goal & architectural principles
-├── PORT_PLAN.md                   # this file
+├── PORT_PLAN.md                   # this file — architecture & contributor reference
+├── README.md
+├── LICENSE                        # MIT + upstream attribution
 ├── package.json                   # bun workspaces root
 ├── tsconfig.base.json
 ├── .oxlintrc.json
 ├── .oxfmtrc.json
 ├── packages/
-│   └── shadstack-table/           # the library (mirrors MRT's packages/material-react-table)
+│   └── shadstack-table/           # the library
 │       ├── src/
-│       │   ├── _ui/               # shadcn primitives (NEW — replaces MUI surface)
+│       │   ├── _ui/               # shadcn primitives (Radix wrappers, custom Spinner / Pagination)
 │       │   ├── lib/utils.ts       # cn() helper
-│       │   ├── components/        # MIRRORS MRT (same paths, same filenames)
-│       │   ├── fns/
-│       │   ├── hooks/
-│       │   ├── locales/
-│       │   ├── utils/
-│       │   ├── icons.ts
-│       │   ├── types.ts
-│       │   └── index.ts
+│       │   ├── components/        # SST_* components (body / buttons / footer / head / inputs / menus / modals / table / toolbar)
+│       │   ├── fns/               # aggregation / filter / sorting fns
+│       │   ├── hooks/             # useShadStackTable + internal hooks + display-column factories
+│       │   ├── locales/           # 39 locales (en + 38 translations)
+│       │   ├── utils/             # cell / column / row / style / virtualization helpers
+│       │   ├── __tests__/         # Vitest smoke tests
+│       │   ├── icons.ts           # SST_Default_Icons → lucide
+│       │   ├── types.ts           # public type surface
+│       │   └── index.ts           # barrel
 │       └── vite.config.ts
 ├── apps/
-│   └── playground/                # Vite dev sandbox for trying the library
-└── material-react-table/          # cloned upstream (gitignored) — reference only
+│   ├── playground/                # Vite dev sandbox for trying the library
+│   └── docs/                      # Astro + Starlight documentation site
+└── material-react-table/          # gitignored local reference clone — not part of the workflow
 ```
 
 ---
 
 ## MUI → shadcn component mapping
 
-Used by every `components/**/*.tsx` port. Where shadcn lacks a direct equivalent, we either compose (`Stack` → flex div) or build a small custom (`Pagination`, spinner).
+This table is the canonical reference for any contributor working in `components/**/*.tsx`. Where shadcn lacks a direct equivalent, we either compose (`Stack` → flex div) or build a small custom primitive (custom `Pagination`, custom `Spinner`).
 
 | MUI import                                                                                  | Replacement                                       | Notes                                  |
 | ------------------------------------------------------------------------------------------- | ------------------------------------------------- | -------------------------------------- |
-| `Alert`, `AlertTitle`                                                                       | `src/_ui/alert.tsx` (shadcn)                      | severity → variant                     |
+| `Alert`, `AlertTitle`                                                                       | `src/_ui/alert.tsx`                               | severity → variant                     |
 | `Badge`                                                                                     | `src/_ui/badge.tsx`                               | numeric badge needs custom render      |
 | `Box`                                                                                       | `<div>`                                           | MUI `sx` → Tailwind classes via `cn()` |
 | `Button`                                                                                    | `src/_ui/button.tsx`                              | `size="small"` → `size="sm"`           |
 | `Checkbox`                                                                                  | `src/_ui/checkbox.tsx`                            | indeterminate via Radix data attr      |
 | `Chip`                                                                                      | `src/_ui/badge.tsx` (variant)                     | chips are badges in shadcn             |
-| `CircularProgress`                                                                          | custom spinner in `_ui/spinner.tsx`               | lucide `Loader2` + spin                |
+| `CircularProgress`                                                                          | `src/_ui/spinner.tsx`                             | lucide `Loader2` + spin                |
 | `Collapse`                                                                                  | `src/_ui/collapsible.tsx`                         | Radix Collapsible                      |
 | `Dialog`, `Dialog{Title,Content,Actions}`                                                   | `src/_ui/dialog.tsx`                              | shadcn Dialog\*                        |
 | `Divider`                                                                                   | `src/_ui/separator.tsx`                           | orientation prop                       |
@@ -110,9 +109,9 @@ Used by every `components/**/*.tsx` port. Where shadcn lacks a direct equivalent
 
 ## MUI icon → lucide-react mapping
 
-For `src/icons.ts`. Names on the right are lucide exports; the keys of `SST_Default_Icons` keep MRT's naming (`ArrowDownwardIcon`, etc.) so downstream code is unchanged.
+For `src/icons.ts`. Names on the right are lucide exports; the keys of `SST_Default_Icons` mirror the MUI icon naming convention (`ArrowDownwardIcon`, etc.) for familiarity to anyone migrating from a MUI-shaped table.
 
-| MRT key                       | lucide           |
+| Key                           | lucide           |
 | ----------------------------- | ---------------- |
 | `ArrowDownwardIcon`           | `ArrowDown`      |
 | `ArrowRightIcon`              | `ArrowRight`     |
@@ -151,205 +150,9 @@ For `src/icons.ts`. Names on the right are lucide exports; the keys of `SST_Defa
 
 ---
 
-## File checklist (87 source files + 39 locales)
-
-Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
-
-### Infrastructure
-
-- [x] Bun workspace, Vite, oxlint, oxfmt, tsconfig
-- [x] `src/lib/utils.ts` — `cn()` helper
-- [x] `src/_ui/styles.css` — Tailwind v4 + theme vars + tw-animate-css
-- [x] Vite library build emits `dist/style.css` (9.4 kB / 2.3 kB gz) + `./style.css` export
-
-### `src/_ui/` (shadcn primitives — new)
-
-- [x] `alert.tsx`
-- [x] `badge.tsx`
-- [x] `button.tsx`
-- [x] `checkbox.tsx`
-- [x] `collapsible.tsx`
-- [x] `dialog.tsx`
-- [x] `dropdown-menu.tsx`
-- [x] `input.tsx`
-- [x] `label.tsx`
-- [x] `pagination.tsx` (custom — composes `button.tsx`)
-- [x] `popover.tsx`
-- [x] `progress.tsx`
-- [x] `radio-group.tsx`
-- [x] `select.tsx`
-- [x] `separator.tsx`
-- [x] `skeleton.tsx`
-- [x] `slider.tsx`
-- [x] `spinner.tsx` (custom — `Loader2` + spin)
-- [x] `switch.tsx`
-- [x] `table.tsx`
-- [x] `tooltip.tsx`
-
-### `src/locales/` (39 files — mechanical copy, no MUI)
-
-- [x] All 39 locale files: `ar, az, bg, cs, da, de, el, en, es, et, fa, fi, fr, he, hr, hu, hy, id, it, ja, ko, mk, nl, no, np, pl, pt-BR, pt, ro, ru, sk, sr-Cyrl-RS, sr-Latn-RS, sv, tr, uk, vi, zh-Hans, zh-Hant`
-
-### `src/fns/` (3 files — mostly pure)
-
-- [x] `aggregationFns.ts`
-- [x] `filterFns.ts`
-- [x] `sortingFns.ts`
-
-### `src/utils/` (8 files)
-
-- [x] `cell.utils.ts`
-- [x] `column.utils.ts`
-- [x] `displayColumn.utils.ts`
-- [x] `row.utils.ts`
-- [x] `style.utils.ts` ← heaviest MUI swap (Theme → CSS vars, sx → tw classes)
-- [x] `tanstack.helpers.ts`
-- [x] `utils.ts`
-- [x] `virtualization.utils.ts`
-
-### `src/hooks/` (8 files + 7 display-column hooks)
-
-- [x] `useShadStackTable.ts`
-- [x] `useSST_ColumnVirtualizer.ts`
-- [x] `useSST_Effects.ts`
-- [x] `useSST_RowVirtualizer.ts`
-- [x] `useSST_Rows.ts`
-- [x] `useSST_TableInstance.ts`
-- [x] `useSST_TableOptions.ts`
-- [x] `display-columns/getSST_RowActionsColumnDef.tsx`
-- [x] `display-columns/getSST_RowDragColumnDef.tsx`
-- [x] `display-columns/getSST_RowExpandColumnDef.tsx`
-- [x] `display-columns/getSST_RowNumbersColumnDef.tsx`
-- [x] `display-columns/getSST_RowPinningColumnDef.tsx`
-- [x] `display-columns/getSST_RowSelectColumnDef.tsx`
-- [x] `display-columns/getSST_RowSpacerColumnDef.tsx`
-
-### `src/components/` (59 files — heaviest MUI swap)
-
-- [x] `ShadStackTable.tsx`
-- **body/** (7)
-  - [x] `SST_TableBody.tsx`
-  - [x] `SST_TableBodyCell.tsx`
-  - [x] `SST_TableBodyCellValue.tsx`
-  - [x] `SST_TableBodyRow.tsx`
-  - [x] `SST_TableBodyRowGrabHandle.tsx`
-  - [x] `SST_TableBodyRowPinButton.tsx`
-  - [x] `SST_TableDetailPanel.tsx`
-- **buttons/** (13)
-  - [x] `SST_ColumnPinningButtons.tsx`
-  - [x] `SST_CopyButton.tsx`
-  - [x] `SST_EditActionButtons.tsx`
-  - [x] `SST_ExpandAllButton.tsx`
-  - [x] `SST_ExpandButton.tsx`
-  - [x] `SST_GrabHandleButton.tsx`
-  - [x] `SST_RowPinButton.tsx`
-  - [x] `SST_ShowHideColumnsButton.tsx`
-  - [x] `SST_ToggleDensePaddingButton.tsx`
-  - [x] `SST_ToggleFiltersButton.tsx`
-  - [x] `SST_ToggleFullScreenButton.tsx`
-  - [x] `SST_ToggleGlobalFilterButton.tsx`
-  - [x] `SST_ToggleRowActionMenuButton.tsx`
-- **footer/** (3)
-  - [x] `SST_TableFooter.tsx`
-  - [x] `SST_TableFooterCell.tsx`
-  - [x] `SST_TableFooterRow.tsx`
-- **head/** (9)
-  - [x] `SST_TableHead.tsx`
-  - [x] `SST_TableHeadCell.tsx`
-  - [x] `SST_TableHeadCellColumnActionsButton.tsx`
-  - [x] `SST_TableHeadCellFilterContainer.tsx`
-  - [x] `SST_TableHeadCellFilterLabel.tsx`
-  - [x] `SST_TableHeadCellGrabHandle.tsx`
-  - [x] `SST_TableHeadCellResizeHandle.tsx`
-  - [x] `SST_TableHeadCellSortLabel.tsx`
-  - [x] `SST_TableHeadRow.tsx`
-- **inputs/** (7)
-  - [x] `SST_EditCellTextField.tsx`
-  - [x] `SST_FilterCheckbox.tsx`
-  - [x] `SST_FilterRangeFields.tsx`
-  - [x] `SST_FilterRangeSlider.tsx`
-  - [x] `SST_FilterTextField.tsx`
-  - [x] `SST_GlobalFilterTextField.tsx`
-  - [x] `SST_SelectCheckbox.tsx`
-- **menus/** (7)
-  - [x] `SST_ActionMenuItem.tsx`
-  - [x] `SST_CellActionMenu.tsx`
-  - [x] `SST_ColumnActionMenu.tsx`
-  - [x] `SST_FilterOptionMenu.tsx`
-  - [x] `SST_RowActionMenu.tsx`
-  - [x] `SST_ShowHideColumnsMenu.tsx`
-  - [x] `SST_ShowHideColumnsMenuItems.tsx`
-- **modals/** (1)
-  - [x] `SST_EditRowModal.tsx`
-- **table/** (4)
-  - [x] `SST_Table.tsx`
-  - [x] `SST_TableContainer.tsx`
-  - [x] `SST_TableLoadingOverlay.tsx`
-  - [x] `SST_TablePaper.tsx`
-- **toolbar/** (7)
-  - [x] `SST_BottomToolbar.tsx`
-  - [x] `SST_LinearProgressBar.tsx`
-  - [x] `SST_TablePagination.tsx`
-  - [x] `SST_ToolbarAlertBanner.tsx`
-  - [x] `SST_ToolbarDropZone.tsx`
-  - [x] `SST_ToolbarInternalButtons.tsx`
-  - [x] `SST_TopToolbar.tsx`
-
-### Top-level
-
-- [x] `src/icons.ts` (MUI icons → lucide)
-- [x] `src/types.ts` (1289 LOC — most types are MUI-agnostic; the few `Mui*Props` references become `slotProps` accepting our shadcn equivalents)
-- [x] `src/index.ts` (mirror MRT's barrel exports) — only `export * from './types'` added; rest left for future batch
-
----
-
-## Workflow per file
-
-1. Open the MRT source: `material-react-table/packages/material-react-table/src/<path>`.
-2. Create the mirror at `packages/shadstack-table/src/<path>`.
-3. Swap MUI imports per the mapping table above. Swap MUI icons per the icon table.
-4. Convert any `sx={{...}}` props to Tailwind classes via `cn(...)`. Static MUI theme tokens (`theme.palette.primary.main`) → CSS vars exposed in `_ui/styles.css`.
-5. Keep logic verbatim. Do not refactor.
-6. Tick the box in the checklist above.
-7. After each batch (e.g. all of `fns/`), run `bun run typecheck` + `bun run lint`.
-
----
-
-## Decisions
-
-- 2026-05-16 — **Test suite scaffolded.** Vitest + `@testing-library/react` + happy-dom; tests live in `packages/shadstack-table/src/__tests__/`. 10 smoke tests cover the v1 priority feature surface. Wired into the `check` CI job; coverage workflow exists but is `workflow_dispatch`-only until the suite stabilizes. Pinning/resize/virtualization deferred to a Playwright pass (viewport-dependent behavior that happy-dom does not simulate).
-- 2026-05-16 — **Renamed away from upstream MRT naming.** `MRT_*` prefix → `SST_*`; `MaterialReactTable` → `ShadStackTable`; `useMaterialReactTable` → `useShadStackTable`. Locale message keys followed (e.g. `MRT_AggregationFn_count` → `SST_AggregationFn_count`). Upstream-diff workflow now requires translating `MRT_` → `SST_` on incoming MRT patches before applying — accepted cost given the library no longer ships MUI and is no longer a drop-in MRT replacement.
-- **Ship pre-compiled CSS** (`dist/style.css`) so consumers don't need a Tailwind setup. Consumers `import 'shadstack-table/style.css'` once.
-- **Radix primitives stay external** (peer or runtime deps), but our wrappers live in `src/_ui/` and are bundled. This keeps the public API a single `shadstack-table` import.
-- **Tailwind v4 + tw-animate-css** (not v3 + tailwindcss-animate). Newer registry of shadcn primitives expects v4 conventions.
-- **No `EnterPlanMode` flow per port file.** The plan is this document. We just execute file-by-file.
-
----
-
-## Open questions (resolve as they come up)
-
-- **Drag-and-drop reorder.** MRT uses HTML5 DnD natively. Keep as-is or swap to `@dnd-kit/*`? — _Default: keep HTML5 DnD verbatim for the literal port._
-- **Date picker.** MRT depends on `@mui/x-date-pickers`. Date filter cells need a shadcn alternative (e.g. shadcn calendar via Radix). — _Default: stub with `<Input type="date">` for v1._
-- **`Mui*Props` passthroughs in `types.ts`.** Rename to `slotProps.<element>` taking our shadcn equivalent's props.
-
----
-
-## Cross-session resume protocol
-
-When starting a new session:
-
-1. Read this file and `GOAL.md`.
-2. Run `bun install` (only if dependencies changed).
-3. Check the file checklist above for the next pending item.
-4. `cd material-react-table/packages/material-react-table` to consult the source whenever needed.
-5. Run `bun run typecheck && bun run lint && bun run build` after each batch.
-6. Tick boxes in this file as you complete files. Commit `PORT_PLAN.md` updates with the changes.
-
----
-
 ## MUI features that don't map cleanly to shadcn
 
-Tracked as we hit them. Each entry: the MUI surface, why it doesn't translate, and how we're handling it. Goal: visibility, not a blocker — every item below has a chosen path forward.
+Tracked as we hit them. Each entry: the MUI surface that didn't translate, why, and how we're handling it. Goal: visibility for contributors who encounter these patterns in legacy code paths, not a blocker — every item has a chosen path forward.
 
 | MUI surface                                                             | Issue                                                                               | Handling                                                                                                                                                                                                   |
 | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -364,14 +167,14 @@ Tracked as we hit them. Each entry: the MUI surface, why it doesn't translate, a
 | `Skeleton` variants (`text` / `circular` / `rectangular` / `rounded`)   | Single shadcn Skeleton.                                                             | Vary via `className`: `text` → `h-4 rounded`, `circular` → `rounded-full`, etc.                                                                                                                            |
 | `CircularProgress` determinate mode                                     | Our `Spinner` is indeterminate-only.                                                | For "rows loading" indicators use `Progress` instead; determinate spinner stays out of v1.                                                                                                                 |
 | `LinearProgress` indeterminate mode                                     | Our `Progress` is determinate-only.                                                 | Add an `indeterminate` prop in `SST_LinearProgressBar` that swaps in a CSS-keyframed stripe (lives in `_ui/styles.css`).                                                                                   |
-| `Collapse` orientation `horizontal`                                     | Radix Collapsible animates `height` only.                                           | If MRT uses horizontal collapse anywhere (e.g. side panels), do a `[data-state]`-driven width transition with Tailwind.                                                                                    |
+| `Collapse` orientation `horizontal`                                     | Radix Collapsible animates `height` only.                                           | For horizontal collapse (e.g. side panels), do a `[data-state]`-driven width transition with Tailwind.                                                                                                     |
 | `Fade`, `Grow` transition components                                    | No standalone equivalents.                                                          | Use `tw-animate-css` data-state utilities (`data-[state=open]:animate-in fade-in-…`).                                                                                                                      |
 | `InputAdornment` (`start` / `end`)                                      | Not a shadcn primitive.                                                             | Wrap `<Input>` in `<div class="relative">` and absolute-position the icon span.                                                                                                                            |
-| `Chip` (`onDelete`, `clickable`)                                        | Our `Badge` is a non-interactive span.                                              | When MRT renders a deletable filter chip, build a tiny `Chip` inline (Badge + close `<Button variant="ghost" size="icon">`).                                                                               |
+| `Chip` (`onDelete`, `clickable`)                                        | Our `Badge` is a non-interactive span.                                              | For a deletable filter chip, compose inline: `<Badge>` + close `<Button variant="ghost" size="icon">`.                                                                                                     |
 | `Badge` overlap / anchor positioning                                    | shadcn Badge is inline-only.                                                        | Manual wrapper: `<span class="relative">{icon}<Badge class="absolute -top-1 -right-1">…</Badge></span>`.                                                                                                   |
 | `@mui/x-date-pickers` (Date/Time/DateTime)                              | No shadcn equivalent in v1.                                                         | Stub filter cells with `<input type="date" \| time \| datetime-local>`. Real picker is post-v1 (see GOAL.md non-goals).                                                                                    |
 | `Autocomplete` (filter mode)                                            | Out of v1 scope per GOAL.md non-goals.                                              | Fall back to `<Input>` text filter for autocomplete columns. Log a runtime `console.warn` once when the column requests autocomplete.                                                                      |
-| `Slider` `marks` prop                                                   | Radix Slider has no marks API.                                                      | If MRT range filter uses marks, render them as absolute-positioned spans over the track.                                                                                                                   |
+| `Slider` `marks` prop                                                   | Radix Slider has no marks API.                                                      | For range filters that use marks, render them as absolute-positioned spans over the track.                                                                                                                 |
 | `Switch` custom track/thumb styling                                     | shadcn Switch has fixed visuals; deep customization needs class overrides.          | Allow `slotProps.<switch>` className overrides; document the constraint.                                                                                                                                   |
 | `Menu` `dense`, `autoFocusItem`                                         | Not direct DropdownMenu props.                                                      | `dense` → smaller class on `DropdownMenuItem`. `autoFocusItem` → use Radix Menu's `loop` + initial focus props.                                                                                            |
 | `Popover` `anchorOrigin` / `transformOrigin`                            | Radix uses `side` + `align`.                                                        | Map `{ vertical, horizontal }` → closest `{ side, align }` pair at call sites.                                                                                                                             |
@@ -389,10 +192,22 @@ Tracked as we hit them. Each entry: the MUI surface, why it doesn't translate, a
 
 ---
 
-## slotProps rename additions (found during port)
+## slotProps additions tracked over time
 
-The initial rename pass (in the prompt that produced types.ts) missed fields that surfaced once the port actually touched the upstream source. New entries land here; the `types.ts` implementation is authoritative.
+`muiXxxProps` → `slotProps.xxx` was a one-pass rename in the initial port. Fields that surfaced later land here; the `types.ts` implementation is authoritative.
 
-| MRT field (upstream)     | Our slotProps path          | Type source                     |
+| Original MUI field       | Our slotProps path          | Type source                     |
 | ------------------------ | --------------------------- | ------------------------------- |
 | `muiCreateRowModalProps` | `slotProps.createRowDialog` | `ComponentProps<typeof Dialog>` |
+
+---
+
+## Decision log
+
+- 2026-05-16 — **Test suite scaffolded.** Vitest + `@testing-library/react` + happy-dom; tests live in `packages/shadstack-table/src/__tests__/`. 10 smoke tests cover the v1 priority feature surface. Wired into the `check` CI job; coverage workflow exists but is `workflow_dispatch`-only until the suite stabilizes. Pinning/resize/virtualization deferred to a Playwright pass (viewport-dependent behavior that happy-dom does not simulate).
+- 2026-05-16 — **Renamed away from upstream MRT naming.** `MRT_*` prefix → `SST_*`; `MaterialReactTable` → `ShadStackTable`; `useMaterialReactTable` → `useShadStackTable`. Locale message keys followed (e.g. `MRT_AggregationFn_count` → `SST_AggregationFn_count`). Built-in column IDs (`mrt-row-*`) followed (`mrt-row-select` → `sst-row-select`, etc.) along with matching `data-slot` attribute values and CSS selectors.
+- 2026-05-16 — **First-party docs site.** Starlight on Astro at `apps/docs/`, examples wired via source alias so docs and the library never drift. Replaces reliance on the unmaintained upstream docs site (`material-react-table.com`).
+- 2026-05-16 — **Retired the literal-port workflow.** The "open MRT source → mirror" porting flow is no longer the development model. Upstream is unmaintained; the fork is independent. The MUI→shadcn mapping tables above remain as a contributor reference, not as an active porting tool.
+- **Ship pre-compiled CSS** (`dist/style.css`) so consumers don't need a Tailwind setup. Consumers `import 'shadstack-table/style.css'` once.
+- **Radix primitives stay external** (peer or runtime deps), but our wrappers live in `src/_ui/` and are bundled. This keeps the public API a single `shadstack-table` import.
+- **Tailwind v4 + tw-animate-css** (not v3 + tailwindcss-animate). The shadcn registry expects v4 conventions.

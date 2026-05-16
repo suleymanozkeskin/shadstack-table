@@ -2,7 +2,7 @@
 
 A shadcn/ui-native React data table with the same feature surface as [`material-react-table`](https://github.com/KevinVandy/material-react-table) — minus the MUI dependency. Built on TanStack Table v8 + TanStack Virtual.
 
-> **Status: pre-1.0.** The literal port of MRT is feature-complete and builds clean (lint / format / typecheck / build all green). Not yet on npm. Stabilization, tests, and a docs site come before a 1.0 tag.
+> **Status: pre-1.0.** Feature-complete fork — the initial port of every MRT feature is shipped and the build is clean (lint / format / typecheck / build / tests all green). Not yet on npm. Stabilization, deeper tests, and the new docs site (Astro + Starlight at `apps/docs/`) come before a 1.0 tag.
 
 ## Why
 
@@ -67,7 +67,7 @@ shadstack-table/
 ├── apps/
 │   └── playground/         # Vite + React 19 dev sandbox / smoke test
 ├── GOAL.md                 # product goal, principles, non-goals, future work
-├── PORT_PLAN.md            # port checklist, MUI→shadcn mapping, quirks
+├── PORT_PLAN.md            # architecture & contributor reference (MUI→shadcn mapping, quirks, decisions)
 └── LICENSE                 # MIT, with upstream MRT attribution
 ```
 
