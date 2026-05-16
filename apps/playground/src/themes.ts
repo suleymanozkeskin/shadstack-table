@@ -205,16 +205,18 @@ const TOKEN_KEYS = Array.from(
   new Set(themes.flatMap((t) => [...Object.keys(t.light), ...Object.keys(t.dark)])),
 );
 
-export function applyTheme(preset: ThemePreset, mode: 'light' | 'dark') {
-  const root = document.documentElement;
+export function applyTheme(
+  preset: ThemePreset,
+  mode: 'light' | 'dark',
+  target: HTMLElement = document.documentElement,
+) {
   const tokens = mode === 'dark' ? preset.dark : preset.light;
   for (const key of TOKEN_KEYS) {
-    if (tokens[key]) root.style.setProperty(key, tokens[key]);
-    else root.style.removeProperty(key);
+    if (tokens[key]) target.style.setProperty(key, tokens[key]);
+    else target.style.removeProperty(key);
   }
 }
 
-export function clearTheme() {
-  const root = document.documentElement;
-  for (const key of TOKEN_KEYS) root.style.removeProperty(key);
+export function clearTheme(target: HTMLElement = document.documentElement) {
+  for (const key of TOKEN_KEYS) target.style.removeProperty(key);
 }

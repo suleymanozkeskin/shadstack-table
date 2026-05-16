@@ -65,34 +65,58 @@ const modeOptions = [
 
 export interface PlaygroundProps {
   /**
-   * `true` (default) puts the playground in charge of the `dark` class on
-   * `<html>` — fine when it owns the page. Set `false` when embedding inside
-   * a host (e.g. Starlight docs) that already manages dark mode, so the
-   * playground's Mode chip only re-themes the table area via inline CSS
-   * variables and doesn't fight the host's theme.
+   * Where the playground's light/dark state lives.
+   *
+   * - `'self'` (default): the playground owns its own Mode chip and toggles
+   *   `.dark` on `<html>` itself. Use this when the playground is the page
+   *   (apps/playground).
+   * - `'host'`: there is no Mode chip; the playground reads `data-theme`
+   *   from `<html>` and re-applies its theme tokens whenever the host
+   *   (Starlight) flips it. Use this when embedding in docs so the host's
+   *   own dark-mode toggle is the single source of truth.
    */
-  manageHtmlDarkClass?: boolean;
+  modeSource?: 'self' | 'host';
   defaultExample?: ExampleKey;
   defaultThemeKey?: string;
   defaultDark?: boolean;
 }
 
+function readHostDark(): boolean {
+  if (typeof document === 'undefined') return false;
+  return document.documentElement.getAttribute('data-theme') === 'dark';
+}
+
 export function Playground({
-  manageHtmlDarkClass = true,
+  modeSource = 'self',
   defaultExample = 'advanced',
   defaultThemeKey = 'northern-lights',
   defaultDark = true,
 }: PlaygroundProps = {}) {
-  const [dark, setDark] = useState(defaultDark);
+  const [dark, setDark] = useState(modeSource === 'host' ? readHostDark : defaultDark);
   const [example, setExample] = useState<ExampleKey>(defaultExample);
   const [themeKey, setThemeKey] = useState<string>(defaultThemeKey);
   const current = examples.find((e) => e.key === example) ?? examples[0];
   const preset = themes.find((t) => t.key === themeKey) ?? themes[0];
 
+  // Self mode: own the `.dark` class on <html> so library `dark:` variants
+  // light up. Host mode: leave the class alone — Starlight already manages
+  // `data-theme` and the docs CSS aliases the dark scope to cover both.
   useEffect(() => {
-    if (!manageHtmlDarkClass) return;
+    if (modeSource !== 'self') return;
     document.documentElement.classList.toggle('dark', dark);
-  }, [dark, manageHtmlDarkClass]);
+  }, [dark, modeSource]);
+
+  // Host mode: subscribe to `<html data-theme>` changes (the user clicking
+  // Starlight's Light/Dark toggle) and mirror them into our `dark` state,
+  // which feeds the applyTheme effect below.
+  useEffect(() => {
+    if (modeSource !== 'host') return;
+    const html = document.documentElement;
+    setDark(readHostDark());
+    const observer = new MutationObserver(() => setDark(readHostDark()));
+    observer.observe(html, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, [modeSource]);
 
   useEffect(() => {
     applyTheme(preset, dark ? 'dark' : 'light');
@@ -110,12 +134,14 @@ export function Playground({
           <div className="flex flex-col items-end gap-y-2">
             <ChipGroup label="Example" value={example} options={examples} onChange={setExample} />
             <ChipGroup label="Theme" value={themeKey} options={themes} onChange={setThemeKey} />
-            <ChipGroup
-              label="Mode"
-              value={dark ? 'dark' : 'light'}
-              options={modeOptions}
-              onChange={(next) => setDark(next === 'dark')}
-            />
+            {modeSource === 'self' && (
+              <ChipGroup
+                label="Mode"
+                value={dark ? 'dark' : 'light'}
+                options={modeOptions}
+                onChange={(next) => setDark(next === 'dark')}
+              />
+            )}
           </div>
         </div>
         <p className="text-muted-foreground mt-3 border-t pt-3 text-xs">{current.description}</p>
