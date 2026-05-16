@@ -82,17 +82,9 @@ export const MRT_TableBodyCellValue = <TData extends MRT_RowData>({
           {chunks?.map(({ key, match, text }) => (
             <span
               aria-hidden="true"
+              className={match ? 'text-foreground rounded-xs px-px py-0.5' : undefined}
               key={key}
-              style={
-                match
-                  ? {
-                      backgroundColor: matchHighlightColor,
-                      borderRadius: '2px',
-                      color: 'var(--foreground)',
-                      padding: '2px 1px',
-                    }
-                  : undefined
-              }
+              style={match ? { backgroundColor: matchHighlightColor } : undefined}
             >
               {text}
             </span>

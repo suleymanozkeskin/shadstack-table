@@ -64,7 +64,7 @@ export const getCommonPinnedCellStyles = <TData extends MRT_RowData>({
   return {
     '&[data-pinned="true"]': {
       '&:before': {
-        backgroundColor: `color-mix(in oklch, ${baseBackgroundColor} 97%, black)`,
+        backgroundColor: `color-mix(in oklch, ${baseBackgroundColor} 95%, var(--foreground))`,
         boxShadow: column
           ? isPinned === 'left' && column.getIsLastColumn(isPinned)
             ? '-4px 0 4px -4px color-mix(in oklch, var(--foreground) 50%, transparent) inset'

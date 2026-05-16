@@ -5,7 +5,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
+/*
+ * Token defaults are wrapped in `:where()` so they carry 0,0,0 specificity.
+ * Any host stylesheet declaring tokens at `:root { ... }` or `.dark { ... }`
+ * wins automatically regardless of bundle order — host themes (tweakcn
+ * presets, custom design systems) stay authoritative. Consumers who ship no
+ * tokens still get a usable shadcn baseline.
+ */
+
+:where(:root) {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -32,7 +40,7 @@
   --chart-5: oklch(0.769 0.188 70.08);
 }
 
-.dark {
+:where(.dark) {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
