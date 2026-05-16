@@ -296,13 +296,16 @@ export const MRT_FilterTextField = <TData extends MRT_RowData>({
     'relative flex items-center w-full',
     isDateFilter
       ? 'min-w-[160px]'
-      : enableColumnFilterModes && rangeFilterIndex === 0
-        ? 'min-w-[110px]'
-        : isRangeFilter
-          ? 'min-w-[90px]'
-          : !filterChipLabel
-            ? 'min-w-[120px]'
-            : 'min-w-fit',
+      : isRangeFilter
+        ? // Both sides of a range pair share the same min-width so Min and Max
+          // line up identically — the wider value (110px) accommodates the
+          // mode-button-icon space we reserve on both inputs.
+          reserveModeButtonSpace
+          ? 'min-w-[110px]'
+          : 'min-w-[90px]'
+        : !filterChipLabel
+          ? 'min-w-[120px]'
+          : 'min-w-fit',
   );
 
   const inputClass = cn(
