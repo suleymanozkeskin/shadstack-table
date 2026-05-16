@@ -63,6 +63,7 @@ export const MRT_TableContainer = <TData extends MRT_RowData>({
     <div
       aria-busy={loading}
       aria-describedby={loading ? 'mrt-progress' : undefined}
+      data-slot="mrt-table-container"
       {...tableContainerProps}
       ref={(node: HTMLDivElement | null) => {
         if (node) {
@@ -79,7 +80,7 @@ export const MRT_TableContainer = <TData extends MRT_RowData>({
         ...tableContainerProps?.style,
       }}
       className={cn(
-        'w-full max-w-full min-w-0 overflow-x-auto overflow-y-auto relative',
+        'w-full max-w-full min-w-0 overflow-x-auto overflow-y-auto relative isolate',
         className,
         tableContainerProps?.className,
       )}

@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+@source '../**/*.{ts,tsx}';
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -35,7 +37,7 @@
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.269 0 0);
+  --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
@@ -90,4 +92,23 @@
   * {
     @apply border-border outline-ring/50;
   }
+}
+
+[data-slot='mrt-table-container']::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+[data-slot='mrt-table-container']::-webkit-scrollbar-track {
+  background: transparent;
+}
+[data-slot='mrt-table-container']::-webkit-scrollbar-thumb {
+  background-color: color-mix(in oklch, var(--foreground) 25%, transparent);
+  border-radius: 999px;
+}
+[data-slot='mrt-table-container']:hover::-webkit-scrollbar-thumb {
+  background-color: color-mix(in oklch, var(--foreground) 45%, transparent);
+}
+[data-slot='mrt-table-container'] {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--foreground) 25%, transparent) transparent;
 }
