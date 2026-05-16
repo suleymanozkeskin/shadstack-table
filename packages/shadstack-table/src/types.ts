@@ -749,10 +749,10 @@ export type SST_DisplayColumnIds =
  * `columns` and `data` props are the only required props, but there are over 170 other optional props.
  *
  * See more info on creating columns and data on the official docs site:
- * @link https://www.material-react-table.com/docs/getting-started/usage
+ * @link https://suleymanozkeskin.github.io/shadstack-table/
  *
  * See the full props list on the official docs site:
- * @link https://www.material-react-table.com/docs/api/props
+ * @link https://suleymanozkeskin.github.io/shadstack-table/
  */
 export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
   Partial<TableOptions<TData>>,
@@ -773,11 +773,11 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
    * The columns to display in the table. `accessorKey`s or `accessorFn`s must match keys in the `data` table option.
    *
    * See more info on creating columns on the official docs site:
-   * @link https://www.material-react-table.com/docs/guides/data-columns
-   * @link https://www.material-react-table.com/docs/guides/display-columns
+   * @link https://suleymanozkeskin.github.io/shadstack-table/
+   * @link https://suleymanozkeskin.github.io/shadstack-table/
    *
    * See all Columns Options on the official docs site:
-   * @link https://www.material-react-table.com/docs/api/column-options
+   * @link https://suleymanozkeskin.github.io/shadstack-table/
    */
   columns: SST_ColumnDef<TData, any>[];
   columnVirtualizerInstanceRef?: RefObject<SST_ColumnVirtualizer | null>;
@@ -791,7 +791,7 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
    * Pass your data as an array of objects. Objects can theoretically be any shape, but it's best to keep them consistent.
    *
    * See the usage guide for more info on creating columns and data:
-   * @link https://www.material-react-table.com/docs/getting-started/usage
+   * @link https://suleymanozkeskin.github.io/shadstack-table/
    */
   data: TData[];
   /**
@@ -856,14 +856,14 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
    * Pass in either a locale imported from `shadstack-table/locales/*` or a custom locale object.
    *
    * See the localization (i18n) guide for more info:
-   * @link https://www.material-react-table.com/docs/guides/localization
+   * @link https://suleymanozkeskin.github.io/shadstack-table/
    */
   localization?: Partial<SST_Localization>;
   /**
    * Memoize cells, rows, or the entire table body to potentially improve render performance.
    *
    * @warning This will break some dynamic rendering features. See the memoization guide for more info:
-   * @link https://www.material-react-table.com/docs/guides/memoize-components
+   * @link https://suleymanozkeskin.github.io/shadstack-table/
    */
   memoMode?: 'cells' | 'rows' | 'table-body';
   // TODO: theme-aware styling moved to CSS vars in _ui/styles.css
