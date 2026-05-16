@@ -28,7 +28,25 @@ Build a shadcn-native React data table that delivers the same feature surface as
 4. **Consumer API is shadcn-shaped, not MRT-shaped.** `slotProps` replaces `muiXxxProps`. Migration from MRT is a config rewrite, not drop-in.
 5. **Core ships zero CSS.** Adapters own styling.
 
+## Future work (post-v1, required for continuous-success of the port)
+
+These are not optional. They are gating items for shipping any v1.x and beyond. Add to CI as gates as each lands.
+
+1. **Comprehensive test suite.** Upstream MRT has zero unit/integration tests — only 54 Storybook stories as de-facto specs. We need our own. Targets:
+   - Vitest + `@testing-library/react` for unit + integration coverage of every feature in the v1 priority list (sort, filter, paginate, select, expand, column visibility/pinning/density/resize, virtualization, editing).
+   - Playwright (or equivalent) for cross-browser smoke + keyboard accessibility.
+   - Each MRT Storybook story → at least one equivalent test asserting the same observable behavior; the stories are our behavioral oracle until tests exist.
+   - Visual regression (Chromatic / Playwright snapshots) for the rendered table at a small set of canonical states.
+
+2. **react-doctor in CI.** Run the [react-doctor](https://www.npmjs.com/package/react-doctor) skill / equivalent linting on every PR. Catches common React 19 anti-patterns (stale closures, derived state, key misuse, missed memoization in virtualized lists).
+
+3. **oxlint + oxfmt enforced.** Configs exist (`.oxlintrc.json`, `.oxfmtrc.json`); make them gating:
+   - Pre-commit hook (lint-staged + husky, or a bun-native equivalent) that runs `oxlint` and `oxfmt --check` on staged files.
+   - CI workflow: `bun run lint && bun run format:check && bun run typecheck && bun run build` blocks merge.
+   - Zero warnings, zero errors policy on PR merge.
+
 ## Decision log
 
 - 2026-05-16 — v1 scoped to shadcn only; Kumo and MUI adapters deferred.
 - 2026-05-16 — rejected runtime `uiLibChoice` config (bundle size); adapter boundary stays as an internal contract.
+- 2026-05-16 — comprehensive test suite + react-doctor + enforced oxlint/oxfmt added as post-v1 gating items (no MRT tests to inherit; quality bar is ours to set).
