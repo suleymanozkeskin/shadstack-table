@@ -95,7 +95,6 @@ export function AdvancedExample() {
             header: 'Start Date',
             size: 160,
             sortingFn: 'datetime',
-            // TODO(post-v1): filterVariant 'date' is stubbed with <input type="date"> per PORT_PLAN.
             filterVariant: 'date',
             filterFn: 'lessThan',
             Cell: ({ cell }) => cell.getValue<Date>()?.toLocaleDateString(),
@@ -134,6 +133,7 @@ export function AdvancedExample() {
     enableColumnOrdering: true,
     enableGrouping: true,
     enableColumnPinning: true,
+    enableColumnResizing: true,
     enableFacetedValues: true,
     enableRowActions: true,
     enableRowSelection: true,
