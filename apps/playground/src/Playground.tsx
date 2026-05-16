@@ -31,9 +31,9 @@ function ChipGroup<T extends string>({
   onChange: (next: T) => void;
 }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex max-w-full min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
       <span className="text-muted-foreground text-xs uppercase tracking-wide">{label}</span>
-      <div className="bg-muted/50 inline-flex items-center gap-1 rounded-md border p-0.5">
+      <div className="bg-muted/50 flex max-w-full items-center gap-1 overflow-x-auto rounded-md border p-0.5">
         {options.map((o) => {
           const active = o.key === value;
           return (
@@ -45,8 +45,8 @@ function ChipGroup<T extends string>({
               aria-pressed={active}
               className={
                 active
-                  ? 'bg-primary text-primary-foreground rounded-sm px-2.5 py-1 text-xs font-medium shadow-xs'
-                  : 'text-foreground hover:bg-accent hover:text-accent-foreground rounded-sm bg-transparent px-2.5 py-1 text-xs font-medium transition-colors'
+                  ? 'bg-primary text-primary-foreground shrink-0 whitespace-nowrap rounded-sm px-2.5 py-1 text-xs font-medium shadow-xs'
+                  : 'text-foreground hover:bg-accent hover:text-accent-foreground shrink-0 whitespace-nowrap rounded-sm bg-transparent px-2.5 py-1 text-xs font-medium transition-colors'
               }
             >
               {o.label}
@@ -126,12 +126,12 @@ export function Playground({
   return (
     <>
       <header className="bg-card text-card-foreground mx-auto mb-6 max-w-7xl rounded-lg border p-4 shadow-xs">
-        <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-x-8">
           <div className="min-w-0">
             <h1 className="text-xl font-semibold tracking-tight">shadstack-table</h1>
             <p className="text-muted-foreground text-xs">playground examples</p>
           </div>
-          <div className="flex flex-col items-end gap-y-2">
+          <div className="flex w-full min-w-0 flex-col gap-y-2 sm:w-auto sm:items-end">
             <ChipGroup label="Example" value={example} options={examples} onChange={setExample} />
             <ChipGroup label="Theme" value={themeKey} options={themes} onChange={setThemeKey} />
             {modeSource === 'self' && (
