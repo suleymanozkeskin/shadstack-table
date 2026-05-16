@@ -264,8 +264,6 @@ export const MRT_TableBodyCell = <TData extends MRT_RowData>({
           actionCell?.id === cell.id
             ? `1px solid color-mix(in oklch, var(--foreground) 50%, transparent)`
             : undefined,
-        outlineOffset: '-1px',
-        overflow: 'hidden',
         padding,
         textOverflow: columnDefType !== 'display' ? 'ellipsis' : undefined,
         whiteSpace: row.getIsPinned() || density === 'compact' ? 'nowrap' : 'normal',
@@ -277,7 +275,7 @@ export const MRT_TableBodyCell = <TData extends MRT_RowData>({
         ...draggingBorders,
         ...tableCellProps?.style,
       }}
-      className={cn(className, tableCellProps?.className)}
+      className={cn('overflow-hidden outline-offset-[-1px]', className, tableCellProps?.className)}
     >
       {tableCellProps.children ?? (
         <>
