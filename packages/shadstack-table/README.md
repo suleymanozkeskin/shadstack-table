@@ -73,6 +73,7 @@ A small set of MRT features are deferred to a later minor:
 
 ## Links
 
+- Documentation: <https://suleymanozkeskin.github.io/shadstack-table/>
 - Source & issues: <https://github.com/suleymanozkeskin/shadstack-table>
 - Changelog: [CHANGELOG.md](https://github.com/suleymanozkeskin/shadstack-table/blob/main/CHANGELOG.md)
 
