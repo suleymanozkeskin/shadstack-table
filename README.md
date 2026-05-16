@@ -2,7 +2,7 @@
 
 A shadcn/ui-native React data table with the same feature surface as [`material-react-table`](https://github.com/KevinVandy/material-react-table) — minus the MUI dependency. Built on TanStack Table v8 + TanStack Virtual.
 
-> **Status: pre-1.0.** Feature-complete fork — the initial port of every MRT feature is shipped and the build is clean (lint / format / typecheck / build / tests all green). Not yet on npm. Stabilization, deeper tests, and the new docs site (Astro + Starlight at `apps/docs/`) come before a 1.0 tag.
+> **Status: 0.1.0 on npm — pre-1.0.** The full MRT feature surface is ported; API shape is stable but may still get breaking refinements before 1.0. Install with `bun add shadstack-table` (or `npm install shadstack-table`).
 
 ## Why
 
@@ -21,18 +21,16 @@ So:
 2. Rename `MaterialReactTable` → `ShadStackTable` (and `useMaterialReactTable` → `useShadStackTable`).
 3. Find-replace the `MRT_*` type prefix with `SST_*`.
 4. Find-replace the built-in column IDs (`'mrt-row-select'`, `'mrt-row-actions'`, `'mrt-row-expand'`, `'mrt-row-drag'`, `'mrt-row-numbers'`, `'mrt-row-pin'`, `'mrt-row-spacer'`) — replace the `mrt-` prefix with `sst-` anywhere they appear in `state.columnOrder`, `state.columnPinning`, custom column ordering logic, etc.
-5. Apply the `muiXxxProps` → `slotProps.xxx` rename pass (one-to-one mapping, documented in [PORT_PLAN.md](./PORT_PLAN.md)).
+5. Apply the `muiXxxProps` → `slotProps.xxx` rename pass — every MUI-prefixed slot prop is now under `slotProps`.
 
-## v1 scope
-
-Feature parity targets, in the order they matter:
+## Feature surface
 
 - Sort, filter, paginate, row select, expand
 - Column visibility, pinning, density toggle, column resize
 - Virtualization (TanStack Virtual)
 - Cell editing modes (modal + inline)
 
-See [GOAL.md](./GOAL.md) for the full scope, non-goals, architectural principles, and post-v1 future work (test suite, react-doctor, enforced CI gates).
+**Deferred to a later minor:** `filterVariant: 'autocomplete'` (falls back to text input with a one-time `console.warn`), column drag-reorder, and `filterVariant: 'time' | 'datetime' | 'time-range' | 'datetime-range'` (native `<input>` until a shadcn time picker recipe lands). `date` and `date-range` use shadcn `Popover` + `Calendar`.
 
 ## Stack
 
@@ -65,9 +63,9 @@ shadstack-table/
 │           ├── types.ts
 │           └── index.ts
 ├── apps/
-│   └── playground/         # Vite + React 19 dev sandbox / smoke test
-├── GOAL.md                 # product goal, principles, non-goals, future work
-├── PORT_PLAN.md            # architecture & contributor reference (MUI→shadcn mapping, quirks, decisions)
+│   ├── playground/         # Vite + React 19 dev sandbox / smoke test
+│   └── docs/               # Astro + Starlight documentation site
+├── CHANGELOG.md
 └── LICENSE                 # MIT, with material-react-table attribution
 ```
 

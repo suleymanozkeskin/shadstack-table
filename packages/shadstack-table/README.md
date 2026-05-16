@@ -61,7 +61,7 @@ The consumer-facing rename is one-to-one:
 1. Rename `MaterialReactTable` → `ShadStackTable`, `useMaterialReactTable` → `useShadStackTable`.
 2. Find-replace the `MRT_*` type prefix with `SST_*`.
 3. Replace built-in column IDs (`'mrt-row-select'`, `'mrt-row-actions'`, `'mrt-row-expand'`, `'mrt-row-drag'`, `'mrt-row-numbers'`, `'mrt-row-pin'`, `'mrt-row-spacer'`) — swap the `mrt-` prefix for `sst-`.
-4. Apply the `muiXxxProps` → `slotProps.xxx` rename pass — see [PORT_PLAN.md](https://github.com/suleymanozkeskin/shadstack-table/blob/main/PORT_PLAN.md) for the full mapping table.
+4. Apply the `muiXxxProps` → `slotProps.xxx` rename pass — every MUI-prefixed slot prop is now under `slotProps` (e.g. `muiTableBodyRowProps` → `slotProps.tableBodyRow`).
 
 ## v1 deferred features
 
@@ -71,14 +71,10 @@ A small set of MRT features are deferred to a later minor:
 - Column drag-reorder — not in v1; column resize and pinning are supported.
 - `filterVariant: 'time' | 'datetime' | 'time-range' | 'datetime-range'` — use a native `<input>` until a shadcn time picker recipe exists. `date` and `date-range` already use shadcn `Popover` + `Calendar`.
 
-See the [repo's PORT_PLAN.md](https://github.com/suleymanozkeskin/shadstack-table/blob/main/PORT_PLAN.md) for the full mapping and deferred-feature rationale.
-
 ## Links
 
 - Source & issues: <https://github.com/suleymanozkeskin/shadstack-table>
 - Changelog: [CHANGELOG.md](https://github.com/suleymanozkeskin/shadstack-table/blob/main/CHANGELOG.md)
-- Architecture / migration guide: [PORT_PLAN.md](https://github.com/suleymanozkeskin/shadstack-table/blob/main/PORT_PLAN.md)
-- Goals & non-goals: [GOAL.md](https://github.com/suleymanozkeskin/shadstack-table/blob/main/GOAL.md)
 
 ## Acknowledgements
 

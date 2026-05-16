@@ -20,7 +20,7 @@ First public pre-release. The full `material-react-table` feature surface is por
 ### Changed
 
 - Built-in column ID prefix: `mrt-*` → `sst-*` (`sst-row-select`, `sst-row-actions`, etc.).
-- `muiXxxProps` → `slotProps.xxx` one-to-one rename; see [PORT_PLAN.md](./PORT_PLAN.md) for the full mapping.
+- `muiXxxProps` → `slotProps.xxx` one-to-one rename — every MUI-prefixed slot prop now goes through `slotProps`.
 
 ### Deferred (not in 0.1.0)
 

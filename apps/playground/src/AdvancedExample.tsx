@@ -58,7 +58,7 @@ export function AdvancedExample() {
             header: 'Email',
             size: 260,
             enableClickToCopy: true,
-            // TODO(post-v1): filterVariant 'autocomplete' is per PORT_PLAN punted to v1.x.
+            // TODO(post-v1): filterVariant 'autocomplete' is a deferred feature.
             // Falls back to Input text filter for now.
             filterVariant: 'autocomplete',
           },
@@ -128,7 +128,7 @@ export function AdvancedExample() {
     // packages/shadstack-table/src/utils/style.utils.ts:111.
     layoutMode: 'grid',
     enableColumnFilterModes: true,
-    // TODO(post-v1): column drag-reorder is deferred per GOAL.md non-goals.
+    // TODO(post-v1): column drag-reorder is a deferred feature.
     // Flag wired here so the toolbar button renders, but the drag handle is a no-op.
     enableColumnOrdering: true,
     enableGrouping: true,
