@@ -1,0 +1,83 @@
+// oxlint-disable jsx-a11y/no-static-element-interactions -- verbatim port of upstream MRT
+import * as React from 'react';
+import { MRT_TableContainer } from './MRT_TableContainer';
+import { cn } from '../../lib/utils';
+import { type MRT_RowData, type MRT_TableInstance } from '../../types';
+import { parseFromValuesOrFunc } from '../../utils/utils';
+import { MRT_BottomToolbar } from '../toolbar/MRT_BottomToolbar';
+import { MRT_TopToolbar } from '../toolbar/MRT_TopToolbar';
+
+export interface MRT_TablePaperProps<
+  TData extends MRT_RowData,
+> extends React.ComponentProps<'div'> {
+  table: MRT_TableInstance<TData>;
+}
+
+export const MRT_TablePaper = <TData extends MRT_RowData>({
+  className,
+  table,
+  ...rest
+}: MRT_TablePaperProps<TData>) => {
+  const {
+    getState,
+    options: {
+      enableBottomToolbar,
+      enableTopToolbar,
+      mrtTheme: { baseBackgroundColor },
+      renderBottomToolbar,
+      renderTopToolbar,
+      slotProps,
+    },
+    refs: { tablePaperRef },
+  } = table;
+  const { isFullScreen } = getState();
+
+  const paperProps = {
+    ...parseFromValuesOrFunc(slotProps?.tablePaper, { table }),
+    ...rest,
+  };
+
+  return (
+    <div
+      onKeyDown={(e) => e.key === 'Escape' && table.setIsFullScreen(false)}
+      {...paperProps}
+      ref={(ref: HTMLDivElement | null) => {
+        tablePaperRef.current = ref!;
+        if (typeof paperProps?.ref === 'function') paperProps.ref(ref!);
+      }}
+      style={{
+        backgroundColor: baseBackgroundColor,
+        ...(isFullScreen
+          ? {
+              bottom: 0,
+              height: '100dvh',
+              left: 0,
+              margin: 0,
+              maxHeight: '100dvh',
+              maxWidth: '100dvw',
+              padding: 0,
+              position: 'fixed',
+              right: 0,
+              top: 0,
+              width: '100dvw',
+              zIndex: 50,
+            }
+          : {}),
+        ...paperProps?.style,
+      }}
+      className={cn(
+        'rounded-md border shadow-md overflow-hidden transition-all duration-100 ease-in-out',
+        className,
+        paperProps?.className,
+      )}
+    >
+      {enableTopToolbar &&
+        (parseFromValuesOrFunc(renderTopToolbar, { table }) ?? <MRT_TopToolbar table={table} />)}
+      <MRT_TableContainer table={table} />
+      {enableBottomToolbar &&
+        (parseFromValuesOrFunc(renderBottomToolbar, { table }) ?? (
+          <MRT_BottomToolbar table={table} />
+        ))}
+    </div>
+  );
+};
