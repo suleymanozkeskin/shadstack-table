@@ -1,0 +1,64 @@
+---
+title: Getting started
+description: Install shadstack-table and render your first table.
+---
+
+import { BasicTable } from '../../components/examples/BasicTable.tsx';
+
+## Install
+
+```bash
+bun add shadstack-table
+# or: npm install shadstack-table
+```
+
+Peer dependencies: `react >= 18` and `react-dom >= 18`.
+
+## Import the stylesheet
+
+`shadstack-table` ships a single stylesheet of Tailwind v4 utilities and CSS-variable
+defaults. Import it once at the entry point of your app:
+
+```ts
+import 'shadstack-table/style.css';
+```
+
+If you already have a shadcn/ui setup, your own `--background` / `--foreground` / etc.
+tokens win — the library's defaults are wrapped in `:where()` so they carry zero
+specificity and your theme stays authoritative.
+
+## Render a table
+
+```tsx
+import { useMemo } from 'react';
+import {
+  ShadStackTable,
+  useShadStackTable,
+  type SST_ColumnDef,
+} from 'shadstack-table';
+
+type Person = { id: number; firstName: string; lastName: string };
+
+const data: Person[] = [
+  { id: 1, firstName: 'Ada', lastName: 'Lovelace' },
+  { id: 2, firstName: 'Grace', lastName: 'Hopper' },
+];
+
+export function People() {
+  const columns = useMemo<SST_ColumnDef<Person>[]>(
+    () => [
+      { accessorKey: 'id', header: 'ID', size: 60 },
+      { accessorKey: 'firstName', header: 'First name' },
+      { accessorKey: 'lastName', header: 'Last name' },
+    ],
+    [],
+  );
+
+  const table = useShadStackTable({ columns, data });
+  return <ShadStackTable table={table} />;
+}
+```
+
+## Live result
+
+<BasicTable client:visible />
