@@ -1,7 +1,7 @@
 {
   "name": "shadstack-table",
   "version": "0.0.0",
-  "description": "shadcn-native React data table with material-react-table feature parity, built on TanStack Table v8",
+  "description": "shadcn-native React data table — full data-table feature surface on TanStack Table v8 + shadcn/ui primitives.",
   "files": [
     "dist"
   ],

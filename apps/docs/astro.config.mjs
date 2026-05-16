@@ -15,7 +15,8 @@ export default defineConfig({
     react(),
     starlight({
       title: 'shadstack-table',
-      description: 'shadcn-native React data table with material-react-table feature parity.',
+      description:
+        'shadcn-native React data table — full data-table feature surface on TanStack Table v8 + shadcn/ui primitives.',
       // Inject our Tailwind v4 stylesheet so library tokens + utility classes
       // are available everywhere — including inside MDX <ShadStackTable/> islands.
       customCss: ['./src/styles/global.css'],
