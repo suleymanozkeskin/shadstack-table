@@ -1,14 +1,14 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { MaterialReactTable } from '../components/MaterialReactTable';
+import { ShadStackTable } from '../components/ShadStackTable';
 import { people, personColumns } from './fixtures';
 
-describe('MaterialReactTable — column filter', () => {
+describe('ShadStackTable — column filter', () => {
   it('filters rows down to substring matches in the typed column', async () => {
     const user = userEvent.setup();
     render(
-      <MaterialReactTable
+      <ShadStackTable
         columns={personColumns}
         data={people}
         initialState={{ showColumnFilters: true }}

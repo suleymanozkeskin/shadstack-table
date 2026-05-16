@@ -25,82 +25,82 @@ export * from './fns/filterFns';
 export * from './fns/sortingFns';
 
 //hooks
-export * from './hooks/useMaterialReactTable';
-export * from './hooks/useMRT_ColumnVirtualizer';
-export * from './hooks/useMRT_Effects';
-export * from './hooks/useMRT_RowVirtualizer';
-export * from './hooks/useMRT_Rows';
-export * from './hooks/useMRT_TableInstance';
-export * from './hooks/useMRT_TableOptions';
+export * from './hooks/useShadStackTable';
+export * from './hooks/useSST_ColumnVirtualizer';
+export * from './hooks/useSST_Effects';
+export * from './hooks/useSST_RowVirtualizer';
+export * from './hooks/useSST_Rows';
+export * from './hooks/useSST_TableInstance';
+export * from './hooks/useSST_TableOptions';
 
 //components
-export * from './components/MaterialReactTable';
+export * from './components/ShadStackTable';
 //body components
-export * from './components/body/MRT_TableBody';
-export * from './components/body/MRT_TableBodyCell';
-export * from './components/body/MRT_TableBodyCellValue';
-export * from './components/body/MRT_TableBodyRow';
-export * from './components/body/MRT_TableBodyRowGrabHandle';
-export * from './components/body/MRT_TableBodyRowPinButton';
-export * from './components/body/MRT_TableDetailPanel';
+export * from './components/body/SST_TableBody';
+export * from './components/body/SST_TableBodyCell';
+export * from './components/body/SST_TableBodyCellValue';
+export * from './components/body/SST_TableBodyRow';
+export * from './components/body/SST_TableBodyRowGrabHandle';
+export * from './components/body/SST_TableBodyRowPinButton';
+export * from './components/body/SST_TableDetailPanel';
 //button components
-export * from './components/buttons/MRT_ColumnPinningButtons';
-export * from './components/buttons/MRT_CopyButton';
-export * from './components/buttons/MRT_EditActionButtons';
-export * from './components/buttons/MRT_ExpandAllButton';
-export * from './components/buttons/MRT_ExpandButton';
-export * from './components/buttons/MRT_GrabHandleButton';
-export * from './components/buttons/MRT_RowPinButton';
-export * from './components/buttons/MRT_ShowHideColumnsButton';
-export * from './components/buttons/MRT_ToggleDensePaddingButton';
-export * from './components/buttons/MRT_ToggleFiltersButton';
-export * from './components/buttons/MRT_ToggleFullScreenButton';
-export * from './components/buttons/MRT_ToggleGlobalFilterButton';
-export * from './components/buttons/MRT_ToggleRowActionMenuButton';
+export * from './components/buttons/SST_ColumnPinningButtons';
+export * from './components/buttons/SST_CopyButton';
+export * from './components/buttons/SST_EditActionButtons';
+export * from './components/buttons/SST_ExpandAllButton';
+export * from './components/buttons/SST_ExpandButton';
+export * from './components/buttons/SST_GrabHandleButton';
+export * from './components/buttons/SST_RowPinButton';
+export * from './components/buttons/SST_ShowHideColumnsButton';
+export * from './components/buttons/SST_ToggleDensePaddingButton';
+export * from './components/buttons/SST_ToggleFiltersButton';
+export * from './components/buttons/SST_ToggleFullScreenButton';
+export * from './components/buttons/SST_ToggleGlobalFilterButton';
+export * from './components/buttons/SST_ToggleRowActionMenuButton';
 //footer components
-export * from './components/footer/MRT_TableFooter';
-export * from './components/footer/MRT_TableFooterCell';
-export * from './components/footer/MRT_TableFooterRow';
+export * from './components/footer/SST_TableFooter';
+export * from './components/footer/SST_TableFooterCell';
+export * from './components/footer/SST_TableFooterRow';
 //head components
-export * from './components/head/MRT_TableHead';
-export * from './components/head/MRT_TableHeadCell';
-export * from './components/head/MRT_TableHeadCellColumnActionsButton';
-export * from './components/head/MRT_TableHeadCellFilterContainer';
-export * from './components/head/MRT_TableHeadCellFilterLabel';
-export * from './components/head/MRT_TableHeadCellGrabHandle';
-export * from './components/head/MRT_TableHeadCellResizeHandle';
-export * from './components/head/MRT_TableHeadCellSortLabel';
-export * from './components/head/MRT_TableHeadRow';
+export * from './components/head/SST_TableHead';
+export * from './components/head/SST_TableHeadCell';
+export * from './components/head/SST_TableHeadCellColumnActionsButton';
+export * from './components/head/SST_TableHeadCellFilterContainer';
+export * from './components/head/SST_TableHeadCellFilterLabel';
+export * from './components/head/SST_TableHeadCellGrabHandle';
+export * from './components/head/SST_TableHeadCellResizeHandle';
+export * from './components/head/SST_TableHeadCellSortLabel';
+export * from './components/head/SST_TableHeadRow';
 //input components
-export * from './components/inputs/MRT_EditCellTextField';
-export * from './components/inputs/MRT_FilterCheckbox';
-export * from './components/inputs/MRT_FilterRangeFields';
-export * from './components/inputs/MRT_FilterRangeSlider';
-export * from './components/inputs/MRT_FilterTextField';
-export * from './components/inputs/MRT_GlobalFilterTextField';
-export * from './components/inputs/MRT_SelectCheckbox';
+export * from './components/inputs/SST_EditCellTextField';
+export * from './components/inputs/SST_FilterCheckbox';
+export * from './components/inputs/SST_FilterRangeFields';
+export * from './components/inputs/SST_FilterRangeSlider';
+export * from './components/inputs/SST_FilterTextField';
+export * from './components/inputs/SST_GlobalFilterTextField';
+export * from './components/inputs/SST_SelectCheckbox';
 //menu components
-export * from './components/menus/MRT_ActionMenuItem';
-export * from './components/menus/MRT_ColumnActionMenu';
-export * from './components/menus/MRT_FilterOptionMenu';
-export * from './components/menus/MRT_RowActionMenu';
-export * from './components/menus/MRT_ShowHideColumnsMenu';
-export * from './components/menus/MRT_ShowHideColumnsMenuItems';
+export * from './components/menus/SST_ActionMenuItem';
+export * from './components/menus/SST_ColumnActionMenu';
+export * from './components/menus/SST_FilterOptionMenu';
+export * from './components/menus/SST_RowActionMenu';
+export * from './components/menus/SST_ShowHideColumnsMenu';
+export * from './components/menus/SST_ShowHideColumnsMenuItems';
 //modal components
-export * from './components/modals/MRT_EditRowModal';
+export * from './components/modals/SST_EditRowModal';
 //table components
-export * from './components/table/MRT_Table';
-export * from './components/table/MRT_TableContainer';
-export * from './components/table/MRT_TableLoadingOverlay';
-export * from './components/table/MRT_TablePaper';
+export * from './components/table/SST_Table';
+export * from './components/table/SST_TableContainer';
+export * from './components/table/SST_TableLoadingOverlay';
+export * from './components/table/SST_TablePaper';
 //toolbar components
-export * from './components/toolbar/MRT_BottomToolbar';
-export * from './components/toolbar/MRT_LinearProgressBar';
-export * from './components/toolbar/MRT_TablePagination';
-export * from './components/toolbar/MRT_ToolbarAlertBanner';
-export * from './components/toolbar/MRT_ToolbarDropZone';
-export * from './components/toolbar/MRT_ToolbarInternalButtons';
-export * from './components/toolbar/MRT_TopToolbar';
+export * from './components/toolbar/SST_BottomToolbar';
+export * from './components/toolbar/SST_LinearProgressBar';
+export * from './components/toolbar/SST_TablePagination';
+export * from './components/toolbar/SST_ToolbarAlertBanner';
+export * from './components/toolbar/SST_ToolbarDropZone';
+export * from './components/toolbar/SST_ToolbarInternalButtons';
+export * from './components/toolbar/SST_TopToolbar';
 
 export const VERSION = '0.0.0';
 

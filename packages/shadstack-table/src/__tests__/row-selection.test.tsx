@@ -2,15 +2,15 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
-import { MaterialReactTable } from '../components/MaterialReactTable';
-import { type MRT_RowSelectionState } from '../types';
+import { ShadStackTable } from '../components/ShadStackTable';
+import { type SST_RowSelectionState } from '../types';
 import { people, personColumns } from './fixtures';
 
 function Harness() {
-  const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
+  const [rowSelection, setRowSelection] = useState<SST_RowSelectionState>({});
   return (
     <>
-      <MaterialReactTable
+      <ShadStackTable
         columns={personColumns}
         data={people.slice(0, 3)}
         enableRowSelection
@@ -23,7 +23,7 @@ function Harness() {
   );
 }
 
-describe('MaterialReactTable — row selection', () => {
+describe('ShadStackTable — row selection', () => {
   it('flips rowSelection state when a row checkbox is clicked', async () => {
     const user = userEvent.setup();
     render(<Harness />);

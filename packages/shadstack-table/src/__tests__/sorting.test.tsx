@@ -1,13 +1,13 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { MaterialReactTable } from '../components/MaterialReactTable';
+import { ShadStackTable } from '../components/ShadStackTable';
 import { people, personColumns } from './fixtures';
 
-describe('MaterialReactTable — sorting', () => {
+describe('ShadStackTable — sorting', () => {
   it('toggles sort direction on column header click and reorders rows', async () => {
     const user = userEvent.setup();
-    render(<MaterialReactTable columns={personColumns} data={people} />);
+    render(<ShadStackTable columns={personColumns} data={people} />);
 
     const firstNameHeader = screen.getByRole('columnheader', { name: /first name/i });
     expect(firstNameHeader).toHaveAttribute('aria-sort', 'none');

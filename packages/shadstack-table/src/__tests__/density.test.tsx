@@ -2,15 +2,15 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
-import { MaterialReactTable } from '../components/MaterialReactTable';
-import { type MRT_DensityState } from '../types';
+import { ShadStackTable } from '../components/ShadStackTable';
+import { type SST_DensityState } from '../types';
 import { people, personColumns } from './fixtures';
 
-function Harness({ initialDensity }: { initialDensity: MRT_DensityState }) {
-  const [density, setDensity] = useState<MRT_DensityState>(initialDensity);
+function Harness({ initialDensity }: { initialDensity: SST_DensityState }) {
+  const [density, setDensity] = useState<SST_DensityState>(initialDensity);
   return (
     <>
-      <MaterialReactTable
+      <ShadStackTable
         columns={personColumns}
         data={people.slice(0, 2)}
         state={{ density }}
@@ -21,7 +21,7 @@ function Harness({ initialDensity }: { initialDensity: MRT_DensityState }) {
   );
 }
 
-describe('MaterialReactTable — density toggle', () => {
+describe('ShadStackTable — density toggle', () => {
   it('cycles density on toggle button click', async () => {
     const user = userEvent.setup();
     render(<Harness initialDensity="comfortable" />);

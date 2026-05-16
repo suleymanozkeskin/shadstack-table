@@ -1,5 +1,5 @@
-import { type MRT_Cell, type MRT_Header, type MRT_RowData, type MRT_TableInstance } from '../types';
-import { getMRT_RowSelectionHandler, getMRT_SelectAllHandler } from './row.utils';
+import { type SST_Cell, type SST_Header, type SST_RowData, type SST_TableInstance } from '../types';
+import { getSST_RowSelectionHandler, getSST_SelectAllHandler } from './row.utils';
 import { parseFromValuesOrFunc } from './utils';
 
 const isWinCtrlMacMeta = (event: React.KeyboardEvent<HTMLTableCellElement>) => {
@@ -9,12 +9,12 @@ const isWinCtrlMacMeta = (event: React.KeyboardEvent<HTMLTableCellElement>) => {
   );
 };
 
-export const isCellEditable = <TData extends MRT_RowData>({
+export const isCellEditable = <TData extends SST_RowData>({
   cell,
   table,
 }: {
-  cell: MRT_Cell<TData>;
-  table: MRT_TableInstance<TData>;
+  cell: SST_Cell<TData>;
+  table: SST_TableInstance<TData>;
 }) => {
   const { enableEditing } = table.options;
   const {
@@ -28,12 +28,12 @@ export const isCellEditable = <TData extends MRT_RowData>({
   );
 };
 
-export const openEditingCell = <TData extends MRT_RowData>({
+export const openEditingCell = <TData extends SST_RowData>({
   cell,
   table,
 }: {
-  cell: MRT_Cell<TData>;
-  table: MRT_TableInstance<TData>;
+  cell: SST_Cell<TData>;
+  table: SST_TableInstance<TData>;
 }) => {
   const {
     options: { editDisplayMode },
@@ -53,7 +53,7 @@ export const openEditingCell = <TData extends MRT_RowData>({
   }
 };
 
-export const cellKeyboardShortcuts = <TData extends MRT_RowData = MRT_RowData>({
+export const cellKeyboardShortcuts = <TData extends SST_RowData = SST_RowData>({
   cell,
   cellElements,
   cellValue,
@@ -63,14 +63,14 @@ export const cellKeyboardShortcuts = <TData extends MRT_RowData = MRT_RowData>({
   parentElement,
   table,
 }: {
-  cell?: MRT_Cell<TData>;
-  header?: MRT_Header<TData>;
+  cell?: SST_Cell<TData>;
+  header?: SST_Header<TData>;
   cellElements?: Array<HTMLTableCellElement>;
   cellValue?: string;
   containerElement?: HTMLTableElement;
   event: React.KeyboardEvent<HTMLTableCellElement>;
   parentElement?: HTMLTableRowElement;
-  table: MRT_TableInstance<TData>;
+  table: SST_TableInstance<TData>;
 }) => {
   if (!table.options.enableKeyboardShortcuts) return;
   if (event.isPropagationStopped()) return;
@@ -81,7 +81,7 @@ export const cellKeyboardShortcuts = <TData extends MRT_RowData = MRT_RowData>({
   } else if (['Enter', ' '].includes(event.key)) {
     if (cell?.column?.id === 'mrt-row-select') {
       event.preventDefault();
-      getMRT_RowSelectionHandler({
+      getSST_RowSelectionHandler({
         row: cell.row,
         table,
         //@ts-expect-error
@@ -89,7 +89,7 @@ export const cellKeyboardShortcuts = <TData extends MRT_RowData = MRT_RowData>({
       })(event as any);
     } else if (header?.column?.id === 'mrt-row-select' && table.options.enableSelectAll) {
       event.preventDefault();
-      getMRT_SelectAllHandler({
+      getSST_SelectAllHandler({
         table,
       })(event as any);
     } else if (

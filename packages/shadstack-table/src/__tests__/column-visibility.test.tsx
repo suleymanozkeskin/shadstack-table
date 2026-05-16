@@ -1,13 +1,13 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { MaterialReactTable } from '../components/MaterialReactTable';
+import { ShadStackTable } from '../components/ShadStackTable';
 import { people, personColumnsWithAge } from './fixtures';
 
-describe('MaterialReactTable — column visibility', () => {
+describe('ShadStackTable — column visibility', () => {
   it('hides a column when its switch is toggled off via the show/hide menu', async () => {
     const user = userEvent.setup();
-    render(<MaterialReactTable columns={personColumnsWithAge} data={people} />);
+    render(<ShadStackTable columns={personColumnsWithAge} data={people} />);
 
     // Sanity: all three column headers present.
     expect(screen.getByRole('columnheader', { name: /first name/i })).toBeInTheDocument();

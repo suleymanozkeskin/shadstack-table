@@ -1,6 +1,6 @@
-import { type MRT_Localization } from '..';
+import { type SST_Localization } from '..';
 
-export const MRT_Localization_ZH_HANS: MRT_Localization = {
+export const SST_Localization_ZH_HANS: SST_Localization = {
   language: 'zh-Hans',
   actions: '操作',
   and: '与',

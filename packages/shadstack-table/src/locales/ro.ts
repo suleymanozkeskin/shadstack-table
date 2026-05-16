@@ -1,6 +1,6 @@
-import { type MRT_Localization } from '..';
+import { type SST_Localization } from '..';
 
-export const MRT_Localization_RO: MRT_Localization = {
+export const SST_Localization_RO: SST_Localization = {
   language: 'ro',
   actions: 'Acțiuni',
   and: 'și',

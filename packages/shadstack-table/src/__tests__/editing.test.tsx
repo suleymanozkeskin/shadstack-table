@@ -1,16 +1,16 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { MaterialReactTable } from '../components/MaterialReactTable';
+import { ShadStackTable } from '../components/ShadStackTable';
 import { people, personColumns } from './fixtures';
 
-describe('MaterialReactTable — editing (modal mode)', () => {
+describe('ShadStackTable — editing (modal mode)', () => {
   it('opens edit modal, accepts input changes, and calls onEditingRowSave with new values', async () => {
     const user = userEvent.setup();
     const onEditingRowSave = vi.fn();
 
     render(
-      <MaterialReactTable
+      <ShadStackTable
         columns={personColumns}
         data={people.slice(0, 2)}
         enableEditing

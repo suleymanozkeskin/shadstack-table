@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
-import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef } from 'shadstack-table';
+import { ShadStackTable, useShadStackTable, type SST_ColumnDef } from 'shadstack-table';
 import { type Person, people } from './data/people';
 
 export function BasicExample() {
-  const columns = useMemo<MRT_ColumnDef<Person>[]>(
+  const columns = useMemo<SST_ColumnDef<Person>[]>(
     () => [
       { accessorKey: 'id', header: 'ID', size: 80, enableEditing: false },
       { accessorKey: 'firstName', header: 'First name' },
@@ -28,7 +28,7 @@ export function BasicExample() {
     [],
   );
 
-  const table = useMaterialReactTable({
+  const table = useShadStackTable({
     columns,
     data: people,
     enableRowSelection: true,
@@ -49,5 +49,5 @@ export function BasicExample() {
     },
   });
 
-  return <MaterialReactTable table={table} />;
+  return <ShadStackTable table={table} />;
 }

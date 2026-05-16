@@ -1,6 +1,6 @@
-import { type MRT_Localization } from '..';
+import { type SST_Localization } from '..';
 
-export const MRT_Localization_DA: MRT_Localization = {
+export const SST_Localization_DA: SST_Localization = {
   language: 'da',
   actions: 'Handlinger',
   and: 'og',

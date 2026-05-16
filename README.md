@@ -11,11 +11,11 @@ A shadcn/ui-native React data table with the same feature surface as [`material-
 If you're migrating from MRT, the consumer-facing change is roughly:
 
 ```diff
-- import { MaterialReactTable } from 'material-react-table';
-+ import { MaterialReactTable } from 'shadstack-table';
+- import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef } from 'material-react-table';
++ import { ShadStackTable,    useShadStackTable,    type SST_ColumnDef } from 'shadstack-table';
 ```
 
-Plus a `muiXxxProps` → `slotProps.xxx` rename pass (one-to-one mapping, documented in [PORT_PLAN.md](./PORT_PLAN.md)).
+So: rename the package, rename `MaterialReactTable` → `ShadStackTable` (and `useMaterialReactTable` → `useShadStackTable`), and find-replace the `MRT_*` type prefix with `SST_*`. Plus a `muiXxxProps` → `slotProps.xxx` rename pass (one-to-one mapping, documented in [PORT_PLAN.md](./PORT_PLAN.md)).
 
 ## v1 scope
 
@@ -50,9 +50,9 @@ shadstack-table/
 │   └── shadstack-table/    # the library
 │       └── src/
 │           ├── _ui/        # shadcn primitives (Radix wrappers)
-│           ├── components/ # MRT_* components — mirrors upstream paths 1:1
+│           ├── components/ # SST_* components — mirrors upstream paths 1:1
 │           ├── fns/        # filter / sort / aggregation fns
-│           ├── hooks/      # useMaterialReactTable + internal hooks
+│           ├── hooks/      # useShadStackTable + internal hooks
 │           ├── locales/    # 39 locales
 │           ├── utils/      # cell / column / row / style utilities
 │           ├── icons.ts

@@ -9,7 +9,7 @@ Pair this with [GOAL.md](./GOAL.md) (product goal & architectural principles) an
 ## Strategy: literal port
 
 - **File-for-file mirror.** Every file under `material-react-table/packages/material-react-table/src/**` has a corresponding file at `packages/shadstack-table/src/**` with the same path and same filename.
-- **Identical exports.** `MRT_*` prefix is preserved. `MaterialReactTable` is exported under that exact name. Consumers migrate by changing only the import path: `from 'material-react-table'` → `from 'shadstack-table'`.
+- **Renamed exports (2026-05-16).** The `MRT_*` prefix is renamed to `SST_*` (ShadStack Table); the main component is `ShadStackTable` and the hook is `useShadStackTable`. Consumers migrate by renaming the import path, renaming `MaterialReactTable` → `ShadStackTable`, and find-replacing `MRT_*` → `SST_*` for type/component imports. Rationale: the library no longer ships MUI and the consumer API is shadcn-shaped — keeping upstream's MRT identifiers would be misleading branding.
 - **Only MUI is replaced.** MUI components → shadcn (Radix + Tailwind). MUI icons → lucide-react. MUI `sx` props / `Theme` → Tailwind class strings via `cn()`. Everything else (logic, hooks, TanStack Table usage, filter fns, locales) is copied verbatim.
 - **No drop-in `muiXxxProps` compat.** Per GOAL.md, consumer-facing prop names become `slotProps`/shadcn-shaped. The internal component tree mirrors MRT exactly so we can diff upstream PRs.
 
@@ -110,7 +110,7 @@ Used by every `components/**/*.tsx` port. Where shadcn lacks a direct equivalent
 
 ## MUI icon → lucide-react mapping
 
-For `src/icons.ts`. Names on the right are lucide exports; the keys of `MRT_Default_Icons` keep MRT's naming (`ArrowDownwardIcon`, etc.) so downstream code is unchanged.
+For `src/icons.ts`. Names on the right are lucide exports; the keys of `SST_Default_Icons` keep MRT's naming (`ArrowDownwardIcon`, etc.) so downstream code is unchanged.
 
 | MRT key                       | lucide           |
 | ----------------------------- | ---------------- |
@@ -209,91 +209,91 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ### `src/hooks/` (8 files + 7 display-column hooks)
 
-- [x] `useMaterialReactTable.ts`
-- [x] `useMRT_ColumnVirtualizer.ts`
-- [x] `useMRT_Effects.ts`
-- [x] `useMRT_RowVirtualizer.ts`
-- [x] `useMRT_Rows.ts`
-- [x] `useMRT_TableInstance.ts`
-- [x] `useMRT_TableOptions.ts`
-- [x] `display-columns/getMRT_RowActionsColumnDef.tsx`
-- [x] `display-columns/getMRT_RowDragColumnDef.tsx`
-- [x] `display-columns/getMRT_RowExpandColumnDef.tsx`
-- [x] `display-columns/getMRT_RowNumbersColumnDef.tsx`
-- [x] `display-columns/getMRT_RowPinningColumnDef.tsx`
-- [x] `display-columns/getMRT_RowSelectColumnDef.tsx`
-- [x] `display-columns/getMRT_RowSpacerColumnDef.tsx`
+- [x] `useShadStackTable.ts`
+- [x] `useSST_ColumnVirtualizer.ts`
+- [x] `useSST_Effects.ts`
+- [x] `useSST_RowVirtualizer.ts`
+- [x] `useSST_Rows.ts`
+- [x] `useSST_TableInstance.ts`
+- [x] `useSST_TableOptions.ts`
+- [x] `display-columns/getSST_RowActionsColumnDef.tsx`
+- [x] `display-columns/getSST_RowDragColumnDef.tsx`
+- [x] `display-columns/getSST_RowExpandColumnDef.tsx`
+- [x] `display-columns/getSST_RowNumbersColumnDef.tsx`
+- [x] `display-columns/getSST_RowPinningColumnDef.tsx`
+- [x] `display-columns/getSST_RowSelectColumnDef.tsx`
+- [x] `display-columns/getSST_RowSpacerColumnDef.tsx`
 
 ### `src/components/` (59 files — heaviest MUI swap)
 
-- [x] `MaterialReactTable.tsx`
+- [x] `ShadStackTable.tsx`
 - **body/** (7)
-  - [x] `MRT_TableBody.tsx`
-  - [x] `MRT_TableBodyCell.tsx`
-  - [x] `MRT_TableBodyCellValue.tsx`
-  - [x] `MRT_TableBodyRow.tsx`
-  - [x] `MRT_TableBodyRowGrabHandle.tsx`
-  - [x] `MRT_TableBodyRowPinButton.tsx`
-  - [x] `MRT_TableDetailPanel.tsx`
+  - [x] `SST_TableBody.tsx`
+  - [x] `SST_TableBodyCell.tsx`
+  - [x] `SST_TableBodyCellValue.tsx`
+  - [x] `SST_TableBodyRow.tsx`
+  - [x] `SST_TableBodyRowGrabHandle.tsx`
+  - [x] `SST_TableBodyRowPinButton.tsx`
+  - [x] `SST_TableDetailPanel.tsx`
 - **buttons/** (13)
-  - [x] `MRT_ColumnPinningButtons.tsx`
-  - [x] `MRT_CopyButton.tsx`
-  - [x] `MRT_EditActionButtons.tsx`
-  - [x] `MRT_ExpandAllButton.tsx`
-  - [x] `MRT_ExpandButton.tsx`
-  - [x] `MRT_GrabHandleButton.tsx`
-  - [x] `MRT_RowPinButton.tsx`
-  - [x] `MRT_ShowHideColumnsButton.tsx`
-  - [x] `MRT_ToggleDensePaddingButton.tsx`
-  - [x] `MRT_ToggleFiltersButton.tsx`
-  - [x] `MRT_ToggleFullScreenButton.tsx`
-  - [x] `MRT_ToggleGlobalFilterButton.tsx`
-  - [x] `MRT_ToggleRowActionMenuButton.tsx`
+  - [x] `SST_ColumnPinningButtons.tsx`
+  - [x] `SST_CopyButton.tsx`
+  - [x] `SST_EditActionButtons.tsx`
+  - [x] `SST_ExpandAllButton.tsx`
+  - [x] `SST_ExpandButton.tsx`
+  - [x] `SST_GrabHandleButton.tsx`
+  - [x] `SST_RowPinButton.tsx`
+  - [x] `SST_ShowHideColumnsButton.tsx`
+  - [x] `SST_ToggleDensePaddingButton.tsx`
+  - [x] `SST_ToggleFiltersButton.tsx`
+  - [x] `SST_ToggleFullScreenButton.tsx`
+  - [x] `SST_ToggleGlobalFilterButton.tsx`
+  - [x] `SST_ToggleRowActionMenuButton.tsx`
 - **footer/** (3)
-  - [x] `MRT_TableFooter.tsx`
-  - [x] `MRT_TableFooterCell.tsx`
-  - [x] `MRT_TableFooterRow.tsx`
+  - [x] `SST_TableFooter.tsx`
+  - [x] `SST_TableFooterCell.tsx`
+  - [x] `SST_TableFooterRow.tsx`
 - **head/** (9)
-  - [x] `MRT_TableHead.tsx`
-  - [x] `MRT_TableHeadCell.tsx`
-  - [x] `MRT_TableHeadCellColumnActionsButton.tsx`
-  - [x] `MRT_TableHeadCellFilterContainer.tsx`
-  - [x] `MRT_TableHeadCellFilterLabel.tsx`
-  - [x] `MRT_TableHeadCellGrabHandle.tsx`
-  - [x] `MRT_TableHeadCellResizeHandle.tsx`
-  - [x] `MRT_TableHeadCellSortLabel.tsx`
-  - [x] `MRT_TableHeadRow.tsx`
+  - [x] `SST_TableHead.tsx`
+  - [x] `SST_TableHeadCell.tsx`
+  - [x] `SST_TableHeadCellColumnActionsButton.tsx`
+  - [x] `SST_TableHeadCellFilterContainer.tsx`
+  - [x] `SST_TableHeadCellFilterLabel.tsx`
+  - [x] `SST_TableHeadCellGrabHandle.tsx`
+  - [x] `SST_TableHeadCellResizeHandle.tsx`
+  - [x] `SST_TableHeadCellSortLabel.tsx`
+  - [x] `SST_TableHeadRow.tsx`
 - **inputs/** (7)
-  - [x] `MRT_EditCellTextField.tsx`
-  - [x] `MRT_FilterCheckbox.tsx`
-  - [x] `MRT_FilterRangeFields.tsx`
-  - [x] `MRT_FilterRangeSlider.tsx`
-  - [x] `MRT_FilterTextField.tsx`
-  - [x] `MRT_GlobalFilterTextField.tsx`
-  - [x] `MRT_SelectCheckbox.tsx`
+  - [x] `SST_EditCellTextField.tsx`
+  - [x] `SST_FilterCheckbox.tsx`
+  - [x] `SST_FilterRangeFields.tsx`
+  - [x] `SST_FilterRangeSlider.tsx`
+  - [x] `SST_FilterTextField.tsx`
+  - [x] `SST_GlobalFilterTextField.tsx`
+  - [x] `SST_SelectCheckbox.tsx`
 - **menus/** (7)
-  - [x] `MRT_ActionMenuItem.tsx`
-  - [x] `MRT_CellActionMenu.tsx`
-  - [x] `MRT_ColumnActionMenu.tsx`
-  - [x] `MRT_FilterOptionMenu.tsx`
-  - [x] `MRT_RowActionMenu.tsx`
-  - [x] `MRT_ShowHideColumnsMenu.tsx`
-  - [x] `MRT_ShowHideColumnsMenuItems.tsx`
+  - [x] `SST_ActionMenuItem.tsx`
+  - [x] `SST_CellActionMenu.tsx`
+  - [x] `SST_ColumnActionMenu.tsx`
+  - [x] `SST_FilterOptionMenu.tsx`
+  - [x] `SST_RowActionMenu.tsx`
+  - [x] `SST_ShowHideColumnsMenu.tsx`
+  - [x] `SST_ShowHideColumnsMenuItems.tsx`
 - **modals/** (1)
-  - [x] `MRT_EditRowModal.tsx`
+  - [x] `SST_EditRowModal.tsx`
 - **table/** (4)
-  - [x] `MRT_Table.tsx`
-  - [x] `MRT_TableContainer.tsx`
-  - [x] `MRT_TableLoadingOverlay.tsx`
-  - [x] `MRT_TablePaper.tsx`
+  - [x] `SST_Table.tsx`
+  - [x] `SST_TableContainer.tsx`
+  - [x] `SST_TableLoadingOverlay.tsx`
+  - [x] `SST_TablePaper.tsx`
 - **toolbar/** (7)
-  - [x] `MRT_BottomToolbar.tsx`
-  - [x] `MRT_LinearProgressBar.tsx`
-  - [x] `MRT_TablePagination.tsx`
-  - [x] `MRT_ToolbarAlertBanner.tsx`
-  - [x] `MRT_ToolbarDropZone.tsx`
-  - [x] `MRT_ToolbarInternalButtons.tsx`
-  - [x] `MRT_TopToolbar.tsx`
+  - [x] `SST_BottomToolbar.tsx`
+  - [x] `SST_LinearProgressBar.tsx`
+  - [x] `SST_TablePagination.tsx`
+  - [x] `SST_ToolbarAlertBanner.tsx`
+  - [x] `SST_ToolbarDropZone.tsx`
+  - [x] `SST_ToolbarInternalButtons.tsx`
+  - [x] `SST_TopToolbar.tsx`
 
 ### Top-level
 
@@ -318,7 +318,7 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 ## Decisions
 
 - 2026-05-16 — **Test suite scaffolded.** Vitest + `@testing-library/react` + happy-dom; tests live in `packages/shadstack-table/src/__tests__/`. 10 smoke tests cover the v1 priority feature surface. Wired into the `check` CI job; coverage workflow exists but is `workflow_dispatch`-only until the suite stabilizes. Pinning/resize/virtualization deferred to a Playwright pass (viewport-dependent behavior that happy-dom does not simulate).
-- **Component & file names unchanged from MRT** (`MRT_TableBody`, `MaterialReactTable`, etc.). Rationale: cheapest migration path for MRT users; easiest upstream-diff for ongoing parity. Rename in a future pass if desired.
+- 2026-05-16 — **Renamed away from upstream MRT naming.** `MRT_*` prefix → `SST_*`; `MaterialReactTable` → `ShadStackTable`; `useMaterialReactTable` → `useShadStackTable`. Locale message keys followed (e.g. `MRT_AggregationFn_count` → `SST_AggregationFn_count`). Upstream-diff workflow now requires translating `MRT_` → `SST_` on incoming MRT patches before applying — accepted cost given the library no longer ships MUI and is no longer a drop-in MRT replacement.
 - **Ship pre-compiled CSS** (`dist/style.css`) so consumers don't need a Tailwind setup. Consumers `import 'shadstack-table/style.css'` once.
 - **Radix primitives stay external** (peer or runtime deps), but our wrappers live in `src/_ui/` and are bundled. This keeps the public API a single `shadstack-table` import.
 - **Tailwind v4 + tw-animate-css** (not v3 + tailwindcss-animate). Newer registry of shadcn primitives expects v4 conventions.
@@ -358,12 +358,12 @@ Tracked as we hit them. Each entry: the MUI surface, why it doesn't translate, a
 | `sx` prop                                                               | No equivalent — shadcn uses `className` + Tailwind.                                 | `slotProps.<name>` shapes drop `sx`. Consumers pass `className`.                                                                                                                                           |
 | `Tooltip` placement variants (`top-start`, `bottom-end`, …)             | shadcn `<TooltipContent side>` only accepts `top \| right \| bottom \| left`.       | Map first segment (`'top-start'` → `side='top'`); drop the alignment suffix.                                                                                                                               |
 | `Tooltip` `enterNextDelay`, `disableInteractive`                        | Not in Radix Tooltip.                                                               | Drop. We pass `delayDuration` only.                                                                                                                                                                        |
-| `Pagination` (`boundaryCount`, `siblingCount`, `showFirstButton`, etc.) | shadcn `<Pagination>` is composable, not configurable.                              | Build a small page-window renderer in `MRT_TablePagination.tsx` (`Pagination` parts + a `getPageRange()` helper).                                                                                          |
+| `Pagination` (`boundaryCount`, `siblingCount`, `showFirstButton`, etc.) | shadcn `<Pagination>` is composable, not configurable.                              | Build a small page-window renderer in `SST_TablePagination.tsx` (`Pagination` parts + a `getPageRange()` helper).                                                                                          |
 | `TextField` (built-in label + helperText + adornments + error)          | shadcn splits Input/Label and has no adornments slot.                               | Compose `<Label>` + relative wrapper around `<Input>` with absolute-positioned span for adornments. Helper text → `<p class="text-sm text-muted-foreground">`.                                             |
 | `Select` `native: true`                                                 | shadcn Select is Radix-only; no native fallback.                                    | Always use Radix Select; document as a behavior change.                                                                                                                                                    |
 | `Skeleton` variants (`text` / `circular` / `rectangular` / `rounded`)   | Single shadcn Skeleton.                                                             | Vary via `className`: `text` → `h-4 rounded`, `circular` → `rounded-full`, etc.                                                                                                                            |
 | `CircularProgress` determinate mode                                     | Our `Spinner` is indeterminate-only.                                                | For "rows loading" indicators use `Progress` instead; determinate spinner stays out of v1.                                                                                                                 |
-| `LinearProgress` indeterminate mode                                     | Our `Progress` is determinate-only.                                                 | Add an `indeterminate` prop in `MRT_LinearProgressBar` that swaps in a CSS-keyframed stripe (lives in `_ui/styles.css`).                                                                                   |
+| `LinearProgress` indeterminate mode                                     | Our `Progress` is determinate-only.                                                 | Add an `indeterminate` prop in `SST_LinearProgressBar` that swaps in a CSS-keyframed stripe (lives in `_ui/styles.css`).                                                                                   |
 | `Collapse` orientation `horizontal`                                     | Radix Collapsible animates `height` only.                                           | If MRT uses horizontal collapse anywhere (e.g. side panels), do a `[data-state]`-driven width transition with Tailwind.                                                                                    |
 | `Fade`, `Grow` transition components                                    | No standalone equivalents.                                                          | Use `tw-animate-css` data-state utilities (`data-[state=open]:animate-in fade-in-…`).                                                                                                                      |
 | `InputAdornment` (`start` / `end`)                                      | Not a shadcn primitive.                                                             | Wrap `<Input>` in `<div class="relative">` and absolute-position the icon span.                                                                                                                            |
@@ -381,7 +381,7 @@ Tracked as we hit them. Each entry: the MUI surface, why it doesn't translate, a
 | `FormControlLabel`                                                      | Couples label position to control.                                                  | Replace with explicit `<Label class="flex items-center gap-2">` wrapping the control.                                                                                                                      |
 | `FormHelperText`                                                        | MUI form-control internals.                                                         | Replace with `<p class="text-sm text-muted-foreground">` (red variant via `text-destructive` on error).                                                                                                    |
 | `theme.direction === 'rtl'` (RTL flips)                                 | No Theme; we read direction from `document.dir`.                                    | Helper `flipIconStyles(direction)` takes the string; component sites pass `useDirection()` (small hook reading `document.documentElement.dir`).                                                            |
-| `Menu` w/ `anchorEl` (imperative DOM positioning)                       | Radix DropdownMenu requires a `<Trigger>`; no equivalent of MUI's free-form anchor. | Use `<Popover open={!!anchorEl}>` + `<PopoverAnchor virtualRef={{ current: anchorEl }} />` from Radix Popper, with menu-styled items inside `<PopoverContent>`. Applied across all `MRT_*Menu` components. |
+| `Menu` w/ `anchorEl` (imperative DOM positioning)                       | Radix DropdownMenu requires a `<Trigger>`; no equivalent of MUI's free-form anchor. | Use `<Popover open={!!anchorEl}>` + `<PopoverAnchor virtualRef={{ current: anchorEl }} />` from Radix Popper, with menu-styled items inside `<PopoverContent>`. Applied across all `SST_*Menu` components. |
 | `useMediaQuery` from `@mui/material`                                    | No equivalent.                                                                      | Tiny inline `useMediaQuery(query)` hook backed by `window.matchMedia`. Inlined per call site (toolbar files).                                                                                              |
 | `useTheme().zIndex.modal`                                               | No theme tokens for z-index.                                                        | Hard-code `zIndex: 50` (matches shadcn Dialog/Tooltip/Popover stack).                                                                                                                                      |
 | `MUI Box component="span" sx={{ flex: '0 0' }}` etc.                    | n/a                                                                                 | All `Box` swapped to `<div>` (or `<span>` when inline) + Tailwind classes.                                                                                                                                 |

@@ -1,22 +1,22 @@
 import {
-  type MRT_DefinedTableOptions,
-  type MRT_DisplayColumnIds,
-  type MRT_Localization,
-  type MRT_RowData,
-  type MRT_StatefulTableOptions,
+  type SST_DefinedTableOptions,
+  type SST_DisplayColumnIds,
+  type SST_Localization,
+  type SST_RowData,
+  type SST_StatefulTableOptions,
 } from '../types';
 import { getAllLeafColumnDefs, getColumnId } from './column.utils';
 
-export function defaultDisplayColumnProps<TData extends MRT_RowData>({
+export function defaultDisplayColumnProps<TData extends SST_RowData>({
   header,
   id,
   size,
   tableOptions,
 }: {
-  header?: keyof MRT_Localization;
-  id: MRT_DisplayColumnIds;
+  header?: keyof SST_Localization;
+  id: SST_DisplayColumnIds;
   size: number;
-  tableOptions: MRT_DefinedTableOptions<TData>;
+  tableOptions: SST_DefinedTableOptions<TData>;
 }) {
   const { defaultDisplayColumn, displayColumnDefOptions, localization } = tableOptions;
   return {
@@ -28,22 +28,22 @@ export function defaultDisplayColumnProps<TData extends MRT_RowData>({
   } as const;
 }
 
-export const showRowPinningColumn = <TData extends MRT_RowData>(
-  tableOptions: MRT_StatefulTableOptions<TData>,
+export const showRowPinningColumn = <TData extends SST_RowData>(
+  tableOptions: SST_StatefulTableOptions<TData>,
 ): boolean => {
   const { enableRowPinning, rowPinningDisplayMode } = tableOptions;
   return !!(enableRowPinning && !rowPinningDisplayMode?.startsWith('select'));
 };
 
-export const showRowDragColumn = <TData extends MRT_RowData>(
-  tableOptions: MRT_StatefulTableOptions<TData>,
+export const showRowDragColumn = <TData extends SST_RowData>(
+  tableOptions: SST_StatefulTableOptions<TData>,
 ): boolean => {
   const { enableRowDragging, enableRowOrdering } = tableOptions;
   return !!(enableRowDragging || enableRowOrdering);
 };
 
-export const showRowExpandColumn = <TData extends MRT_RowData>(
-  tableOptions: MRT_StatefulTableOptions<TData>,
+export const showRowExpandColumn = <TData extends SST_RowData>(
+  tableOptions: SST_StatefulTableOptions<TData>,
 ): boolean => {
   const {
     enableExpanding,
@@ -54,8 +54,8 @@ export const showRowExpandColumn = <TData extends MRT_RowData>(
   return !!(enableExpanding || (enableGrouping && grouping?.length) || renderDetailPanel);
 };
 
-export const showRowActionsColumn = <TData extends MRT_RowData>(
-  tableOptions: MRT_StatefulTableOptions<TData>,
+export const showRowActionsColumn = <TData extends SST_RowData>(
+  tableOptions: SST_StatefulTableOptions<TData>,
 ): boolean => {
   const {
     createDisplayMode,
@@ -71,20 +71,20 @@ export const showRowActionsColumn = <TData extends MRT_RowData>(
   );
 };
 
-export const showRowSelectionColumn = <TData extends MRT_RowData>(
-  tableOptions: MRT_StatefulTableOptions<TData>,
+export const showRowSelectionColumn = <TData extends SST_RowData>(
+  tableOptions: SST_StatefulTableOptions<TData>,
 ): boolean => !!tableOptions.enableRowSelection;
 
-export const showRowNumbersColumn = <TData extends MRT_RowData>(
-  tableOptions: MRT_StatefulTableOptions<TData>,
+export const showRowNumbersColumn = <TData extends SST_RowData>(
+  tableOptions: SST_StatefulTableOptions<TData>,
 ): boolean => !!tableOptions.enableRowNumbers;
 
-export const showRowSpacerColumn = <TData extends MRT_RowData>(
-  tableOptions: MRT_StatefulTableOptions<TData>,
+export const showRowSpacerColumn = <TData extends SST_RowData>(
+  tableOptions: SST_StatefulTableOptions<TData>,
 ): boolean => tableOptions.layoutMode === 'grid-no-grow';
 
-export const getLeadingDisplayColumnIds = <TData extends MRT_RowData>(
-  tableOptions: MRT_StatefulTableOptions<TData>,
+export const getLeadingDisplayColumnIds = <TData extends SST_RowData>(
+  tableOptions: SST_StatefulTableOptions<TData>,
 ) =>
   [
     showRowPinningColumn(tableOptions) && 'mrt-row-pin',
@@ -97,10 +97,10 @@ export const getLeadingDisplayColumnIds = <TData extends MRT_RowData>(
       'mrt-row-expand',
     showRowSelectionColumn(tableOptions) && 'mrt-row-select',
     showRowNumbersColumn(tableOptions) && 'mrt-row-numbers',
-  ].filter(Boolean) as MRT_DisplayColumnIds[];
+  ].filter(Boolean) as SST_DisplayColumnIds[];
 
-export const getTrailingDisplayColumnIds = <TData extends MRT_RowData>(
-  tableOptions: MRT_StatefulTableOptions<TData>,
+export const getTrailingDisplayColumnIds = <TData extends SST_RowData>(
+  tableOptions: SST_StatefulTableOptions<TData>,
 ) =>
   [
     tableOptions.positionActionsColumn === 'last' &&
@@ -110,10 +110,10 @@ export const getTrailingDisplayColumnIds = <TData extends MRT_RowData>(
       showRowExpandColumn(tableOptions) &&
       'mrt-row-expand',
     showRowSpacerColumn(tableOptions) && 'mrt-row-spacer',
-  ].filter(Boolean) as MRT_DisplayColumnIds[];
+  ].filter(Boolean) as SST_DisplayColumnIds[];
 
-export const getDefaultColumnOrderIds = <TData extends MRT_RowData>(
-  tableOptions: MRT_StatefulTableOptions<TData>,
+export const getDefaultColumnOrderIds = <TData extends SST_RowData>(
+  tableOptions: SST_StatefulTableOptions<TData>,
   reset = false,
 ) => {
   const {

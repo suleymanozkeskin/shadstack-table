@@ -35,7 +35,7 @@ import {
   XCircle as CancelIcon,
 } from 'lucide-react';
 
-export const MRT_Default_Icons = {
+export const SST_Default_Icons = {
   ArrowDownwardIcon,
   ArrowRightIcon,
   CancelIcon,
@@ -72,4 +72,4 @@ export const MRT_Default_Icons = {
   VisibilityOffIcon,
 } as const;
 
-export type MRT_Icons = Record<keyof typeof MRT_Default_Icons, any>;
+export type SST_Icons = Record<keyof typeof SST_Default_Icons, any>;

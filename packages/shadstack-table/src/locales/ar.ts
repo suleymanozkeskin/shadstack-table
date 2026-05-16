@@ -1,6 +1,6 @@
-import { type MRT_Localization } from '..';
+import { type SST_Localization } from '..';
 
-export const MRT_Localization_AR: MRT_Localization = {
+export const SST_Localization_AR: SST_Localization = {
   language: 'ar',
   actions: 'إجراءات',
   and: 'و',

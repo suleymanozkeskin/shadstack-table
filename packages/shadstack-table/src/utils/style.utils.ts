@@ -1,11 +1,11 @@
 import { type CSSProperties } from 'react';
 import {
-  type MRT_Column,
-  type MRT_Header,
-  type MRT_RowData,
-  type MRT_TableInstance,
-  type MRT_TableOptions,
-  type MRT_Theme,
+  type SST_Column,
+  type SST_Header,
+  type SST_RowData,
+  type SST_TableInstance,
+  type SST_TableOptions,
+  type SST_Theme,
 } from '../types';
 import { parseFromValuesOrFunc } from './utils';
 
@@ -24,9 +24,9 @@ type CommonTableCellProps = {
 
 export const parseCSSVarId = (id: string) => id.replace(/[^a-zA-Z0-9]/g, '_');
 
-export const getMRTTheme = <TData extends MRT_RowData>(
-  mrtTheme: MRT_TableOptions<TData>['mrtTheme'],
-): MRT_Theme => {
+export const getMRTTheme = <TData extends SST_RowData>(
+  mrtTheme: SST_TableOptions<TData>['mrtTheme'],
+): SST_Theme => {
   const mrtThemeOverrides = parseFromValuesOrFunc(mrtTheme, undefined);
   const baseBackgroundColor = mrtThemeOverrides?.baseBackgroundColor ?? 'var(--background)';
   return {
@@ -51,12 +51,12 @@ export const commonCellBeforeAfterStyles: CSSProperties = {
   zIndex: -1,
 };
 
-export const getCommonPinnedCellStyles = <TData extends MRT_RowData>({
+export const getCommonPinnedCellStyles = <TData extends SST_RowData>({
   column,
   table,
 }: {
-  column?: MRT_Column<TData>;
-  table: MRT_TableInstance<TData>;
+  column?: SST_Column<TData>;
+  table: SST_TableInstance<TData>;
 }): Record<string, Record<string, unknown>> => {
   const { baseBackgroundColor } = table.options.mrtTheme;
   const isPinned = column?.getIsPinned();
@@ -78,15 +78,15 @@ export const getCommonPinnedCellStyles = <TData extends MRT_RowData>({
   };
 };
 
-export const getCommonMRTCellStyles = <TData extends MRT_RowData>({
+export const getCommonMRTCellStyles = <TData extends SST_RowData>({
   column,
   header,
   table,
   tableCellProps,
 }: {
-  column: MRT_Column<TData>;
-  header?: MRT_Header<TData>;
-  table: MRT_TableInstance<TData>;
+  column: SST_Column<TData>;
+  header?: SST_Header<TData>;
+  table: SST_TableInstance<TData>;
   tableCellProps: CommonTableCellProps;
 }) => {
   const {
@@ -161,10 +161,10 @@ export const getCommonMRTCellStyles = <TData extends MRT_RowData>({
   };
 };
 
-export const getCommonToolbarStyles = <TData extends MRT_RowData>({
+export const getCommonToolbarStyles = <TData extends SST_RowData>({
   table,
 }: {
-  table: MRT_TableInstance<TData>;
+  table: SST_TableInstance<TData>;
 }) => ({
   alignItems: 'flex-start',
   backgroundColor: table.options.mrtTheme.baseBackgroundColor,

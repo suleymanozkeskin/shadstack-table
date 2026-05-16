@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import {
-  MaterialReactTable,
-  MRT_GlobalFilterTextField,
-  MRT_ToggleFiltersButton,
-  useMaterialReactTable,
-  type MRT_ColumnDef,
+  ShadStackTable,
+  SST_GlobalFilterTextField,
+  SST_ToggleFiltersButton,
+  useShadStackTable,
+  type SST_ColumnDef,
 } from 'shadstack-table';
 import { Mail, Send, UserCheck, UserCircle, UserX } from 'lucide-react';
 import { type Employee, employees } from './data/employees';
@@ -27,7 +27,7 @@ const salaryTier = (n: number) => {
 };
 
 export function AdvancedExample() {
-  const columns = useMemo<MRT_ColumnDef<Employee>[]>(
+  const columns = useMemo<SST_ColumnDef<Employee>[]>(
     () => [
       {
         id: 'employee',
@@ -120,7 +120,7 @@ export function AdvancedExample() {
     [],
   );
 
-  const table = useMaterialReactTable({
+  const table = useShadStackTable({
     columns,
     data: employees,
     enableColumnFilterModes: true,
@@ -202,8 +202,8 @@ export function AdvancedExample() {
       return (
         <div className="bg-muted/50 flex flex-wrap items-center justify-between gap-2 border-b p-2">
           <div className="flex items-center gap-2">
-            <MRT_GlobalFilterTextField table={t} />
-            <MRT_ToggleFiltersButton table={t} />
+            <SST_GlobalFilterTextField table={t} />
+            <SST_ToggleFiltersButton table={t} />
             {hasSelection && (
               <span className="text-muted-foreground text-sm">{selectedCount} selected</span>
             )}
@@ -242,5 +242,5 @@ export function AdvancedExample() {
     },
   });
 
-  return <MaterialReactTable table={table} />;
+  return <ShadStackTable table={table} />;
 }

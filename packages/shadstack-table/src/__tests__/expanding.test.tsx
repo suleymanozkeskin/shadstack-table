@@ -1,14 +1,14 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { MaterialReactTable } from '../components/MaterialReactTable';
+import { ShadStackTable } from '../components/ShadStackTable';
 import { people, personColumns } from './fixtures';
 
-describe('MaterialReactTable — detail panel expand', () => {
+describe('ShadStackTable — detail panel expand', () => {
   it('reveals renderDetailPanel content when the row expand button is clicked', async () => {
     const user = userEvent.setup();
     render(
-      <MaterialReactTable
+      <ShadStackTable
         columns={personColumns}
         data={people.slice(0, 2)}
         renderDetailPanel={({ row }) => (

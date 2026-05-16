@@ -7,7 +7,7 @@ afterEach(() => {
   cleanup();
 });
 
-// happy-dom lacks IntersectionObserver — MRT_* virtualization paths
+// happy-dom lacks IntersectionObserver — SST_* virtualization paths
 // touch it indirectly. A no-op stub is enough for unit tests; the real
 // virtualization behavior belongs in a Playwright pass.
 class IntersectionObserverMock {

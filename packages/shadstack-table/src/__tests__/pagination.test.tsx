@@ -1,14 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { MaterialReactTable } from '../components/MaterialReactTable';
+import { ShadStackTable } from '../components/ShadStackTable';
 import { people, personColumns } from './fixtures';
 
-describe('MaterialReactTable — pagination', () => {
+describe('ShadStackTable — pagination', () => {
   it('shows only the current page of rows and advances on next-page click', async () => {
     const user = userEvent.setup();
     render(
-      <MaterialReactTable
+      <ShadStackTable
         columns={personColumns}
         data={people}
         initialState={{ pagination: { pageIndex: 0, pageSize: 2 } }}
