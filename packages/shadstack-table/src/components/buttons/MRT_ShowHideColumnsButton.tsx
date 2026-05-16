@@ -24,7 +24,7 @@ export const MRT_ShowHideColumnsButton = <TData extends MRT_RowData>({
 
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
-  const handleClick = (event: MouseEvent<HTMLElement>) => {
+  const openShowHideColumnsMenu = (event: MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
@@ -34,7 +34,7 @@ export const MRT_ShowHideColumnsButton = <TData extends MRT_RowData>({
         <TooltipTrigger asChild>
           <Button
             aria-label={localization.showHideColumns}
-            onClick={handleClick}
+            onClick={openShowHideColumnsMenu}
             size="icon"
             variant="ghost"
             {...rest}

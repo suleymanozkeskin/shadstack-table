@@ -78,12 +78,12 @@ export const MRT_EditCellTextField = <TData extends MRT_RowData>({
     }
   };
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const updateInputValue = (event: ChangeEvent<HTMLInputElement>) => {
     inputProps.onChange?.(event);
     setValue(event.target.value);
   };
 
-  const handleBlur = (event: FocusEvent<HTMLInputElement>) => {
+  const commitEditOnBlur = (event: FocusEvent<HTMLInputElement>) => {
     inputProps.onBlur?.(event);
     saveInputValueToRowCache(value);
     setEditingCell(null);
@@ -156,8 +156,8 @@ export const MRT_EditCellTextField = <TData extends MRT_RowData>({
             if (typeof inputProps.ref === 'function') inputProps.ref(node);
           }
         }}
-        onBlur={handleBlur}
-        onChange={handleChange}
+        onBlur={commitEditOnBlur}
+        onChange={updateInputValue}
         onClick={(e) => {
           e.stopPropagation();
           inputProps?.onClick?.(e);

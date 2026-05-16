@@ -32,7 +32,7 @@ export const MRT_TableHeadCellColumnActionsButton = <TData extends MRT_RowData>(
 
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
-  const handleClick = (event: MouseEvent<HTMLElement>) => {
+  const openColumnActionsMenu = (event: MouseEvent<HTMLElement>) => {
     event.stopPropagation();
     event.preventDefault();
     setAnchorEl(event.currentTarget);
@@ -56,7 +56,7 @@ export const MRT_TableHeadCellColumnActionsButton = <TData extends MRT_RowData>(
         <TooltipTrigger asChild>
           <Button
             aria-label={localization.columnActions}
-            onClick={handleClick}
+            onClick={openColumnActionsMenu}
             size="icon"
             variant="ghost"
             {...iconButtonProps}
