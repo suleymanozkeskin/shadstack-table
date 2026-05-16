@@ -1,13 +1,8 @@
-# Placeholder release pipeline for the shadstack-table npm package.
-# Manual dispatch only until the package is ready to publish; `publish`
-# input defaults to false so accidental runs are no-ops.
-# TODO before first real release:
-#   1. Configure npm Trusted Publishing (OIDC) for the `shadstack-table`
-#      package: https://docs.npmjs.com/trusted-publishers
-#   2. Create a `npm` GitHub Environment with a required reviewer.
-#   3. Uncomment the `npm publish` step below.
-#   4. Add a CHANGELOG.md and bump the version in
-#      packages/shadstack-table/package.json.
+# Release pipeline for the shadstack-table npm package.
+#
+# Manual dispatch only — `publish: true` is required to actually upload.
+# The publish job runs in the `npm` GitHub Environment (required reviewer),
+# and uses npm Trusted Publishing (OIDC) with provenance — no NPM_TOKEN.
 
 name: Release
 
@@ -90,16 +85,15 @@ jobs:
           name: shadstack-table-dist-${{ needs.metadata.outputs.version }}
           path: packages/shadstack-table/dist
 
+      # Trusted Publishing requires Node >= 22.14.0 and npm >= 11.5.1.
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 20
+          node-version: 22
           registry-url: https://registry.npmjs.org
 
-      # TODO: enable once npm Trusted Publishing is configured for the
-      # `shadstack-table` package. --provenance requires id-token: write
-      # (already granted above) and emits a Sigstore attestation linking
-      # the published tarball to this workflow run.
+      - name: Upgrade npm to >= 11.5.1
+        run: npm install -g npm@latest
+
       - name: Publish to npm (Trusted Publishing)
-        if: false
         working-directory: packages/shadstack-table
         run: npm publish --provenance --access public
