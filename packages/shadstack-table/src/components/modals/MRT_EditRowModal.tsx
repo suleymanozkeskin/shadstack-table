@@ -78,15 +78,18 @@ export const MRT_EditRowModal = <TData extends MRT_RowData>({
           row,
           table,
         })) ?? (
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="flex h-[80vh] w-[80vw] max-w-[80vw] flex-col gap-0 p-0 sm:max-w-[80vw]">
+          <DialogHeader className="border-b px-6 py-4">
             <DialogTitle className="text-center">{localization.edit}</DialogTitle>
           </DialogHeader>
           {/* intentional preventDefault: edit-row is an in-browser modal with no server-side submit fallback */}
-          <form onSubmit={(e) => e.preventDefault()}>
-            <div className="flex flex-col gap-8 pt-4 w-full">{internalEditComponents}</div>
+          <form
+            onSubmit={(e) => e.preventDefault()}
+            className="min-h-0 flex-1 overflow-y-auto px-6 py-4"
+          >
+            <div className="flex w-full flex-col gap-4">{internalEditComponents}</div>
           </form>
-          <DialogFooter className="p-5">
+          <DialogFooter className="border-t px-6 py-4">
             <MRT_EditActionButtons row={row} table={table} variant="text" />
           </DialogFooter>
         </DialogContent>
