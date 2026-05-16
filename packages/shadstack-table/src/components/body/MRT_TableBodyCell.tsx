@@ -275,7 +275,12 @@ export const MRT_TableBodyCell = <TData extends MRT_RowData>({
         ...draggingBorders,
         ...tableCellProps?.style,
       }}
-      className={cn('overflow-hidden outline-offset-[-1px]', className, tableCellProps?.className)}
+      className={cn(
+        columnDefType === 'display' ? 'overflow-visible' : 'overflow-hidden',
+        'outline-offset-[-1px]',
+        className,
+        tableCellProps?.className,
+      )}
     >
       {tableCellProps.children ?? (
         <>

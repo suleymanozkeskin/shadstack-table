@@ -276,7 +276,10 @@ export const MRT_TableHeadCell = <TData extends MRT_RowData>({
                       : 'whitespace-normal',
                   )}
                   style={{
-                    minWidth: `${Math.min(columnDef.header?.length ?? 0, 4)}ch`,
+                    minWidth:
+                      columnDefType === 'display'
+                        ? 0
+                        : `${Math.min(columnDef.header?.length ?? 0, 4)}ch`,
                   }}
                 >
                   {HeaderElement}

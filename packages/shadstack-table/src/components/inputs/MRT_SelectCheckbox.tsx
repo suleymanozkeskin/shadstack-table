@@ -86,7 +86,7 @@ export const MRT_SelectCheckbox = <TData extends MRT_RowData>({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className={cn('inline-flex items-center justify-center', sizeClasses)}>
+        <span className={cn('inline-flex shrink-0 items-center justify-center', sizeClasses)}>
           {enableMultiRowSelection === false ? (
             <RadioGroup
               value={isChecked ? 'on' : ''}
