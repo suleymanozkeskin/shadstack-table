@@ -65,7 +65,7 @@ export const MRT_ToolbarAlertBanner = <TData extends MRT_RowData>({
 
   const selectedAlert =
     selectedRowCount > 0 ? (
-      <span className="flex items-center gap-4">
+      <span className="flex items-center gap-3 whitespace-nowrap">
         {localization.selectedCountOfRowCountRowsSelected
           ?.replace('{selectedCount}', selectedRowCount.toLocaleString(localization.language))
           ?.replace('{rowCount}', totalRowCount.toLocaleString(localization.language))}
@@ -138,10 +138,10 @@ export const MRT_ToolbarAlertBanner = <TData extends MRT_RowData>({
           }) ?? (
             <>
               {alertProps?.title && <AlertTitle>{alertProps.title as React.ReactNode}</AlertTitle>}
-              <div className="flex flex-col" style={{ padding }}>
+              <div className="col-start-1 col-end-[-1] flex flex-col min-w-0" style={{ padding }}>
                 {alertProps?.children as React.ReactNode}
                 {alertProps?.children && (selectedAlert || groupedAlert) && <br />}
-                <div className="flex">
+                <div className="flex items-center min-w-0">
                   {enableRowSelection &&
                     enableSelectAll &&
                     positionToolbarAlertBanner === 'head-overlay' && (

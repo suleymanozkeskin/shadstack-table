@@ -35,8 +35,8 @@ export const getMRTTheme = <TData extends MRT_RowData>(
     draggingBorderColor: 'var(--primary)',
     matchHighlightColor: 'color-mix(in oklch, var(--chart-4) 60%, var(--background))',
     menuBackgroundColor: 'var(--popover)',
-    pinnedRowBackgroundColor: 'color-mix(in oklch, var(--primary) 10%, transparent)',
-    selectedRowBackgroundColor: 'color-mix(in oklch, var(--primary) 20%, transparent)',
+    pinnedRowBackgroundColor: 'color-mix(in oklch, var(--accent) 60%, transparent)',
+    selectedRowBackgroundColor: 'var(--muted)',
     ...mrtThemeOverrides,
   };
 };
