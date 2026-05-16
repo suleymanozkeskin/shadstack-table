@@ -122,7 +122,6 @@ export const getCommonMRTCellStyles = <TData extends MRT_RowData>({
     ? {
         ...getCommonPinnedCellStyles({ column, table }),
         left: isColumnPinned === 'left' ? `${column.getStart('left')}px` : undefined,
-        opacity: 0.97,
         position: 'sticky',
         right: isColumnPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
       }

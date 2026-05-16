@@ -66,7 +66,7 @@ export const MRT_TablePaper = <TData extends MRT_RowData>({
         ...paperProps?.style,
       }}
       className={cn(
-        'rounded-md border shadow-md overflow-hidden transition-all duration-100 ease-in-out',
+        'w-full max-w-full min-w-0 rounded-md border shadow-sm bg-card overflow-hidden transition-all duration-100 ease-in-out',
         className,
         paperProps?.className,
       )}

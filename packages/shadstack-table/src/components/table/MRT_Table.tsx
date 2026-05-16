@@ -67,8 +67,8 @@ export const MRT_Table = <TData extends MRT_RowData>({
       {...tableProps}
       style={{ ...columnSizeVars, ...tableProps?.style }}
       className={cn(
-        'border-separate relative w-full caption-bottom text-sm',
-        isGrid && 'grid',
+        'border-separate relative caption-bottom text-sm',
+        isGrid ? 'grid' : 'table',
         className,
         tableProps?.className,
       )}

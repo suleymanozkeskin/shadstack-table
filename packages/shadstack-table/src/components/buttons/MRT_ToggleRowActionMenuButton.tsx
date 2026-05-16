@@ -9,7 +9,7 @@ import { parseFromValuesOrFunc } from '../../utils/utils';
 import { MRT_RowActionMenu } from '../menus/MRT_RowActionMenu';
 
 const commonIconButtonClasses =
-  'h-8 w-8 ml-2.5 opacity-50 transition-opacity duration-150 hover:opacity-100';
+  'h-8 w-8 opacity-60 transition-opacity duration-150 hover:opacity-100';
 
 export interface MRT_ToggleRowActionMenuButtonProps<
   TData extends MRT_RowData,
