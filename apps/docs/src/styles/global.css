@@ -5,14 +5,20 @@
 @source '../../../../packages/shadstack-table/src/**/*.{ts,tsx}';
 @source '../../../../apps/playground/src/**/*.{ts,tsx}';
 
-@custom-variant dark (&:is(.dark *));
+/*
+ * The library uses `.dark`, Starlight uses `[data-theme='dark']`. In docs we
+ * treat them as the same scope so the same token block lights up either way
+ * — Starlight's chrome toggle and the playground's Mode chip both end up
+ * driving the same set of library tokens below.
+ */
+@custom-variant dark (&:is(.dark *, [data-theme='dark'] *));
 
 /*
  * Library tokens — wrapped in :where() (0,0,0 specificity) so the playground's
  * inline `<html style="--background: …">` declarations and any host theme can
  * still win. Mirrors packages/shadstack-table/src/_ui/styles.css verbatim,
- * including the `.dark` class for the dark scope — the Playground component
- * toggles that class when its Mode chip is set to Dark.
+ * with the dark scope expanded to cover Starlight's `[data-theme='dark']`
+ * attribute as well as the library's own `.dark` class.
  */
 :where(:root) {
   --radius: 0.625rem;
@@ -36,7 +42,7 @@
   --ring: oklch(0.708 0 0);
 }
 
-:where(.dark) {
+:where(.dark, [data-theme='dark']) {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -80,6 +86,33 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+}
+
+/*
+ * Tie Starlight's chrome tokens to the library tokens. The playground's
+ * Mode/Theme chips already write `--background`, `--card`, `--foreground`,
+ * etc. inline on `<html>` (specificity 1,0,0,0), so by aliasing the
+ * `--sl-color-*` vars to them, the entire docs surface — sidebar, top nav,
+ * page background — re-themes in lockstep with the embedded playground.
+ *
+ * The cascade survives Starlight's own dark/light toggle too: Starlight
+ * flips `data-theme` on `<html>`, which (above) flips the library tokens,
+ * which flow through to `--sl-color-*` here.
+ *
+ * Defined as a normal `:root` rule (not `:where()`) so it overrides
+ * Starlight's own `--sl-color-*: var(--sl-color-gray-…)` defaults — which
+ * are written without `:where()` and therefore carry specificity 0,0,1.
+ */
+:root {
+  --sl-color-bg: var(--background);
+  --sl-color-bg-nav: var(--card);
+  --sl-color-bg-sidebar: var(--card);
+  --sl-color-bg-inline-code: var(--muted);
+  --sl-color-text: var(--foreground);
+  --sl-color-text-accent: var(--primary);
+  --sl-color-hairline: var(--border);
+  --sl-color-hairline-light: var(--border);
+  --sl-color-hairline-shade: var(--border);
 }
 
 /*
