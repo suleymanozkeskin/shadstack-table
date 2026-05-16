@@ -8,7 +8,9 @@
   "type": "module",
   "scripts": {
     "dev": "bun run --filter=playground dev",
+    "dev:docs": "bun run --filter=docs dev",
     "build": "bun run --filter=shadstack-table build",
+    "build:docs": "bun run --filter=docs build",
     "build:all": "bun run --filter='*' build",
     "typecheck": "bun run --filter='*' typecheck",
     "lint": "oxlint",
