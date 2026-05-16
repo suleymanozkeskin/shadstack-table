@@ -70,7 +70,6 @@ export const SST_DateFilter = ({
             onChange(d ?? undefined);
             if (d) setOpen(false);
           }}
-          autoFocus
         />
       </PopoverContent>
     </Popover>
