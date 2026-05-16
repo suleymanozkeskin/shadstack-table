@@ -173,7 +173,11 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
   const align = columnDefType === 'group' ? 'center' : isRtl ? 'right' : 'left';
   const isGrid = !!layoutMode?.startsWith('grid');
 
-  const padding =
+  // Horizontal-only padding: vertical sides are owned by paddingTop/paddingBottom
+  // below, so we avoid emitting the `padding` shorthand alongside them — React
+  // warns about shorthand/longhand collisions because the shorthand can clobber
+  // the longhand depending on declaration order.
+  const paddingX =
     density === 'compact'
       ? '0.5rem'
       : density === 'comfortable'
@@ -181,7 +185,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
           ? '0.75rem'
           : '1rem'
         : columnDefType === 'display'
-          ? '1rem 1.25rem'
+          ? '1.25rem'
           : '1.5rem';
 
   const paddingBottom =
@@ -220,7 +224,8 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
       onKeyDown={handleKeyDown}
       style={{
         textAlign: align,
-        padding,
+        paddingLeft: paddingX,
+        paddingRight: paddingX,
         paddingBottom,
         paddingTop,
         userSelect: enableMultiSort && column.getCanSort() ? 'none' : undefined,

@@ -125,3 +125,14 @@
   scrollbar-width: thin;
   scrollbar-color: color-mix(in oklch, var(--foreground) 25%, transparent) transparent;
 }
+
+/*
+ * Keyboard-navigated cell focus ring. Wrapped in `:where()` to stay at
+ * specificity 0 so host themes can override with any selector. The color
+ * variable is set on the table container from `mrtTheme.cellNavigationOutlineColor`
+ * and falls back to `var(--ring)` when unset.
+ */
+:where([data-slot='sst-table-container']) :where(th, td):focus-visible {
+  outline: 2px solid var(--sst-cell-outline-color, var(--ring));
+  outline-offset: -2px;
+}

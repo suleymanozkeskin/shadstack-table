@@ -28,6 +28,7 @@ export const SST_TableContainer = <TData extends SST_RowData>({
       editDisplayMode,
       enableCellActions,
       enableStickyHeader,
+      mrtTheme: { cellNavigationOutlineColor },
       slotProps,
     },
     refs: { bottomToolbarRef, tableContainerRef, topToolbarRef },
@@ -72,6 +73,11 @@ export const SST_TableContainer = <TData extends SST_RowData>({
         }
       }}
       style={{
+        // Themable focus ring color for keyboard-navigated cells; consumed by
+        // the `[data-slot='sst-table-container'] :focus-visible` rule in
+        // _ui/styles.css. Cells used to set this via a nested selector inside
+        // inline style, which React warns about and silently drops.
+        ['--sst-cell-outline-color' as string]: cellNavigationOutlineColor,
         maxHeight: isFullScreen
           ? `calc(100vh - ${totalToolbarHeight}px)`
           : enableStickyHeader

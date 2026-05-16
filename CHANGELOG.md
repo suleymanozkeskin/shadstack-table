@@ -4,6 +4,19 @@ All notable changes to `shadstack-table` are recorded here. The format is based 
 
 ## [Unreleased]
 
+## [0.1.2] — 2026-05-16
+
+Patch release that silences React DOM warnings emitted from every cell render. No behavior change for consumers — the focus ring and head-cell padding now resolve to the same values, just through a stylesheet rule and longhand sides respectively.
+
+### Fixed
+
+- Cell focus ring no longer leaks an `&:focus-visible` nested selector into React `style={…}`. The ring is now applied via a real CSS rule (`_ui/styles.css`) reading a new `--sst-cell-outline-color` custom property that `SST_TableContainer` sets from `mrtTheme.cellNavigationOutlineColor`. Theming via `mrtTheme.cellNavigationOutlineColor` continues to work.
+- `SST_TableHeadCell` no longer emits the `padding` shorthand alongside `paddingTop` / `paddingBottom`. The horizontal padding is now expressed as `paddingLeft` / `paddingRight`, removing React's shorthand/longhand collision warning.
+- `getCommonPinnedCellStyles` no longer returns nested `&[data-pinned="true"]` / `&:before` selectors that React silently dropped on every pinned cell. The export is preserved for API compatibility but now returns `{}`; reconstructing the pinned-cell overlay as a real CSS rule is tracked for 0.1.3.
+
+[Unreleased]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.1...v0.1.2
+
 ## [0.1.1] — 2026-05-16
 
 Metadata-only follow-up to 0.1.0. No code changes.
@@ -37,6 +50,5 @@ First public pre-release. The full `material-react-table` feature surface is por
 - Column drag-reorder.
 - `filterVariant: 'time' | 'datetime' | 'time-range' | 'datetime-range'` — native `<input>` is used until a shadcn time picker recipe lands.
 
-[Unreleased]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.1...HEAD
 [0.1.1]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/suleymanozkeskin/shadstack-table/releases/tag/v0.1.0

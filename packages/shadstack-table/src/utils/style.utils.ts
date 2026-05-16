@@ -51,32 +51,23 @@ export const commonCellBeforeAfterStyles: CSSProperties = {
   zIndex: -1,
 };
 
-export const getCommonPinnedCellStyles = <TData extends SST_RowData>({
-  column,
-  table,
-}: {
+/**
+ * @deprecated Returns an empty object as of 0.1.2.
+ *
+ * The original implementation returned a nested `&[data-pinned="true"] &:before`
+ * sx-style object that was spread into React's inline `style={…}`. React inline
+ * styles do not support nested selectors or pseudo-elements, so the result was
+ * silently dropped (and produced a console warning for every pinned cell).
+ *
+ * The pinned-cell visual overlay was therefore inert from 0.1.0 onward.
+ * Restoring it requires a stylesheet rule rather than a returned style object
+ * — see the 0.1.3 follow-up. The export is preserved at empty for API
+ * compatibility with any consumer that imported it.
+ */
+export const getCommonPinnedCellStyles = <TData extends SST_RowData>(_args: {
   column?: SST_Column<TData>;
   table: SST_TableInstance<TData>;
-}): Record<string, Record<string, unknown>> => {
-  const { baseBackgroundColor } = table.options.mrtTheme;
-  const isPinned = column?.getIsPinned();
-
-  return {
-    '&[data-pinned="true"]': {
-      '&:before': {
-        backgroundColor: `color-mix(in oklch, ${baseBackgroundColor} 95%, var(--foreground))`,
-        boxShadow: column
-          ? isPinned === 'left' && column.getIsLastColumn(isPinned)
-            ? '-4px 0 4px -4px color-mix(in oklch, var(--foreground) 50%, transparent) inset'
-            : isPinned === 'right' && column.getIsFirstColumn(isPinned)
-              ? '4px 0 4px -4px color-mix(in oklch, var(--foreground) 50%, transparent) inset'
-              : undefined
-          : undefined,
-        ...commonCellBeforeAfterStyles,
-      },
-    },
-  };
-};
+}): Record<string, Record<string, unknown>> => ({});
 
 export const getCommonMRTCellStyles = <TData extends SST_RowData>({
   column,
@@ -127,6 +118,11 @@ export const getCommonMRTCellStyles = <TData extends SST_RowData>({
       }
     : {};
 
+  // Focus-visible ring is applied via stylesheet (see _ui/styles.css) reading
+  // `--sst-cell-outline-color`. The variable is set once on the table container
+  // (SST_TableContainer) from `mrtTheme.cellNavigationOutlineColor`, so it can
+  // stay themable without us emitting a nested `&:focus-visible` selector into
+  // React inline style (which React warns about and silently drops).
   return {
     backgroundColor: 'inherit',
     backgroundImage: 'inherit',
@@ -150,10 +146,6 @@ export const getCommonMRTCellStyles = <TData extends SST_RowData>({
         : columnDefType !== 'group' && isColumnPinned
           ? 1
           : 0,
-    '&:focus-visible': {
-      outline: `2px solid ${table.options.mrtTheme.cellNavigationOutlineColor}`,
-      outlineOffset: '-2px',
-    },
     ...pinnedStyles,
     ...widthStyles,
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any -- legacy MUI sx passthrough
