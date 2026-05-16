@@ -55,14 +55,13 @@ export const MRT_EditActionButtons = <TData extends MRT_RowData>({
 
   const handleSubmitRow = () => {
     //look for auto-filled input values
-    Object.values(editInputRefs.current ?? {})
-      .filter((inputRef) => row.id === inputRef?.name?.split('_')?.[0])
-      ?.forEach((input) => {
-        if (input.value !== undefined && Object.hasOwn(row?._valuesCache as object, input.name)) {
-          // @ts-expect-error
-          row._valuesCache[input.name] = input.value;
-        }
-      });
+    for (const input of Object.values(editInputRefs.current ?? {})) {
+      if (row.id !== input?.name?.split('_')?.[0]) continue;
+      if (input.value !== undefined && Object.hasOwn(row?._valuesCache as object, input.name)) {
+        // @ts-expect-error
+        row._valuesCache[input.name] = input.value;
+      }
+    }
     if (isCreating)
       onCreatingRowSave?.({
         exitCreatingMode: () => setCreatingRow(null),

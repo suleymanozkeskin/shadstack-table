@@ -40,10 +40,14 @@ export const MRT_EditRowModal = <TData extends MRT_RowData>({
     ...rest,
   };
 
-  const internalEditComponents = row
-    .getAllCells()
-    .filter((cell) => cell.column.columnDef.columnDefType === 'data')
-    .map((cell) => <MRT_EditCellTextField cell={cell as any} key={cell.id} table={table as any} />);
+  const internalEditComponents: React.ReactNode[] = [];
+  for (const cell of row.getAllCells()) {
+    if (cell.column.columnDef.columnDefType === 'data') {
+      internalEditComponents.push(
+        <MRT_EditCellTextField cell={cell as any} key={cell.id} table={table as any} />,
+      );
+    }
+  }
 
   return (
     <Dialog
