@@ -91,7 +91,7 @@ export const SST_TablePagination = <TData extends SST_RowData>({
     >
       {showRowsPerPage && (
         <div className="flex items-center gap-2">
-          <Label htmlFor={`mrt-rows-per-page-${id}`} className="mb-0">
+          <Label htmlFor={`sst-rows-per-page-${id}`} className="mb-0">
             {localization.rowsPerPage}
           </Label>
           <Select
@@ -100,7 +100,7 @@ export const SST_TablePagination = <TData extends SST_RowData>({
             onValueChange={(value) => table.setPageSize(+value)}
           >
             <SelectTrigger
-              id={`mrt-rows-per-page-${id}`}
+              id={`sst-rows-per-page-${id}`}
               size="sm"
               aria-label={localization.rowsPerPage}
             >

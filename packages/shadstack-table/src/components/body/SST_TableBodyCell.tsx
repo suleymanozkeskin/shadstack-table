@@ -289,7 +289,7 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
           ) : showSkeletons !== false && (isLoading || showSkeletons) ? (
             <Skeleton className="h-5" style={{ width: skeletonWidth }} {...skeletonProps} />
           ) : columnDefType === 'display' &&
-            (['mrt-row-expand', 'mrt-row-numbers', 'mrt-row-select'].includes(column.id) ||
+            (['sst-row-expand', 'sst-row-numbers', 'sst-row-select'].includes(column.id) ||
               !row.getIsGrouped()) ? (
             columnDef.Cell?.({
               cell,

@@ -17,7 +17,7 @@ export const getSST_RowActionsColumnDef = <TData extends SST_RowData>(
     grow: false,
     ...defaultDisplayColumnProps({
       header: 'actions',
-      id: 'mrt-row-actions',
+      id: 'sst-row-actions',
       size: 70,
       tableOptions,
     }),

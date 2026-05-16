@@ -54,7 +54,7 @@ export const SST_CellActionMenu = <TData extends SST_RowData>({
       parseFromValuesOrFunc(columnDef.enableClickToCopy, cell) === 'context-menu') && (
       <SST_ActionMenuItem
         icon={<ContentCopy />}
-        key={'mrt-copy'}
+        key={'sst-copy'}
         label={localization.copy}
         onClick={(event) => {
           event.stopPropagation();
@@ -67,7 +67,7 @@ export const SST_CellActionMenu = <TData extends SST_RowData>({
     parseFromValuesOrFunc(enableEditing, row) && editDisplayMode === 'cell' && (
       <SST_ActionMenuItem
         icon={<EditIcon />}
-        key={'mrt-edit'}
+        key={'sst-edit'}
         label={localization.edit}
         onClick={() => {
           openEditingCell({ cell, table });

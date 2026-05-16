@@ -15,7 +15,13 @@ If you're migrating from MRT, the consumer-facing change is roughly:
 + import { ShadStackTable,    useShadStackTable,    type SST_ColumnDef } from 'shadstack-table';
 ```
 
-So: rename the package, rename `MaterialReactTable` → `ShadStackTable` (and `useMaterialReactTable` → `useShadStackTable`), and find-replace the `MRT_*` type prefix with `SST_*`. Plus a `muiXxxProps` → `slotProps.xxx` rename pass (one-to-one mapping, documented in [PORT_PLAN.md](./PORT_PLAN.md)).
+So:
+
+1. Rename the package.
+2. Rename `MaterialReactTable` → `ShadStackTable` (and `useMaterialReactTable` → `useShadStackTable`).
+3. Find-replace the `MRT_*` type prefix with `SST_*`.
+4. Find-replace the built-in column IDs (`'mrt-row-select'`, `'mrt-row-actions'`, `'mrt-row-expand'`, `'mrt-row-drag'`, `'mrt-row-numbers'`, `'mrt-row-pin'`, `'mrt-row-spacer'`) — replace the `mrt-` prefix with `sst-` anywhere they appear in `state.columnOrder`, `state.columnPinning`, custom column ordering logic, etc.
+5. Apply the `muiXxxProps` → `slotProps.xxx` rename pass (one-to-one mapping, documented in [PORT_PLAN.md](./PORT_PLAN.md)).
 
 ## v1 scope
 

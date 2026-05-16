@@ -98,7 +98,7 @@ export const SST_EditRowModal = <TData extends SST_RowData>({
           </DialogHeader>
           {/* intentional preventDefault: edit-row is an in-browser modal with no server-side submit fallback */}
           <form
-            data-slot="mrt-edit-modal-body"
+            data-slot="sst-edit-modal-body"
             onSubmit={(e) => e.preventDefault()}
             className="min-h-0 flex-1 overflow-y-auto px-6 py-4"
           >

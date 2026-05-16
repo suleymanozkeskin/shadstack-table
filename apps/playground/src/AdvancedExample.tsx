@@ -138,8 +138,8 @@ export function AdvancedExample() {
       showColumnFilters: true,
       showGlobalFilter: true,
       columnPinning: {
-        left: ['mrt-row-select'],
-        right: ['mrt-row-actions'],
+        left: ['sst-row-select'],
+        right: ['sst-row-actions'],
       },
       pagination: { pageSize: 10, pageIndex: 0 },
     },

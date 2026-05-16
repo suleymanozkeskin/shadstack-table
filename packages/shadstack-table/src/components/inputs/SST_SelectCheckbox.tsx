@@ -65,7 +65,7 @@ export const SST_SelectCheckbox = <TData extends SST_RowData>({
 
   const ariaLabel = selectAll ? localization.toggleSelectAll : localization.toggleSelectRow;
   const tooltipTitle = checkboxProps?.title ?? ariaLabel;
-  const disabled = isLoading || (row && !row.getCanSelect()) || row?.id === 'mrt-row-create';
+  const disabled = isLoading || (row && !row.getCanSelect()) || row?.id === 'sst-row-create';
 
   const handleChange = (event: any) => {
     event.stopPropagation();

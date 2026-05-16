@@ -41,7 +41,7 @@ export const SST_TableLoadingOverlay = <TData extends SST_RowData>({
     >
       <Spinner
         aria-label={localization.noRecordsToDisplay}
-        id={`mrt-progress-${id}`}
+        id={`sst-progress-${id}`}
         size={32}
         {...spinnerProps}
         className={cn(className, spinnerProps?.className)}

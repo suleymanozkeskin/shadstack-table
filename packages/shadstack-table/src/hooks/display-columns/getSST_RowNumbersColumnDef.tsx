@@ -18,7 +18,7 @@ export const getSST_RowNumbersColumnDef = <TData extends SST_RowData>(
     grow: false,
     ...defaultDisplayColumnProps({
       header: 'rowNumbers',
-      id: 'mrt-row-numbers',
+      id: 'sst-row-numbers',
       size: 50,
       tableOptions,
     }),

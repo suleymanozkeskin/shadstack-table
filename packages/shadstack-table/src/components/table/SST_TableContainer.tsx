@@ -62,8 +62,8 @@ export const SST_TableContainer = <TData extends SST_RowData>({
   return (
     <div
       aria-busy={loading}
-      aria-describedby={loading ? 'mrt-progress' : undefined}
-      data-slot="mrt-table-container"
+      aria-describedby={loading ? 'sst-progress' : undefined}
+      data-slot="sst-table-container"
       {...tableContainerProps}
       ref={(node: HTMLDivElement | null) => {
         if (node) {

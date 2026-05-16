@@ -45,7 +45,7 @@ export const SST_LinearProgressBar = <TData extends SST_RowData>({
           value={isIndeterminate ? undefined : linearProgressProps.value}
           className={cn(
             'relative',
-            isIndeterminate && 'mrt-progress-indeterminate',
+            isIndeterminate && 'sst-progress-indeterminate',
             className,
             linearProgressProps?.className,
           )}

@@ -737,13 +737,13 @@ export type SST_InternalFilterOption = {
 };
 
 export type SST_DisplayColumnIds =
-  | 'mrt-row-actions'
-  | 'mrt-row-drag'
-  | 'mrt-row-expand'
-  | 'mrt-row-numbers'
-  | 'mrt-row-pin'
-  | 'mrt-row-select'
-  | 'mrt-row-spacer';
+  | 'sst-row-actions'
+  | 'sst-row-drag'
+  | 'sst-row-expand'
+  | 'sst-row-numbers'
+  | 'sst-row-pin'
+  | 'sst-row-select'
+  | 'sst-row-spacer';
 
 /**
  * `columns` and `data` props are the only required props, but there are over 170 other optional props.
@@ -853,7 +853,7 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
    */
   layoutMode?: 'grid' | 'grid-no-grow' | 'semantic';
   /**
-   * Pass in either a locale imported from `material-react-table/locales/*` or a custom locale object.
+   * Pass in either a locale imported from `shadstack-table/locales/*` or a custom locale object.
    *
    * See the localization (i18n) guide for more info:
    * @link https://www.material-react-table.com/docs/guides/localization

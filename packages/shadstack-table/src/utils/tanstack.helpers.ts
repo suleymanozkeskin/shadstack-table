@@ -47,7 +47,7 @@ export const createRow = <TData extends SST_RowData>(
 ): SST_Row<TData> =>
   _createRow(
     table as any,
-    'mrt-row-create',
+    'sst-row-create',
     originalRow ??
       Object.assign(
         {},

@@ -18,7 +18,7 @@ export const getSST_RowSelectColumnDef = <TData extends SST_RowData>(
     grow: false,
     ...defaultDisplayColumnProps({
       header: 'select',
-      id: 'mrt-row-select',
+      id: 'sst-row-select',
       size: enableSelectAll ? 60 : 70,
       tableOptions,
     }),

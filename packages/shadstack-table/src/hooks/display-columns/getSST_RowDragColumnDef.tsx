@@ -17,7 +17,7 @@ export const getSST_RowDragColumnDef = <TData extends SST_RowData>(
     grow: false,
     ...defaultDisplayColumnProps({
       header: 'move',
-      id: 'mrt-row-drag',
+      id: 'sst-row-drag',
       size: 60,
       tableOptions,
     }),

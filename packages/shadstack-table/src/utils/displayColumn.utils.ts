@@ -87,16 +87,16 @@ export const getLeadingDisplayColumnIds = <TData extends SST_RowData>(
   tableOptions: SST_StatefulTableOptions<TData>,
 ) =>
   [
-    showRowPinningColumn(tableOptions) && 'mrt-row-pin',
-    showRowDragColumn(tableOptions) && 'mrt-row-drag',
+    showRowPinningColumn(tableOptions) && 'sst-row-pin',
+    showRowDragColumn(tableOptions) && 'sst-row-drag',
     tableOptions.positionActionsColumn === 'first' &&
       showRowActionsColumn(tableOptions) &&
-      'mrt-row-actions',
+      'sst-row-actions',
     tableOptions.positionExpandColumn === 'first' &&
       showRowExpandColumn(tableOptions) &&
-      'mrt-row-expand',
-    showRowSelectionColumn(tableOptions) && 'mrt-row-select',
-    showRowNumbersColumn(tableOptions) && 'mrt-row-numbers',
+      'sst-row-expand',
+    showRowSelectionColumn(tableOptions) && 'sst-row-select',
+    showRowNumbersColumn(tableOptions) && 'sst-row-numbers',
   ].filter(Boolean) as SST_DisplayColumnIds[];
 
 export const getTrailingDisplayColumnIds = <TData extends SST_RowData>(
@@ -105,11 +105,11 @@ export const getTrailingDisplayColumnIds = <TData extends SST_RowData>(
   [
     tableOptions.positionActionsColumn === 'last' &&
       showRowActionsColumn(tableOptions) &&
-      'mrt-row-actions',
+      'sst-row-actions',
     tableOptions.positionExpandColumn === 'last' &&
       showRowExpandColumn(tableOptions) &&
-      'mrt-row-expand',
-    showRowSpacerColumn(tableOptions) && 'mrt-row-spacer',
+      'sst-row-expand',
+    showRowSpacerColumn(tableOptions) && 'sst-row-spacer',
   ].filter(Boolean) as SST_DisplayColumnIds[];
 
 export const getDefaultColumnOrderIds = <TData extends SST_RowData>(

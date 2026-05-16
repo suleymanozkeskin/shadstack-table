@@ -12,7 +12,7 @@ export const getSST_RowSpacerColumnDef = <TData extends SST_RowData>(
 ): SST_ColumnDef<TData> => {
   return {
     ...defaultDisplayColumnProps({
-      id: 'mrt-row-spacer',
+      id: 'sst-row-spacer',
       size: 0,
       tableOptions,
     }),

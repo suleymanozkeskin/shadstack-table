@@ -71,7 +71,7 @@ export const getSST_RowExpandColumnDef = <TData extends SST_RowData>(
     },
     ...defaultDisplayColumnProps({
       header: 'expand',
-      id: 'mrt-row-expand',
+      id: 'sst-row-expand',
       size:
         groupedColumnMode === 'remove'
           ? (defaultColumn?.size ?? 180)

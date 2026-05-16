@@ -10,7 +10,7 @@ export const getSST_RowPinningColumnDef = <TData extends SST_RowData>(
     grow: false,
     ...defaultDisplayColumnProps({
       header: 'pin',
-      id: 'mrt-row-pin',
+      id: 'sst-row-pin',
       size: 60,
       tableOptions,
     }),
