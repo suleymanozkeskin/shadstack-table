@@ -248,9 +248,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
   const showClearButton = !isAutocompleteFilter && !isNativeDateFilter && !filterChipLabel;
   const clearVisible = isCalendarFilter
     ? !!filterValue
-    : (typeof filterValue === 'string' || Array.isArray(filterValue)
-        ? filterValue.length
-        : 0) > 0;
+    : (typeof filterValue === 'string' || Array.isArray(filterValue) ? filterValue.length : 0) > 0;
 
   const startAdornment = showChangeModeButton ? (
     <span className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-1">
@@ -342,11 +340,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
       <SST_DateFilter
         ariaLabel={filterPlaceholder}
         calendarIcon={<CalendarIcon className="size-3.5 opacity-60" />}
-        className={cn(
-          reserveModeButtonSpace && 'pl-9',
-          showClearButton && 'pr-9',
-          className,
-        )}
+        className={cn(reserveModeButtonSpace && 'pl-9', showClearButton && 'pr-9', className)}
         disabled={!!filterChipLabel}
         inputRef={buttonRefFn}
         onChange={handleChange}

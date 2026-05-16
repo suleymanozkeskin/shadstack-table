@@ -107,19 +107,12 @@ function Calendar({
       components={{
         Root: ({ className: rootClassName, rootRef, ...rootProps }) => {
           return (
-            <div
-              data-slot="calendar"
-              ref={rootRef}
-              className={cn(rootClassName)}
-              {...rootProps}
-            />
+            <div data-slot="calendar" ref={rootRef} className={cn(rootClassName)} {...rootProps} />
           );
         },
         Chevron: ({ className: chevronClassName, orientation, ...chevronProps }) => {
           if (orientation === 'left') {
-            return (
-              <ChevronLeftIcon className={cn('size-4', chevronClassName)} {...chevronProps} />
-            );
+            return <ChevronLeftIcon className={cn('size-4', chevronClassName)} {...chevronProps} />;
           }
 
           if (orientation === 'right') {
