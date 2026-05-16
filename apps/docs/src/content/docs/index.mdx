@@ -4,28 +4,24 @@ description: shadcn-native React data table with material-react-table feature pa
 template: splash
 hero:
   title: shadstack-table
-  tagline: A shadcn-native port of material-react-table. Same API surface, shadcn primitives, Tailwind v4 tokens.
+  tagline: A shadcn-native data table forked from material-react-table. Full feature parity on shadcn primitives + Tailwind v4 tokens.
   actions:
     - text: Getting started
       link: /getting-started/
       icon: right-arrow
       variant: primary
-    - text: Basic example
-      link: /examples/basic/
+    - text: Live demo
+      link: /example/
 ---
 
 ## Why this exists
 
-`material-react-table` is the most complete React data table on the market, but it ships
-MUI as a hard dependency. If your design system is shadcn/ui + Tailwind, you either pull in
-MUI for one component or rebuild a table from scratch. `shadstack-table` is the third option:
-a file-for-file port that keeps the upstream API and swaps every MUI primitive for its
-shadcn/ui equivalent.
+[`material-react-table`](https://github.com/KevinVandy/material-react-table) is one of the most complete React data tables ever shipped, but it ships MUI as a hard dependency and is no longer being maintained upstream. If your design system is shadcn/ui + Tailwind, you either pulled in MUI for one component or rebuilt a table from scratch. `shadstack-table` is the third option: a shadcn-native fork that ports every MUI primitive to its shadcn/ui equivalent and continues forward as its own library.
 
 ## What you get
 
-- TanStack Table v8 under the hood, like the upstream library
+- TanStack Table v8 under the hood
 - shadcn/ui primitives — Tailwind v4, Radix, your own CSS variables drive theming
-- The full upstream feature surface: filtering, sorting, grouping, row selection,
+- Full data-table feature surface: filtering, sorting, grouping, row selection,
   pinning, editing, virtualization, detail panels
 - Zero MUI in your bundle
