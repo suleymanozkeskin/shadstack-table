@@ -68,7 +68,7 @@ Your own Tailwind build now generates utilities for the library by scanning its 
 }
 ```
 
-Keep `import 'shadstack-table/style.css'` at your app entry — it now ships only the library-specific bits (token *values* plus library component CSS).
+Keep `import 'shadstack-table/style.css'` at your app entry — it now ships only the library-specific bits (token _values_ plus library component CSS).
 
 0.1.0–0.1.3 quietly shipped the `@theme inline` mapping and the `@layer base` reset inside the library's CSS bundle, which is part of what caused the cascade collision. Both now live in the consumer's globals — if you initialised with `shadcn init`, they're already there verbatim. Without `@theme inline`, Tailwind utilities like `bg-background` and `border-border` are unknown to the compiler and the table renders unstyled.
 

@@ -71,7 +71,7 @@ In your app's globals.css:
 }
 ```
 
-If you ran `shadcn init` already, the `@theme inline` and `@layer base` blocks are in your `globals.css` from that step — leave them. The token *values* (`--background: oklch(1 0 0)` etc.) are provided by `shadstack-table/style.css`, so anything you don't override falls through to the library's shadcn-neutral defaults. Without the `@theme inline` block, Tailwind utilities like `bg-background` and `border-border` are unknown classes and the table renders unstyled.
+If you ran `shadcn init` already, the `@theme inline` and `@layer base` blocks are in your `globals.css` from that step — leave them. The token _values_ (`--background: oklch(1 0 0)` etc.) are provided by `shadstack-table/style.css`, so anything you don't override falls through to the library's shadcn-neutral defaults. Without the `@theme inline` block, Tailwind utilities like `bg-background` and `border-border` are unknown classes and the table renders unstyled.
 
 And once at your app entry:
 
