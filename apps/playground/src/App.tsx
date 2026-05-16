@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { AdvancedExample } from './AdvancedExample';
 import { BasicExample } from './BasicExample';
+import { ThemedExample } from './ThemedExample';
 
-type ExampleKey = 'basic' | 'advanced';
+type ExampleKey = 'basic' | 'advanced' | 'themed';
 
 const examples: Array<{ key: ExampleKey; label: string; description: string }> = [
   {
@@ -15,6 +16,12 @@ const examples: Array<{ key: ExampleKey; label: string; description: string }> =
     label: 'Advanced',
     description:
       '30 employees · grouped column headers · custom Cell + Header renderers · row pinning · row actions · detail panel · custom toolbar with selection-aware bulk actions. Modeled on MRT’s canonical advanced demo.',
+  },
+  {
+    key: 'themed',
+    label: 'Themed',
+    description:
+      'Swap host CSS-variable presets at runtime (shaped like tweakcn.com themes) to verify the table picks up consumer tokens — surface, primary, radius, borders all flow through.',
   },
 ];
 
@@ -66,7 +73,13 @@ export function App() {
         </section>
 
         <section className="mx-auto max-w-7xl min-w-0 overflow-hidden">
-          {example === 'basic' ? <BasicExample /> : <AdvancedExample />}
+          {example === 'basic' ? (
+            <BasicExample />
+          ) : example === 'advanced' ? (
+            <AdvancedExample />
+          ) : (
+            <ThemedExample dark={dark} />
+          )}
         </section>
       </main>
     </div>
