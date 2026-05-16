@@ -2,7 +2,9 @@
 
 A shadcn/ui-native React data table with the same feature surface as [`material-react-table`](https://github.com/KevinVandy/material-react-table) — minus the MUI dependency. Built on TanStack Table v8 + TanStack Virtual.
 
-> **Status: 0.1.0 — pre-1.0.** The full MRT feature surface is ported; API is stable in shape but may receive breaking refinements before 1.0.
+**👉 [Documentation & live demo](https://suleymanozkeskin.github.io/shadstack-table/)** · [GitHub](https://github.com/suleymanozkeskin/shadstack-table) · [Changelog](https://github.com/suleymanozkeskin/shadstack-table/blob/main/CHANGELOG.md)
+
+> **Status: pre-1.0.** The full MRT feature surface is ported; API is stable in shape but may receive breaking refinements before 1.0.
 
 ## Install
 
@@ -70,12 +72,6 @@ A small set of MRT features are deferred to a later minor:
 - `filterVariant: 'autocomplete'` — falls back to a text input with a one-time `console.warn`.
 - Column drag-reorder — not in v1; column resize and pinning are supported.
 - `filterVariant: 'time' | 'datetime' | 'time-range' | 'datetime-range'` — use a native `<input>` until a shadcn time picker recipe exists. `date` and `date-range` already use shadcn `Popover` + `Calendar`.
-
-## Links
-
-- Documentation: <https://suleymanozkeskin.github.io/shadstack-table/>
-- Source & issues: <https://github.com/suleymanozkeskin/shadstack-table>
-- Changelog: [CHANGELOG.md](https://github.com/suleymanozkeskin/shadstack-table/blob/main/CHANGELOG.md)
 
 ## Acknowledgements
 

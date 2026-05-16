@@ -1,6 +1,6 @@
 {
   "name": "shadstack-table",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "shadcn-native React data table — full data-table feature surface on TanStack Table v8 + shadcn/ui primitives.",
   "keywords": [
     "data-table",
@@ -16,7 +16,7 @@
     "typescript",
     "virtualization"
   ],
-  "homepage": "https://github.com/suleymanozkeskin/shadstack-table#readme",
+  "homepage": "https://suleymanozkeskin.github.io/shadstack-table/",
   "bugs": {
     "url": "https://github.com/suleymanozkeskin/shadstack-table/issues"
   },

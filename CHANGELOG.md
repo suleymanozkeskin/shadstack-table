@@ -4,6 +4,15 @@ All notable changes to `shadstack-table` are recorded here. The format is based 
 
 ## [Unreleased]
 
+## [0.1.1] — 2026-05-16
+
+Metadata-only follow-up to 0.1.0. No code changes.
+
+### Changed
+
+- `homepage` field now points at the live docs site, <https://suleymanozkeskin.github.io/shadstack-table/>, instead of the GitHub README anchor. npm renders this as the package's "Homepage" link.
+- Package README links to the docs site and live demo prominently at the top of the page.
+
 ## [0.1.0] — 2026-05-16
 
 First public pre-release. The full `material-react-table` feature surface is ported to shadcn/ui primitives; the API shape is stable but may still receive breaking refinements before 1.0.
@@ -28,5 +37,6 @@ First public pre-release. The full `material-react-table` feature surface is por
 - Column drag-reorder.
 - `filterVariant: 'time' | 'datetime' | 'time-range' | 'datetime-range'` — native `<input>` is used until a shadcn time picker recipe lands.
 
-[Unreleased]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/suleymanozkeskin/shadstack-table/releases/tag/v0.1.0
