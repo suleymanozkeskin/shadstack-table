@@ -20,7 +20,7 @@ import { Playground } from '@playground/Playground';
 
 > [`material-react-table`](https://github.com/KevinVandy/material-react-table) is one of the most complete React data tables ever shipped — but it ships MUI as a hard dependency and is no longer maintained upstream.
 
-> If your design system is shadcn/ui + Tailwind, you either pulled in MUI for one component or rebuilt a table from scratch.
+> If your design system is shadcn/ui + Tailwind, you can just use this without introducing Material UI for the table alone.
 
 > `shadstack-table` is the third option: a shadcn-native fork that ports every MUI primitive to its shadcn/ui equivalent and continues forward as its own library.
 
@@ -32,12 +32,14 @@ import { Playground } from '@playground/Playground';
 
 > **The full data-table feature surface** — filtering, sorting, grouping, row selection, pinning, editing, virtualization, detail panels.
 
-> **Zero MUI in your bundle.** No `@mui/*`, no Emotion, no theme provider to wire up.
-
-> **Arguably biggest missing piece from Shadcn-ui ecosystem.** A real batteries-included data table.
+> **A big missing piece from Shadcn-ui ecosystem.** A real batteries-included data table.
 
 ## Live demo
 
 <div class="not-content sst-playground-host">
   <Playground client:only="react" modeSource="host" />
 </div>
+
+### Acknowledgment
+
+Thanks to [`Kevin Vandy`](https://github.com/KevinVandy) for his foundational work with `material-react-table`!

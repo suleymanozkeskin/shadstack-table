@@ -2,7 +2,9 @@
 
 A shadcn/ui-native React data table with the same feature surface as [`material-react-table`](https://github.com/KevinVandy/material-react-table) — minus the MUI dependency. Built on TanStack Table v8 + TanStack Virtual.
 
-> **Status: 0.1.0 on npm — pre-1.0.** The full MRT feature surface is ported; API shape is stable but may still get breaking refinements before 1.0. Install with `bun add shadstack-table` (or `npm install shadstack-table`).
+> **Status: 0.1.4 on npm — pre-1.0.** The full MRT feature surface is ported; API shape is stable but may still get breaking refinements before 1.0. Install with `bun add shadstack-table` (or `npm install shadstack-table`).
+>
+> Starting in 0.1.4, `dist/style.css` no longer ships a Tailwind utility build — your own Tailwind v4 setup generates utilities for the library via `@source`. See the [changelog](./CHANGELOG.md#014--2026-05-16) for the required `globals.css` snippet.
 
 **[Docs](https://suleymanozkeskin.github.io/shadstack-table/)** · [npm](https://www.npmjs.com/package/shadstack-table) · [Changelog](./CHANGELOG.md)
 
@@ -33,24 +35,6 @@ So:
 - Cell editing modes (modal + inline)
 
 **Deferred to a later minor:** `filterVariant: 'autocomplete'` (falls back to text input with a one-time `console.warn`), column drag-reorder, and `filterVariant: 'time' | 'datetime' | 'time-range' | 'datetime-range'` (native `<input>` until a shadcn time picker recipe lands). `date` and `date-range` use shadcn `Popover` + `Calendar`.
-
-## Local development
-
-Bun is the package manager — `bun install` is constrained by `minimum-release-age: 604800s` (7-day supply-chain guard).
-
-```bash
-bun install
-bun run dev          # starts the playground at http://localhost:5173
-bun run build        # builds the library (dist/index.{js,cjs,d.ts} + dist/style.css)
-bun run lint         # oxlint
-bun run format       # oxfmt write
-bun run format:check # oxfmt check (CI-equivalent)
-bun run typecheck    # tsc --noEmit across both workspaces
-bun run test         # vitest run (smoke tests for v1 priority features)
-bun run test:coverage # vitest run --coverage (V8 reporter)
-```
-
-CI runs the full `lint / format:check / typecheck / test / build` chain on every PR and push to `main`.
 
 ## Acknowledgements
 
