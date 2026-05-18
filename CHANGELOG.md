@@ -4,6 +4,15 @@ All notable changes to `shadstack-table` are recorded here. The format is based 
 
 ## [Unreleased]
 
+## [0.1.6] — 2026-05-18
+
+Fixes a packaging bug: `dist/index.{js,cjs}` imported 21 packages that were marked external in the rollup config but never declared in `package.json`. They only resolved when the consumer's `node_modules` happened to contain them transitively — a clean install of just `shadstack-table` broke at runtime.
+
+### Fixed
+
+- Declared every runtime import as a real dependency: all 14 `@radix-ui/*` primitives in use, `@tanstack/match-sorter-utils`, `class-variance-authority`, `clsx`, `date-fns`, `lucide-react`, `react-day-picker`, `tailwind-merge`. `react` / `react-dom` remain peers; `@tanstack/react-table` and `@tanstack/react-virtual` remain in `dependencies` as before.
+- Externalized `date-fns` and `react-day-picker` in the rollup config (they were being bundled). `dist/index.js` dropped from ~501 KB to ~248 KB (CJS: ~523 → ~269 KB); gzip dropped from ~110 KB to ~53 KB.
+
 ## [0.1.5] — 2026-05-18
 
 Drops the `highlight-words` runtime dependency by vendoring its ~30 LOC into the library. No behavior change for consumers — filter-match highlighting renders identically. Motivated by the upstream package being unmaintained (last published 2024-09-03).
@@ -116,7 +125,8 @@ Patch release that silences React DOM warnings emitted from every cell render. N
 - `SST_TableHeadCell` no longer emits the `padding` shorthand alongside `paddingTop` / `paddingBottom`. The horizontal padding is now expressed as `paddingLeft` / `paddingRight`, removing React's shorthand/longhand collision warning.
 - `getCommonPinnedCellStyles` no longer returns nested `&[data-pinned="true"]` / `&:before` selectors that React silently dropped on every pinned cell. The export is preserved for API compatibility but now returns `{}`; reconstructing the pinned-cell overlay as a real CSS rule is tracked for 0.1.3.
 
-[Unreleased]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.5...HEAD
+[Unreleased]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.6...HEAD
+[0.1.6]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.2...v0.1.3

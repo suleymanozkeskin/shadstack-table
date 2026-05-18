@@ -38,6 +38,8 @@ export default defineConfig({
         'class-variance-authority',
         'clsx',
         'tailwind-merge',
+        /^date-fns(\/|$)/,
+        'react-day-picker',
       ],
       output: {
         globals: {
