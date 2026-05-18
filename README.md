@@ -2,9 +2,9 @@
 
 A shadcn/ui-native React data table with the same feature surface as [`material-react-table`](https://github.com/KevinVandy/material-react-table) — minus the MUI dependency. Built on TanStack Table v8 + TanStack Virtual.
 
-> **Status: 0.1.4 on npm — pre-1.0.** The full MRT feature surface is ported; API shape is stable but may still get breaking refinements before 1.0. Install with `bun add shadstack-table` (or `npm install shadstack-table`).
+> **Status: 0.1.5 on npm — pre-1.0.** The full MRT feature surface is ported; API shape is stable but may still get breaking refinements before 1.0. Install with `bun add shadstack-table` (or `npm install shadstack-table`).
 >
-> Starting in 0.1.4, `dist/style.css` no longer ships a Tailwind utility build — your own Tailwind v4 setup generates utilities for the library via `@source`. See the [changelog](./CHANGELOG.md#014--2026-05-16) for the required `globals.css` snippet.
+> Since 0.1.4, `dist/style.css` no longer ships a Tailwind utility build — your own Tailwind v4 setup generates utilities for the library via `@source`. See the [changelog](./CHANGELOG.md#014--2026-05-16) for the required `globals.css` snippet.
 
 **[Docs](https://suleymanozkeskin.github.io/shadstack-table/)** · [npm](https://www.npmjs.com/package/shadstack-table) · [Changelog](./CHANGELOG.md)
 

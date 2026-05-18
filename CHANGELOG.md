@@ -4,6 +4,14 @@ All notable changes to `shadstack-table` are recorded here. The format is based 
 
 ## [Unreleased]
 
+## [0.1.5] — 2026-05-18
+
+Drops the `highlight-words` runtime dependency by vendoring its ~30 LOC into the library. No behavior change for consumers — filter-match highlighting renders identically. Motivated by the upstream package being unmaintained (last published 2024-09-03).
+
+### Changed
+
+- Removed `highlight-words` from runtime dependencies; the function is now bundled into `dist/index.{js,cjs}` and no longer appears in the rollup externals. Consumer install graphs shrink by one transitive dep.
+
 ## [0.1.4] — 2026-05-16
 
 **Breaking CSS change (pre-1.0 refinement).** `dist/style.css` no longer ships a full Tailwind v4 utility build. It dropped from ~76 KB to ~5 KB and now contains only shadcn token defaults, library component CSS (scrollbar, focus ring), and nothing else — no Tailwind preflight, no `@theme`, no `.hidden` / `.flex` / etc.
@@ -108,7 +116,8 @@ Patch release that silences React DOM warnings emitted from every cell render. N
 - `SST_TableHeadCell` no longer emits the `padding` shorthand alongside `paddingTop` / `paddingBottom`. The horizontal padding is now expressed as `paddingLeft` / `paddingRight`, removing React's shorthand/longhand collision warning.
 - `getCommonPinnedCellStyles` no longer returns nested `&[data-pinned="true"]` / `&:before` selectors that React silently dropped on every pinned cell. The export is preserved for API compatibility but now returns `{}`; reconstructing the pinned-cell overlay as a real CSS rule is tracked for 0.1.3.
 
-[Unreleased]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.1...v0.1.2
