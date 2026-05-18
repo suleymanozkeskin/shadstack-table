@@ -33,7 +33,6 @@ export default defineConfig({
         '@tanstack/react-table',
         '@tanstack/react-virtual',
         '@tanstack/match-sorter-utils',
-        'highlight-words',
         /^@radix-ui\//,
         'lucide-react',
         'class-variance-authority',

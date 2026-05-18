@@ -1,6 +1,6 @@
 // oxlint-disable eslint/no-underscore-dangle -- intentional; revisit when refactoring
 import { type ReactNode, type RefObject } from 'react';
-import highlightWords from 'highlight-words';
+import { highlightWords } from '../../utils/highlightWords';
 import { type SST_Cell, type SST_RowData, type SST_TableInstance } from '../../types';
 
 const allowedTypes = ['string', 'number'];
@@ -71,15 +71,15 @@ export const SST_TableBodyCellValue = <TData extends SST_RowData>({
       ['autocomplete', 'text'].includes(columnDef.filterVariant!)) ||
       (globalFilter && allowedTypes.includes(typeof globalFilter) && column.getCanGlobalFilter()))
   ) {
-    const chunks = highlightWords?.({
+    const chunks = highlightWords({
       matchExactly: (filterValue ? columnDef._filterFn : globalFilterFn) !== 'fuzzy',
       query: (filterValue ?? globalFilter ?? '').toString(),
       text: renderedCellValue?.toString() as string,
     });
-    if (chunks?.length > 1 || chunks?.[0]?.match) {
+    if (chunks.length > 1 || chunks[0]?.match) {
       renderedCellValue = (
         <span aria-label={renderedCellValue as string} role="note">
-          {chunks?.map(({ key, match, text }) => (
+          {chunks.map(({ key, match, text }) => (
             <span
               aria-hidden="true"
               className={match ? 'text-foreground rounded-xs px-px py-0.5' : undefined}
@@ -88,7 +88,7 @@ export const SST_TableBodyCellValue = <TData extends SST_RowData>({
             >
               {text}
             </span>
-          )) ?? renderedCellValue}
+          ))}
         </span>
       );
     }
