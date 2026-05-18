@@ -21,8 +21,7 @@ interface ClipArgs {
 const chunkExists = (chunk: HighlightChunk | undefined): chunk is HighlightChunk =>
   typeof chunk !== 'undefined';
 
-const hasMatch = (chunk: HighlightChunk | undefined): boolean =>
-  chunkExists(chunk) && chunk.match;
+const hasMatch = (chunk: HighlightChunk | undefined): boolean => chunkExists(chunk) && chunk.match;
 
 const clip = ({ clipBy = 3, curr, next, prev }: ClipArgs): string => {
   const words = curr.text.split(' ');
@@ -56,7 +55,10 @@ const escapeRegexp = (term: string): string =>
   term.replace(/[|\\{}()[\]^$+*?.-]/g, (char) => `\\${char}`);
 
 const termsToRegExpString = (terms: string): string =>
-  terms.replace(/\s{2,}/g, ' ').split(' ').join('|');
+  terms
+    .replace(/\s{2,}/g, ' ')
+    .split(' ')
+    .join('|');
 
 const regexpQuery = ({
   matchExactly = false,
@@ -126,9 +128,7 @@ export const highlightWords = ({
     .filter(hasLength)
     .map<HighlightChunk>((str) => ({
       key: uid(),
-      match: matchExactly
-        ? str.toLowerCase() === safeQuery.toLowerCase()
-        : searchRegexp.test(str),
+      match: matchExactly ? str.toLowerCase() === safeQuery.toLowerCase() : searchRegexp.test(str),
       text: str,
     }))
     .map((chunk, index, chunks) => ({
