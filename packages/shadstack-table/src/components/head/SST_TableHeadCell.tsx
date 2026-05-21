@@ -250,7 +250,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
         : (tableCellProps.children ?? (
             <div
               className={cn(
-                'Mui-TableHeadCell-Content relative w-full flex items-center gap-2',
+                'SST-TableHeadCell-Content relative w-full flex items-center gap-2',
                 tableCellProps?.style?.textAlign === 'right' ? 'flex-row-reverse' : 'flex-row',
                 columnDefType === 'group' || (tableCellProps as any)?.align === 'center'
                   ? 'justify-center'
@@ -261,7 +261,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
             >
               <div
                 className={cn(
-                  'Mui-TableHeadCell-Content-Labels flex items-center gap-1.5 min-w-0',
+                  'SST-TableHeadCell-Content-Labels flex items-center gap-1.5 min-w-0',
                   tableCellProps?.style?.textAlign === 'right' ? 'flex-row-reverse' : 'flex-row',
                   columnDefType === 'data' && 'overflow-hidden',
                   column.getCanSort() && columnDefType !== 'group' && 'cursor-pointer',
@@ -274,7 +274,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
               >
                 <div
                   className={cn(
-                    'Mui-TableHeadCell-Content-Wrapper text-ellipsis hover:text-clip',
+                    'SST-TableHeadCell-Content-Wrapper text-ellipsis hover:text-clip',
                     columnDefType === 'data' && 'overflow-hidden',
                     (columnDef.header?.length ?? 0) < 20
                       ? 'whitespace-nowrap'
@@ -297,7 +297,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
                 )}
               </div>
               {columnDefType !== 'group' && (
-                <div className="Mui-TableHeadCell-Content-Actions flex items-center gap-0.5 whitespace-nowrap">
+                <div className="SST-TableHeadCell-Content-Actions flex items-center gap-0.5 whitespace-nowrap">
                   {showDragHandle && (
                     <SST_TableHeadCellGrabHandle
                       column={column}

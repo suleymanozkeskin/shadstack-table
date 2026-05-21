@@ -38,7 +38,7 @@ export const SST_TableHeadCellResizeHandle = <TData extends SST_RowData>({
         // inset-y-0 anchors the wrapper to the full vertical extent of the
         // th — without it the absolute-positioned wrapper collapses to 0
         // height and the divider inside (h-full) renders invisible.
-        'Mui-TableHeadCell-ResizeHandle-Wrapper absolute inset-y-0 flex items-center cursor-col-resize px-1 group',
+        'SST-TableHeadCell-ResizeHandle-Wrapper absolute inset-y-0 flex items-center cursor-col-resize px-1 group',
         className,
       )}
       onDoubleClick={() => {
@@ -69,7 +69,7 @@ export const SST_TableHeadCellResizeHandle = <TData extends SST_RowData>({
        */}
       <div
         className={cn(
-          'Mui-TableHeadCell-ResizeHandle-Divider rounded touch-none select-none translate-x-1 z-[4]',
+          'SST-TableHeadCell-ResizeHandle-Divider rounded touch-none select-none translate-x-1 z-[4]',
           'h-6 w-0.5 bg-border',
           'group-hover:bg-primary',
           column.getIsResizing() ? '' : 'transition-colors duration-150 ease-in-out',
