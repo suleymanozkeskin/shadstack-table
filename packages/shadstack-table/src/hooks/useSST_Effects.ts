@@ -1,6 +1,7 @@
 // oxlint-disable react-hooks/exhaustive-deps -- intentional narrow dep array; revisit when refactoring
 import { useEffect, useReducer, useRef } from 'react';
 import { type SST_RowData, type SST_SortingState, type SST_TableInstance } from '../types';
+import { getAllLeafColumnDefs, getColumnId } from '../utils/column.utils';
 import { getDefaultColumnOrderIds } from '../utils/displayColumn.utils';
 import { getCanRankRows } from '../utils/row.utils';
 
@@ -11,18 +12,9 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
     getState,
     options: { enablePagination, enableRowPinning, rowCount },
   } = table;
-  const {
-    columnOrder,
-    density,
-    globalFilter,
-    isFullScreen,
-    isLoading,
-    pagination,
-    showSkeletons,
-    sorting,
-  } = getState();
+  const { density, globalFilter, isFullScreen, isLoading, pagination, showSkeletons, sorting } =
+    getState();
 
-  const totalColumnCount = table.options.columns.length;
   const totalRowCount = rowCount ?? getPrePaginationRowModel().rows.length;
 
   const rerender = useReducer(() => ({}), {})[1];
@@ -53,12 +45,15 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
     }
   }, [isFullScreen]);
 
-  //recalculate column order when columns change or features are toggled on/off
+  //recalculate column order when the set of column ids changes — not just the
+  //count — so swapping columns for a same-length array with different ids
+  //still triggers a rebuild
+  const sourceColumnSignature = getAllLeafColumnDefs(table.options.columns)
+    .map(getColumnId)
+    .join('|');
   useEffect(() => {
-    if (totalColumnCount !== columnOrder.length) {
-      table.setColumnOrder(getDefaultColumnOrderIds(table.options));
-    }
-  }, [totalColumnCount]);
+    table.setColumnOrder(getDefaultColumnOrderIds(table.options));
+  }, [sourceColumnSignature]);
 
   //if page index is out of bounds, set it to the last page
   useEffect(() => {
