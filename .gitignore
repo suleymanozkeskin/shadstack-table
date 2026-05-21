@@ -13,3 +13,6 @@ coverage
 # Cloned reference repo (kept locally for parity research, not part of this project)
 material-react-table/
 .claude/
+
+# Local audit reports (not committed)
+reports/
