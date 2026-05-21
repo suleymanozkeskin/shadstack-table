@@ -128,6 +128,42 @@ The consumer-facing rename is one-to-one:
 3. Replace built-in column IDs (`'mrt-row-select'`, `'mrt-row-actions'`, `'mrt-row-expand'`, `'mrt-row-drag'`, `'mrt-row-numbers'`, `'mrt-row-pin'`, `'mrt-row-spacer'`) — swap the `mrt-` prefix for `sst-`.
 4. Apply the `muiXxxProps` → `slotProps.xxx` rename pass — every MUI-prefixed slot prop is now under `slotProps` (e.g. `muiTableBodyRowProps` → `slotProps.tableBodyRow`).
 
+## API stability
+
+Pre-1.0, exports are classified into three tiers. Anything not listed under **Stable** may change without a major bump.
+
+### Stable
+
+The public surface we intend to keep working through 1.x. Consumers should rely only on these:
+
+- **Components:** `ShadStackTable`
+- **Hooks:** `useShadStackTable`
+- **Helpers:** `createSSTColumnHelper`, `flexRender`, `createRow`
+- **Types:** `SST_ColumnDef`, `SST_TableOptions`, `SST_TableInstance`, `SST_Row`, `SST_RowData`, `SST_Header`, `SST_Column`, `SST_Localization`, `SST_Theme`, `SST_RowSelectionState`, `SST_SortingState`, `SST_ColumnFiltersState`, `SST_PaginationState`, `SST_ColumnPinningState`, `SST_RowPinningState`, `SST_ExpandedState`, `SST_VisibilityState`, `SST_GroupingState`, `SST_ColumnOrderState`, `SST_ColumnSizingState`, `SST_ColumnSizingInfoState`
+- **Options:** every documented field on `SST_TableOptions` (toggles, callbacks, `theme`, `localization`, `slotProps`, etc.)
+- **Localization subpaths:** `shadstack-table/locales/<code>` — see [Localization](https://suleymanozkeskin.github.io/shadstack-table/guides/localization/)
+- **Style entry:** `shadstack-table/style.css`
+
+### Deprecated (compatibility aliases)
+
+Still exported and working; emit JSDoc deprecation warnings in your editor and will be removed in a future major:
+
+- `createMRTColumnHelper` → use `createSSTColumnHelper`
+- `mrtTheme` option → use `theme`
+- `getMRTTheme` → use `getSST_Theme`
+
+### Internal / unstable
+
+Currently re-exported from the package barrel for ergonomic access, but **not part of the stable surface**. These can change shape, move, or disappear without a major bump:
+
+- Every `SST_*` component other than `ShadStackTable` (the head, body, footer, toolbar, menu, button, input, modal pieces under `src/components/*`)
+- Every `Memo_*` component
+- Every `useSST_*` hook other than `useShadStackTable`
+- Every utility under `src/utils/` (cell, column, display-column, row helpers, style.utils)
+- The aggregation/filter/sorting `*Fns` collections
+
+If you find yourself reaching for one of these, please open an issue describing the use case — that helps us decide what should be promoted to the stable tier before 1.0.
+
 ## v1 deferred features
 
 A small set of MRT features are deferred to a later minor:
