@@ -43,11 +43,16 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./locales/*": {
+      "types": "./dist/locales/*.d.ts",
+      "import": "./dist/locales/*.js",
+      "require": "./dist/locales/*.cjs"
+    },
     "./style.css": "./dist/style.css"
   },
   "scripts": {
     "dev": "vite build --watch",
-    "build": "vite build",
+    "build": "vite build && vite build --mode locales",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
