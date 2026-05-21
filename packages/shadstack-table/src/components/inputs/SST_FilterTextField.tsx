@@ -238,7 +238,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
           `filter${
             currentFilterOption?.charAt(0)?.toUpperCase() + currentFilterOption?.slice(1)
           }` as keyof typeof localization
-        ],
+        ] ?? '',
       )}
     </p>
   ) : null;

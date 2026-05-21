@@ -206,5 +206,5 @@ export const SST_TableBody = <TData extends SST_RowData>({
 // flows through unimpeded.
 export const Memo_SST_TableBody = memo(
   SST_TableBody,
-  (_prev, next) => next.table.getState().columnSizingInfo.isResizingColumn,
+  (_prev, next) => !!next.table.getState().columnSizingInfo.isResizingColumn,
 ) as typeof SST_TableBody;

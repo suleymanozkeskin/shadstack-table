@@ -68,11 +68,11 @@ export const SST_TableHeadCellFilterLabel = <TData extends SST_RowData = {}>({
           .replace(
             '{filterType}',
             currentFilterOption
-              ? localization[
+              ? (localization[
                   `filter${
                     currentFilterOption.charAt(0).toUpperCase() + currentFilterOption.slice(1)
                   }` as keyof typeof localization
-                ]
+                ] ?? '')
               : '',
           )
           .replace(
