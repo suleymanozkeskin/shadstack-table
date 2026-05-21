@@ -7,6 +7,7 @@ import { Badge } from '../../_ui/badge';
 import { Button } from '../../_ui/button';
 import { Checkbox } from '../../_ui/checkbox';
 import { Input } from '../../_ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '../../_ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../_ui/select';
 import { cn } from '../../lib/utils';
 import { type SST_Header, type SST_RowData, type SST_TableInstance } from '../../types';
@@ -330,6 +331,19 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
 
   const onSelectChange = (newValue: string) => handleChange(newValue);
 
+  const multiSelectArray = Array.isArray(filterValue) ? filterValue : [];
+  const toggleMultiSelectValue = (value: string, checked: boolean) => {
+    const next = checked
+      ? multiSelectArray.includes(value)
+        ? multiSelectArray
+        : [...multiSelectArray, value]
+      : multiSelectArray.filter((v) => v !== value);
+    setFilterValue(next);
+    column.setFilterValue(next.length === 0 ? undefined : next);
+  };
+  const multiSelectTriggerLabel =
+    multiSelectArray.length === 0 ? filterPlaceholder : `${multiSelectArray.length} selected`;
+
   const buttonRefFn = (el: HTMLButtonElement | null) => {
     filterInputRefs.current![`${column.id}-${rangeFilterIndex ?? 0}`] = el as any;
   };
@@ -376,13 +390,65 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
       />
       {endAdornment}
     </div>
-  ) : isSelectFilter || isMultiSelectFilter ? (
+  ) : isMultiSelectFilter ? (
     <div className={wrapperClass}>
       {startAdornment}
-      <Select
-        value={Array.isArray(filterValue) ? filterValue.join(',') : (filterValue as string)}
-        onValueChange={onSelectChange}
-      >
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            ref={buttonRefFn as any}
+            type="button"
+            variant="outline"
+            aria-label={filterPlaceholder}
+            title={filterPlaceholder}
+            className={cn(
+              inputClass,
+              'h-9 justify-start font-normal',
+              multiSelectArray.length === 0 && 'text-muted-foreground',
+            )}
+          >
+            <span className="truncate">{multiSelectTriggerLabel}</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          className="w-[var(--radix-popover-trigger-width)] min-w-[12rem] p-1"
+        >
+          <div className="max-h-64 overflow-y-auto">
+            {dropdownOptions?.map((option) => {
+              const { label, value } = getValueAndLabel(option);
+              const checked = multiSelectArray.includes(value);
+              const itemId = `${column.id}-multi-${value}`;
+              return (
+                <div
+                  key={value}
+                  className="hover:bg-accent flex items-center gap-2 rounded px-2 py-1.5 text-sm"
+                >
+                  <Checkbox
+                    id={itemId}
+                    checked={checked}
+                    onCheckedChange={(next) => toggleMultiSelectValue(value, next === true)}
+                  />
+                  <label htmlFor={itemId} className="flex-1 cursor-pointer truncate">
+                    {label}
+                  </label>
+                  {!columnDef.filterSelectOptions && (
+                    <span className="text-muted-foreground text-xs">
+                      ({facetedUniqueValues.get(value)})
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </PopoverContent>
+      </Popover>
+      {endAdornment}
+    </div>
+  ) : isSelectFilter ? (
+    <div className={wrapperClass}>
+      {startAdornment}
+      <Select value={(filterValue as string) ?? ''} onValueChange={onSelectChange}>
         <SelectTrigger
           ref={inputRefFn as any}
           className={inputClass}
@@ -397,12 +463,6 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
             return (
               <SelectItem key={value} value={value}>
                 <span className="flex items-center gap-2">
-                  {isMultiSelectFilter && (
-                    <Checkbox
-                      checked={((column.getFilterValue() ?? []) as string[]).includes(value)}
-                      className="mr-1"
-                    />
-                  )}
                   {label}
                   {!columnDef.filterSelectOptions && ` (${facetedUniqueValues.get(value)})`}
                 </span>
