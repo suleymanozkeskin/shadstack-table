@@ -67,21 +67,22 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
     }
   }, [totalRowCount, enablePagination, isLoading, showSkeletons]);
 
-  //turn off sort when global filter is looking for ranked results
-  const appliedSort = useRef<SST_SortingState>(sorting);
-  useEffect(() => {
-    if (sorting.length) {
-      appliedSort.current = sorting;
-    }
-  }, [sorting]);
-
+  //turn off sort when global filter is looking for ranked results, and restore
+  //the user's previous sort (including an intentionally cleared empty array)
+  //when the filter is removed
+  const userIntendedSort = useRef<SST_SortingState>(sorting);
+  const prevGlobalFilter = useRef(globalFilter);
   useEffect(() => {
     if (!getCanRankRows(table)) return;
-    if (globalFilter) {
+    if (globalFilter && !prevGlobalFilter.current) {
+      //entering ranked-filter mode — snapshot the user's current sort to restore later
+      userIntendedSort.current = sorting;
       table.setSorting([]);
-    } else {
-      table.setSorting(() => appliedSort.current || []);
+    } else if (!globalFilter && prevGlobalFilter.current) {
+      //leaving ranked-filter mode — restore the snapshot exactly, including []
+      table.setSorting(() => userIntendedSort.current);
     }
+    prevGlobalFilter.current = globalFilter;
   }, [globalFilter]);
 
   //fix pinned row top style when density changes
