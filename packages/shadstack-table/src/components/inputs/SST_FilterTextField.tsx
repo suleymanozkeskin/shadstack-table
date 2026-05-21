@@ -141,9 +141,9 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
       (newValue: any) => {
         if (isRangeFilter) {
           column.setFilterValue((old: Array<Date | null | number | string>) => {
-            const newFilterValues = old ?? ['', ''];
-            newFilterValues[rangeFilterIndex as number] = newValue ?? undefined;
-            return newFilterValues;
+            const next = [...(old ?? ['', ''])];
+            next[rangeFilterIndex as number] = newValue ?? undefined;
+            return next;
           });
         } else {
           column.setFilterValue(newValue ?? undefined);
@@ -177,9 +177,9 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
     } else if (isRangeFilter) {
       setFilterValue('');
       column.setFilterValue((old: [string | undefined, string | undefined]) => {
-        const newFilterValues = (Array.isArray(old) && old) || ['', ''];
-        newFilterValues[rangeFilterIndex as number] = undefined;
-        return newFilterValues;
+        const next = [...(Array.isArray(old) ? old : ['', ''])];
+        next[rangeFilterIndex as number] = undefined;
+        return next;
       });
     } else {
       setFilterValue('');
