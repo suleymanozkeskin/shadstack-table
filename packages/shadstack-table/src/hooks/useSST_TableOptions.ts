@@ -88,7 +88,7 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
   enableTopToolbar = true,
   filterFns,
   icons,
-  id = useId(),
+  id,
   layoutMode,
   localization,
   manualFiltering,
@@ -110,6 +110,8 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
   sortingFns,
   ...rest
 }: SST_TableOptions<TData>) => {
+  const generatedId = useId();
+  id = id ?? generatedId;
   icons = useMemo(() => ({ ...SST_Default_Icons, ...icons }), [icons]);
   localization = useMemo(
     () => ({
