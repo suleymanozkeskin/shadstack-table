@@ -13,6 +13,7 @@ export default defineConfig({
   plugins: [
     react(),
     dts({
+      exclude: ['src/__tests__/**', 'src/**/*.test.ts', 'src/**/*.test.tsx'],
       include: ['src'],
       rollupTypes: true,
       tsconfigPath: './tsconfig.json',
