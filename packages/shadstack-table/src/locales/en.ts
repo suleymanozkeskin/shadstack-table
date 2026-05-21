@@ -58,6 +58,7 @@ export const SST_Localization_EN: SST_Localization = {
   max: 'Max',
   min: 'Min',
   move: 'Move',
+  loading: 'Loading',
   noRecordsToDisplay: 'No records to display',
   noResultsFound: 'No results found',
   of: 'of',

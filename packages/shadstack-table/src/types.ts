@@ -185,6 +185,8 @@ export interface SST_Localization {
   move: string;
   noRecordsToDisplay: string;
   noResultsFound: string;
+  /** Loading state announced to screen readers while the table is fetching or processing data. Optional with a hardcoded 'Loading' fallback so locale maintainers can opt in. */
+  loading?: string;
   of: string;
   or: string;
   pin: string;

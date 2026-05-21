@@ -40,7 +40,7 @@ export const SST_TableLoadingOverlay = <TData extends SST_RowData>({
       }}
     >
       <Spinner
-        aria-label={localization.noRecordsToDisplay}
+        aria-label={localization.loading ?? 'Loading'}
         id={`sst-progress-${id}`}
         size={32}
         {...spinnerProps}

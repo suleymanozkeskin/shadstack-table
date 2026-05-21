@@ -28,6 +28,7 @@ export const SST_TableContainer = <TData extends SST_RowData>({
       editDisplayMode,
       enableCellActions,
       enableStickyHeader,
+      id,
       mrtTheme: { cellNavigationOutlineColor },
       slotProps,
     },
@@ -63,7 +64,7 @@ export const SST_TableContainer = <TData extends SST_RowData>({
   return (
     <div
       aria-busy={loading}
-      aria-describedby={loading ? 'sst-progress' : undefined}
+      aria-describedby={loading ? `sst-progress-${id}` : undefined}
       data-slot="sst-table-container"
       {...tableContainerProps}
       ref={(node: HTMLDivElement | null) => {
