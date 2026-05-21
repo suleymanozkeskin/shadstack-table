@@ -10,7 +10,7 @@ A shadcn/ui-native React data table with the same feature surface as [`material-
 
 ## Why
 
-`material-react-table` is the most feature-complete table for TanStack Table v8 in the React ecosystem. As of 2026 it has been unmaintained for ~8 months and is tightly coupled to Material UI v6, which makes it a non-starter for projects on shadcn/ui or any non-MUI design system. `shadstack-table` is a fork that swaps the MUI surface for shadcn primitives (Radix UI + Tailwind v4 + lucide-react) while keeping every feature, every option, and every public type that MRT consumers depend on.
+`material-react-table` is the most feature-complete table for TanStack Table v8 in the React ecosystem. As of 2026 it has been unmaintained for ~8 months and is tightly coupled to Material UI v6, which makes it a non-starter for projects on shadcn/ui or any non-MUI design system. `shadstack-table` is a fork that swaps the MUI surface for shadcn primitives (Radix UI + Tailwind v4 + lucide-react), keeping the MRT-compatible API direction, options, and types — with a small set of known deferred features (see [Feature surface](#feature-surface) below).
 
 If you're migrating from MRT, the consumer-facing change is roughly:
 

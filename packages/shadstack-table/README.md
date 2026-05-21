@@ -1,10 +1,10 @@
 # shadstack-table
 
-A shadcn/ui-native React data table with the same feature surface as [`material-react-table`](https://github.com/KevinVandy/material-react-table) — minus the MUI dependency. Built on TanStack Table v8 + TanStack Virtual.
+A shadcn/ui-native React data table that follows the [`material-react-table`](https://github.com/KevinVandy/material-react-table) API direction — minus the MUI dependency — with a small set of [known deferred features](#v1-deferred-features). Built on TanStack Table v8 + TanStack Virtual.
 
 **👉 [Documentation & live demo](https://suleymanozkeskin.github.io/shadstack-table/)** · [GitHub](https://github.com/suleymanozkeskin/shadstack-table) · [Changelog](https://github.com/suleymanozkeskin/shadstack-table/blob/main/CHANGELOG.md)
 
-> **Status: pre-1.0.** The full MRT feature surface is ported; API is stable in shape but may receive breaking refinements before 1.0.
+> **Status: pre-1.0.** MRT-compatible API direction is in place; a small set of features are deferred (see [v1 deferred features](#v1-deferred-features) below). API is stable in shape but may receive breaking refinements before 1.0.
 
 ## Install
 
