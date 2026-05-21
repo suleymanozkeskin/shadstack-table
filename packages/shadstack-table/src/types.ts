@@ -319,10 +319,15 @@ export type SST_TableInstance<TData extends SST_RowData> = Omit<
 
 export type SST_DefinedTableOptions<TData extends SST_RowData> = Omit<
   SST_TableOptions<TData>,
-  'icons' | 'localization' | 'mrtTheme'
+  'icons' | 'localization' | 'mrtTheme' | 'theme'
 > & {
   icons: SST_Icons;
   localization: SST_Localization;
+  theme: Required<SST_Theme>;
+  /**
+   * @deprecated Read `options.theme` instead. Same reference as `theme`; kept
+   * so legacy components reading `options.mrtTheme.<color>` continue to work.
+   */
   mrtTheme: Required<SST_Theme>;
 };
 
@@ -868,7 +873,18 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
    * @link https://suleymanozkeskin.github.io/shadstack-table/guides/memoize-components/
    */
   memoMode?: 'cells' | 'rows';
+  /**
+   * Override the colors used for selected/pinned-row backgrounds, the drag/drop
+   * border, the cell-navigation focus ring, the global-filter match highlight,
+   * and a handful of other table-scoped pieces. Pass an object (or a function
+   * returning one) — unspecified keys fall back to the shadcn-neutral defaults.
+   */
   // TODO: theme-aware styling moved to CSS vars in _ui/styles.css
+  theme?: ((theme: unknown) => Partial<SST_Theme>) | Partial<SST_Theme>;
+  /**
+   * @deprecated Use `theme` instead. This MRT-era alias is kept for migration
+   * compatibility and will be removed in a future major.
+   */
   mrtTheme?: ((theme: unknown) => Partial<SST_Theme>) | Partial<SST_Theme>;
   slotProps?: {
     bottomToolbar?:

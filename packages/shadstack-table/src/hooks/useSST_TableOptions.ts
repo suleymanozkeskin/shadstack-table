@@ -17,7 +17,7 @@ import { SST_SortingFns } from '../fns/sortingFns';
 import { SST_Default_Icons } from '../icons';
 import { SST_Localization_EN } from '../locales/en';
 import { type SST_DefinedTableOptions, type SST_RowData, type SST_TableOptions } from '../types';
-import { getMRTTheme } from '../utils/style.utils';
+import { getSST_Theme } from '../utils/style.utils';
 
 export const SST_DefaultColumn = {
   filterVariant: 'text',
@@ -96,6 +96,7 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
   manualPagination,
   manualSorting,
   mrtTheme,
+  theme,
   paginationDisplayMode = 'default',
   positionActionsColumn = 'first',
   positionCreatingRow = 'top',
@@ -120,7 +121,11 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
     }),
     [localization],
   );
-  mrtTheme = useMemo(() => getMRTTheme(mrtTheme), [mrtTheme]);
+  // `theme` is the canonical input; `mrtTheme` remains as a deprecated alias.
+  // The normalized options expose the resolved value on BOTH fields (same
+  // reference) so legacy components reading `options.mrtTheme.<color>` keep
+  // working.
+  const resolvedTheme = useMemo(() => getSST_Theme(theme ?? mrtTheme), [theme, mrtTheme]);
   aggregationFns = useMemo(() => ({ ...SST_AggregationFns, ...aggregationFns }), []);
   filterFns = useMemo(() => ({ ...SST_FilterFns, ...filterFns }), []);
   sortingFns = useMemo(() => ({ ...SST_SortingFns, ...sortingFns }), []);
@@ -230,7 +235,8 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
     manualGrouping,
     manualPagination,
     manualSorting,
-    mrtTheme,
+    theme: resolvedTheme,
+    mrtTheme: resolvedTheme,
     paginationDisplayMode,
     positionActionsColumn,
     positionCreatingRow,
