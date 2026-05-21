@@ -865,7 +865,7 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
    * @warning This will break some dynamic rendering features. See the memoization guide:
    * @link https://suleymanozkeskin.github.io/shadstack-table/guides/memoize-components/
    */
-  memoMode?: 'cells' | 'rows' | 'table-body';
+  memoMode?: 'cells' | 'rows';
   // TODO: theme-aware styling moved to CSS vars in _ui/styles.css
   mrtTheme?: ((theme: unknown) => Partial<SST_Theme>) | Partial<SST_Theme>;
   slotProps?: {

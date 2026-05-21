@@ -198,7 +198,13 @@ export const SST_TableBody = <TData extends SST_RowData>({
   );
 };
 
+// Memoizes the body while a column is being resized. The previous
+// comparator skipped re-renders whenever `data` was reference-stable, which
+// also swallowed selection/filter/pagination updates whose row arrays
+// didn't change identity. Now the memo skips *only* while the user is
+// actively dragging a column resize handle — every other state change
+// flows through unimpeded.
 export const Memo_SST_TableBody = memo(
   SST_TableBody,
-  (prev, next) => prev.table.options.data === next.table.options.data,
+  (_prev, next) => next.table.getState().columnSizingInfo.isResizingColumn,
 ) as typeof SST_TableBody;

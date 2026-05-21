@@ -22,15 +22,7 @@ export const SST_Table = <TData extends SST_RowData>({
   const {
     getFlatHeaders,
     getState,
-    options: {
-      columns,
-      enableTableFooter,
-      enableTableHead,
-      layoutMode,
-      memoMode,
-      renderCaption,
-      slotProps,
-    },
+    options: { columns, enableTableFooter, enableTableHead, layoutMode, renderCaption, slotProps },
   } = table;
   const { columnSizing, columnSizingInfo, columnVisibility } = getState();
 
@@ -75,7 +67,7 @@ export const SST_Table = <TData extends SST_RowData>({
     >
       {!!Caption && <caption>{Caption}</caption>}
       {enableTableHead && <SST_TableHead {...commonTableGroupProps} />}
-      {memoMode === 'table-body' || columnSizingInfo.isResizingColumn ? (
+      {columnSizingInfo.isResizingColumn ? (
         <Memo_SST_TableBody {...commonTableGroupProps} />
       ) : (
         <SST_TableBody {...commonTableGroupProps} />
