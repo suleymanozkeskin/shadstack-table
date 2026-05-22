@@ -63,7 +63,6 @@ Full step-by-step (component rename, `MRT_*` → `SST_*` types, `mrt-` → `sst-
 A small set of MRT features are deferred to a later minor:
 
 - `filterVariant: 'autocomplete'` — falls back to a text input with a one-time `console.warn`.
-- Column drag-reorder — column resize, pinning, and visibility are supported.
 - `filterVariant: 'time' | 'datetime' | 'time-range' | 'datetime-range'` — native `<input>` until a shadcn time picker recipe lands. `date` and `date-range` already use shadcn `Popover` + `Calendar`.
 
 ## API stability

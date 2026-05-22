@@ -98,8 +98,9 @@ common gotchas:
 
 - `filterVariant: 'autocomplete'` falls back to a plain text input with a
   one-time `console.warn` on first render.
-- Column drag-reorder is not in v1. Column resize, pinning, and visibility
-  toggles are supported.
+- `filterVariant: 'time' | 'datetime' | 'time-range' | 'datetime-range'`
+  uses a native `<input>` until a shadcn time-picker recipe lands. `date`
+  and `date-range` already use the shadcn `Popover` + `Calendar`.
 
 If your MRT app relies on a deferred feature, please open an issue describing
 the use case — that helps us prioritize.
