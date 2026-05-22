@@ -280,8 +280,8 @@ describe('cell-render counts with memoMode=cells (Tier 1 win surface)', () => {
       {
         "mount": {
           "commits": 5,
-          "firstName": 10,
-          "lastName": 10,
+          "firstName": 20,
+          "lastName": 20,
         },
         "rows": 100,
         "update": {
@@ -303,8 +303,8 @@ describe('cell-render counts with memoMode=cells (Tier 1 win surface)', () => {
       {
         "mount": {
           "commits": 5,
-          "firstName": 10,
-          "lastName": 10,
+          "firstName": 20,
+          "lastName": 20,
         },
         "rows": 100,
         "update": {
@@ -326,8 +326,8 @@ describe('cell-render counts with memoMode=cells (Tier 1 win surface)', () => {
       {
         "mount": {
           "commits": 5,
-          "firstName": 10,
-          "lastName": 10,
+          "firstName": 20,
+          "lastName": 20,
         },
         "rows": 100,
         "update": {
@@ -348,8 +348,8 @@ describe('cell-render counts with memoMode=cells (Tier 1 win surface)', () => {
       {
         "mount": {
           "commits": 5,
-          "firstName": 10,
-          "lastName": 10,
+          "firstName": 20,
+          "lastName": 20,
         },
         "rows": 100,
         "update": {

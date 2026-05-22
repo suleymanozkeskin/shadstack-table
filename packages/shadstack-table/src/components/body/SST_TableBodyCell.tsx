@@ -342,15 +342,16 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
 // to be read from `getState()` inside the component and the comparator
 // couldn't see them. Now those signals come in as discrete primitive props,
 // so a shallow-equal of the render-relevant ones is the correct gate.
-// `cell.id` rather than the cell instance: TanStack regenerates Cell
-// objects when `table.options.columns` is a fresh array reference (even with
-// stable contents), which would defeat reference equality. The cell id is
-// derived from (row.id, column.id) and is stable for a logical cell — and
-// the row/column identity stability is enforced upstream in
-// useSST_TableInstance, so id-based equality is sufficient here.
+// `cell` is compared by reference, not by id. TanStack regenerates Cell
+// instances when the underlying row model changes — including the common
+// case of replacing `data` immutably while keeping `getRowId` stable. An
+// id-based check would incorrectly bail there and leave stale values on
+// screen. The column-ref stability layer in useSST_TableInstance keeps
+// cells warm across narrow state changes (hover/drag/edit), so this is
+// both correct and fast.
 export const Memo_SST_TableBodyCell = memo(SST_TableBodyCell, (prev, next) => {
   return (
-    prev.cell.id === next.cell.id &&
+    prev.cell === next.cell &&
     prev.density === next.density &&
     prev.isActionCell === next.isActionCell &&
     prev.isCreatingRow === next.isCreatingRow &&
