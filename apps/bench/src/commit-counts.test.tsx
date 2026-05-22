@@ -28,7 +28,7 @@ import {
 import { describe, expect, test } from 'vitest';
 import { type BenchPerson, makePeople } from './fixtures';
 
-type MemoMode = 'cells' | 'rows' | undefined;
+type MemoMode = 'cells' | 'rows' | 'off' | undefined;
 
 // Small enough that the test stays fast in happy-dom (a few hundred ms),
 // large enough that an amplification bug shows up as a 100×+ gap rather than
@@ -185,8 +185,8 @@ describe('cell-render counts under narrow state changes (100 rows, unvirtualized
         "rows": 100,
         "update": {
           "commits": 2,
-          "firstName": 10,
-          "lastName": 10,
+          "firstName": 1,
+          "lastName": 1,
         },
       }
     `);
@@ -208,8 +208,8 @@ describe('cell-render counts under narrow state changes (100 rows, unvirtualized
         "rows": 100,
         "update": {
           "commits": 2,
-          "firstName": 10,
-          "lastName": 10,
+          "firstName": 1,
+          "lastName": 0,
         },
       }
     `);
@@ -231,7 +231,7 @@ describe('cell-render counts under narrow state changes (100 rows, unvirtualized
         "rows": 100,
         "update": {
           "commits": 2,
-          "firstName": 10,
+          "firstName": 0,
           "lastName": 10,
         },
       }
@@ -263,13 +263,11 @@ describe('cell-render counts under narrow state changes (100 rows, unvirtualized
   });
 });
 
-// Same scenarios with `memoMode='cells'` — Tier 1 refactor hoisted state out
-// of the cell component and made the memo comparator shallow-equal on
-// primitive props. These snapshots are where the win shows up: hovering,
-// editing, or dragging should now bail the memo for cells whose narrow
-// props didn't change, dropping the update cell-render count toward 0–1
-// instead of "every visible cell".
-describe('cell-render counts with memoMode=cells (Tier 1 win surface)', () => {
+// Same scenarios with `memoMode='cells'` set EXPLICITLY. Since 'cells' is
+// also the default now, these should match the first describe block — they
+// remain as a regression guard against accidentally changing the default
+// behavior under the explicit value.
+describe('cell-render counts with memoMode=cells (explicit, matches default)', () => {
   test('setHoveredRow — only the hovered row should re-render', () => {
     const result = measureAmplification((table) => {
       const target = table.getRowModel().rows[5];
@@ -354,6 +352,58 @@ describe('cell-render counts with memoMode=cells (Tier 1 win surface)', () => {
         "rows": 100,
         "update": {
           "commits": 3,
+          "firstName": 10,
+          "lastName": 10,
+        },
+      }
+    `);
+  });
+});
+
+// memoMode='off' is the escape hatch for consumers with custom Cell
+// renderers that read state from outside the props the comparator sees.
+// It re-instates the pre-Tier-1 behavior: every cell re-renders on every
+// narrow state change.
+describe('cell-render counts with memoMode=off (opt-out re-instates amplification)', () => {
+  test('setHoveredRow — every visible cell re-renders', () => {
+    const result = measureAmplification((table) => {
+      const target = table.getRowModel().rows[5];
+      if (target) table.setHoveredRow(target);
+    }, 'off');
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "mount": {
+          "commits": 5,
+          "firstName": 10,
+          "lastName": 10,
+        },
+        "rows": 100,
+        "update": {
+          "commits": 2,
+          "firstName": 10,
+          "lastName": 10,
+        },
+      }
+    `);
+  });
+
+  test('setDraggingColumn — every visible cell re-renders', () => {
+    const result = measureAmplification((table) => {
+      const target = table.getAllLeafColumns()[1];
+      if (target) table.setDraggingColumn(target);
+    }, 'off');
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "mount": {
+          "commits": 5,
+          "firstName": 10,
+          "lastName": 10,
+        },
+        "rows": 100,
+        "update": {
+          "commits": 2,
           "firstName": 10,
           "lastName": 10,
         },
