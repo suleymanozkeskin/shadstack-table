@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "bench": "vitest bench --run",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
