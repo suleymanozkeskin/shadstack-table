@@ -1,8 +1,6 @@
 # Bench workflow.
 # Manual-dispatch only — render benchmarks are noisy and not useful as a
-# blocking CI gate. Dispatchable once PR #38 (feat/render-benchmarks) lands
-# and apps/bench/package.json exists; until then the job no-ops via
-# hashFiles().
+# blocking CI gate.
 
 name: Bench
 
@@ -17,7 +15,6 @@ permissions: {}
 
 jobs:
   bench:
-    if: hashFiles('apps/bench/package.json') != ''
     runs-on: ubuntu-latest
     permissions:
       contents: read

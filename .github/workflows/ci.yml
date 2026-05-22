@@ -53,9 +53,6 @@ jobs:
         run: bun run verify:package
 
   e2e:
-    # Activates once PR #39 (feat/playwright-smoke) introduces apps/e2e.
-    # Until then hashFiles() returns an empty string and the job no-ops.
-    if: hashFiles('apps/e2e/package.json') != ''
     runs-on: ubuntu-latest
     permissions:
       contents: read
