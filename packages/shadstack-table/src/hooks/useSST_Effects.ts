@@ -56,7 +56,21 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
     .map(getColumnId)
     .join('|');
   useEffect(() => {
-    table.setColumnOrder(getDefaultColumnOrderIds(table.options));
+    //Skip the setState round-trip when the recomputed order matches what
+    //the table is already holding. On first mount, columnOrder was seeded
+    //inside `initialState` from this same getDefaultColumnOrderIds call —
+    //an unconditional setColumnOrder here hands React a *new array
+    //reference* with identical contents, which forces a re-render. That
+    //re-render invalidates TanStack's column-order memo chain and
+    //regenerates every Cell instance, which doubles the cell-render count
+    //during mount (commit-counts.test.tsx snapshots showed mount.firstName
+    //20 vs the expected 10).
+    const next = getDefaultColumnOrderIds(table.options);
+    const current = table.getState().columnOrder;
+    if (current.length === next.length && current.every((id, i) => id === next[i])) {
+      return;
+    }
+    table.setColumnOrder(next);
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: only re-fire when the column-id signature changes; `table` is a stable instance and depending on it would cause this to fire on every state change.
   }, [sourceColumnSignature]);
 
