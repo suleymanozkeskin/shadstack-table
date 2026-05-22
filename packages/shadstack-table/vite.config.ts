@@ -1,8 +1,12 @@
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
+
+const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8')) as {
+  version: string;
+};
 
 const localeEntries = Object.fromEntries(
   readdirSync(resolve(__dirname, 'src/locales'))
@@ -39,6 +43,9 @@ export default defineConfig(({ mode }) => {
   const isLocales = mode === 'locales';
 
   return {
+    define: {
+      __SST_VERSION__: JSON.stringify(pkg.version),
+    },
     plugins: [
       react(),
       dts({
