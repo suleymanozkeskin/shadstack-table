@@ -1,7 +1,3 @@
-// oxlint-disable jsx-a11y/click-events-have-key-events -- intentional; revisit when refactoring
-// oxlint-disable jsx-a11y/no-static-element-interactions -- intentional; revisit when refactoring
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
-// oxlint-disable typescript/no-non-null-asserted-optional-chain -- intentional; revisit when refactoring
 import * as React from 'react';
 import { type DragEvent, useMemo, useCallback } from 'react';
 import { SST_TableHeadCellColumnActionsButton } from './SST_TableHeadCellColumnActionsButton';
@@ -94,6 +90,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
     if (showColumnActions) pl += 1.75;
     if (showDragHandle) pl += 1.5;
     return pl;
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- column is the table-column proxy; getCanSort() never changes for a given column instance, so the dep list is intentionally narrow. FOLLOW-UP: verify and possibly inline column.getCanSort() into the dep array.
   }, [showColumnActions, showDragHandle]);
 
   const draggingBorders = useMemo(() => {
@@ -122,6 +119,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
           borderTop: borderStyle,
         }
       : undefined;
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional narrow deps; resize-border state must only react to drag/hover/resize transitions. column.id / columnResizeMode / columnResizeDirection / draggingBorderColor / header.subHeaders.length are effectively per-instance constants over the cell lifetime, and including them would cause unnecessary recomputes during column-resize streams. FOLLOW-UP: verify all listed deps are truly stable.
   }, [draggingColumn, hoveredColumn, columnSizingInfo.isResizingColumn]);
 
   const handleDragEnter = (_e: DragEvent) => {
@@ -259,6 +257,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
                     : 'justify-start',
               )}
             >
+              {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events -- parent <th> has tabIndex / onKeyDown wired via cellKeyboardShortcuts; this inner div is a click-affordance overlay for the sort label */}
               <div
                 className={cn(
                   'SST-TableHeadCell-Content-Labels flex items-center gap-1.5 min-w-0',
@@ -303,6 +302,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
                       column={column}
                       table={table}
                       tableHeadCellRef={{
+                        // oxlint-disable-next-line typescript/no-non-null-asserted-optional-chain -- by the time SST_TableHeadCellGrabHandle mounts, the parent <th> ref has been assigned and the entry exists for this column.id. FOLLOW-UP: refactor to use a stable ref callback that doesn't require this.
                         current: tableHeadCellRefs.current?.[column.id]!,
                       }}
                     />

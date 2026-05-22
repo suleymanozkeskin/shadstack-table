@@ -1,5 +1,3 @@
-// oxlint-disable jsx-a11y/click-events-have-key-events -- intentional; revisit when refactoring
-// oxlint-disable jsx-a11y/no-static-element-interactions -- intentional; revisit when refactoring
 import * as React from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
 import { cn } from '../../lib/utils';
@@ -51,6 +49,7 @@ export const SST_TableHeadCellSortLabel = <TData extends SST_RowData>({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
+        {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events -- visual sort indicator; keyboard sorting is handled by the parent SST_TableHeadCell button which wraps this span */}
         <span
           aria-label={sortTooltip}
           onClick={(e) => {
