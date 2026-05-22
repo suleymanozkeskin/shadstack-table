@@ -1,4 +1,3 @@
-// oxlint-disable eslint/no-underscore-dangle -- intentional; revisit when refactoring
 import { type ReactNode, type RefObject } from 'react';
 import { highlightWords } from '../../utils/highlightWords';
 import { type SST_Cell, type SST_RowData, type SST_TableInstance } from '../../types';
@@ -72,6 +71,7 @@ export const SST_TableBodyCellValue = <TData extends SST_RowData>({
       (globalFilter && allowedTypes.includes(typeof globalFilter) && column.getCanGlobalFilter()))
   ) {
     const chunks = highlightWords({
+      // oxlint-disable-next-line no-underscore-dangle -- _filterFn is the canonical internal property carried over from upstream MRT/TanStack column def shape
       matchExactly: (filterValue ? columnDef._filterFn : globalFilterFn) !== 'fuzzy',
       query: (filterValue ?? globalFilter ?? '').toString(),
       text: renderedCellValue?.toString() as string,

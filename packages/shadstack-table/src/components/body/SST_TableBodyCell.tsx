@@ -1,4 +1,3 @@
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
 import * as React from 'react';
 import {
   type DragEvent,
@@ -101,6 +100,7 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
         ? size / 2
         : Math.round(Math.random() * (size - size / 3) + size / 3),
     );
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional one-shot skeleton-width init keyed on loading transition; skeletonWidth is read as a re-entry guard. FOLLOW-UP: stale-closure risk if column.getSize() or columnDefType change after the first loading entry; consider rewriting with a ref.
   }, [isLoading, showSkeletons]);
 
   const draggingBorders = useMemo(() => {
@@ -147,6 +147,7 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
           borderTop: isDraggingRow || isHoveredRow ? borderStyle : undefined,
         }
       : undefined;
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional narrow deps; column/row/draggingBorderColor/columnResizeMode are stable per cell-instance, and recomputing borders on every column-resize tick would tank perf. FOLLOW-UP: verify each "stable" dep is truly stable across the cell lifetime.
   }, [
     columnSizingInfo.isResizingColumn,
     draggingColumn,
@@ -173,7 +174,7 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
     (parseFromValuesOrFunc(enableClickToCopy, cell) === true ||
       parseFromValuesOrFunc(columnDef.enableClickToCopy, cell) === true) &&
     !['context-menu', false].includes(
-      // @ts-expect-error
+      // @ts-expect-error -- Array.prototype.includes's narrowed (string | false) signature doesn't accept the wider union returned by parseFromValuesOrFunc; the runtime check is intentional
       parseFromValuesOrFunc(columnDef.enableClickToCopy, cell),
     );
 
