@@ -1,0 +1,106 @@
+---
+title: Migrating from material-react-table
+description: A one-to-one rename pass that moves an MRT codebase to shadstack-table.
+---
+
+`shadstack-table` keeps the MRT API direction. The migration is a
+near-mechanical rename pass plus a slot-prop refactor; the React component
+tree, hook lifecycle, and TanStack Table state shapes are unchanged.
+
+## 1. Swap the package
+
+```bash
+bun remove material-react-table @mui/material @mui/icons-material @emotion/react @emotion/styled
+bun add shadstack-table
+```
+
+Replace the import:
+
+```diff
+- import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef } from 'material-react-table';
++ import { ShadStackTable,    useShadStackTable,    type SST_ColumnDef } from 'shadstack-table';
+```
+
+## 2. Rename the component and hook
+
+| MRT                     | shadstack-table     |
+| ----------------------- | ------------------- |
+| `MaterialReactTable`    | `ShadStackTable`    |
+| `useMaterialReactTable` | `useShadStackTable` |
+
+## 3. Rename the `MRT_*` type prefix
+
+Every type that started with `MRT_` is now `SST_` with the same shape.
+
+```diff
+- import { type MRT_Row, type MRT_TableInstance } from 'material-react-table';
++ import { type SST_Row, type SST_TableInstance } from 'shadstack-table';
+```
+
+A find-and-replace of `MRT_` → `SST_` across your codebase covers this step;
+no type was renamed beyond the prefix.
+
+## 4. Swap built-in column ID prefixes
+
+If you read or write any of the built-in column IDs in `state.columnOrder`,
+`state.columnPinning`, custom column-order logic, etc., swap the `mrt-`
+prefix for `sst-`:
+
+| MRT                 | shadstack-table     |
+| ------------------- | ------------------- |
+| `'mrt-row-select'`  | `'sst-row-select'`  |
+| `'mrt-row-actions'` | `'sst-row-actions'` |
+| `'mrt-row-expand'`  | `'sst-row-expand'`  |
+| `'mrt-row-drag'`    | `'sst-row-drag'`    |
+| `'mrt-row-numbers'` | `'sst-row-numbers'` |
+| `'mrt-row-pin'`     | `'sst-row-pin'`     |
+| `'mrt-row-spacer'`  | `'sst-row-spacer'`  |
+
+## 5. `muiXxxProps` → `slotProps.xxx`
+
+Every MUI-prefixed slot prop on `MRT_TableOptions` lives under
+`slotProps` on `SST_TableOptions`. The renames are positional —
+`muiTableBodyRowProps` → `slotProps.tableBodyRow`, etc.
+
+```diff
+- <MaterialReactTable
+-   muiTableBodyRowProps={({ row }) => ({ className: cn(...) })}
+-   muiTableHeadCellProps={{ align: 'center' }}
+- />
++ <ShadStackTable
++   table={useShadStackTable({
++     slotProps: {
++       tableBodyRow: ({ row }) => ({ className: cn(...) }),
++       tableHeadCell: { className: 'text-center' },
++     },
++   })}
++ />
+```
+
+A few specifics that catch people out:
+
+- MUI's `sx` is gone. Use Tailwind utilities on `className`.
+- `align="center"` on table cells was an MUI prop; shadstack-table uses
+  Tailwind text-alignment classes instead.
+
+## 6. Theming
+
+MRT consumed MUI's theme. shadstack-table reads shadcn-style CSS variables
+(`--background`, `--foreground`, `--primary`, …). If you ran `shadcn init`
+already, you have them. Otherwise see
+[Getting started → CSS setup](/getting-started/#wire-tailwind-to-scan-the-library).
+
+## 7. Deferred features
+
+A small set of MRT features ship later in the 0.x line — see
+[Feature surface](/getting-started/) for the current list. The two most
+common gotchas:
+
+- `filterVariant: 'autocomplete'` falls back to a plain text input with a
+  one-time `console.warn` on first render.
+- `filterVariant: 'time' | 'datetime' | 'time-range' | 'datetime-range'`
+  uses a native `<input>` until a shadcn time-picker recipe lands. `date`
+  and `date-range` already use the shadcn `Popover` + `Calendar`.
+
+If your MRT app relies on a deferred feature, please open an issue describing
+the use case — that helps us prioritize.

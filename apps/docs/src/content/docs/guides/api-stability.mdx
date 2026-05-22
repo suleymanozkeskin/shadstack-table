@@ -1,0 +1,84 @@
+---
+title: API stability
+description: Which exports are stable, which are deprecated aliases, and which can move without a major bump.
+---
+
+Pre-1.0, the public surface is split into three tiers. Consumers should
+rely only on **Stable**; the other two exist for ergonomic discovery and
+will change shape, move, or disappear in pre-1.0 releases without a major
+version bump.
+
+## Stable
+
+The surface we intend to keep working through 1.x.
+
+- **Components:** `ShadStackTable`
+- **Hooks:** `useShadStackTable`
+- **Helpers:** `createSSTColumnHelper`, `flexRender`, `createRow`
+- **Types:** `SST_ColumnDef`, `SST_TableOptions`, `SST_TableInstance`,
+  `SST_Row`, `SST_RowData`, `SST_Header`, `SST_Column`, `SST_Localization`,
+  `SST_Theme`, `SST_RowSelectionState`, `SST_SortingState`,
+  `SST_ColumnFiltersState`, `SST_PaginationState`, `SST_ColumnPinningState`,
+  `SST_RowPinningState`, `SST_ExpandedState`, `SST_VisibilityState`,
+  `SST_GroupingState`, `SST_ColumnOrderState`, `SST_ColumnSizingState`,
+  `SST_ColumnSizingInfoState`
+- **Options:** every documented field on `SST_TableOptions` (toggles,
+  callbacks, `theme`, `localization`, `slotProps`, …)
+- **Localization subpaths:** `shadstack-table/locales/<code>` — see
+  [Localization](/guides/localization/)
+- **Style entry:** `shadstack-table/style.css`
+
+## Deprecated (compatibility aliases)
+
+Still exported and working; emit JSDoc deprecation warnings in your editor
+and will be removed in a future major.
+
+| Deprecated              | Use instead             |
+| ----------------------- | ----------------------- |
+| `createMRTColumnHelper` | `createSSTColumnHelper` |
+| `mrtTheme` option       | `theme`                 |
+| `getMRTTheme`           | `getSST_Theme`          |
+
+## Internal / unstable
+
+Currently re-exported from the package barrel for ergonomic access, but
+**not part of the stable surface**. These can move, change shape, or
+disappear without a major bump:
+
+- Every `SST_*` component other than `ShadStackTable` (the head, body,
+  footer, toolbar, menu, button, input, modal pieces under
+  `src/components/*`)
+- Every `Memo_*` component
+- Every `useSST_*` hook other than `useShadStackTable`
+- Every utility under `src/utils/` (`cell`, `column`, `displayColumn`, `row`
+  helpers, `style.utils`)
+- The aggregation / filter / sorting `*Fns` collections
+
+If you find yourself reaching for one of these, please open an issue
+describing the use case — it helps us decide what to promote to the stable
+tier before 1.0.
+
+## Size budget
+
+CI gates the published build against gzip-size budgets enforced in
+[`apps/consumer-fixture/verify.mjs`](https://github.com/suleymanozkeskin/shadstack-table/blob/main/apps/consumer-fixture/verify.mjs):
+
+| Artifact                 | Budget       |
+| ------------------------ | ------------ |
+| `dist/index.js`          | ≤ 60 kB gzip |
+| `dist/index.cjs`         | ≤ 62 kB gzip |
+| `dist/style.css`         | ≤ 3 kB gzip  |
+| each `dist/locales/*.js` | ≤ 3 kB gzip  |
+| `dist/locales/` total    | ≤ 220 kB raw |
+
+If a change trips one of these, investigate the diff before adjusting the
+number — the budget is the gate.
+
+## Type stability caveat
+
+Public types intentionally contain `any` in a few places where a designed
+generic isn't in place yet: `SST_RowData = Record<string, any>`, the
+`columns` array on `SST_TableOptions`, and the edit-value callback
+payloads. A generic redesign is planned for a later minor; until then,
+do not infer "any-free" guarantees from the type-safety improvements in
+the rest of the surface.
