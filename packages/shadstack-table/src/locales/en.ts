@@ -17,6 +17,7 @@ export const SST_Localization_EN: SST_Localization = {
   collapseAll: 'Collapse all',
   columnActions: 'Column Actions',
   copiedToClipboard: 'Copied to clipboard',
+  create: 'Create',
   dropToGroupBy: 'Drop to group by {column}',
   edit: 'Edit',
   expand: 'Expand',
