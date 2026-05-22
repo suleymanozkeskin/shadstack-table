@@ -58,8 +58,7 @@ export const SST_ToolbarAlertBanner = <TData extends SST_RowData>({
   const selectedRowCount = useMemo(
     () =>
       manualPagination ? Object.values(rowSelection).filter(Boolean).length : filteredRowCount,
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- upstream dep list; totalRowCount kept to recompute display banner when underlying row total changes
-    [rowSelection, totalRowCount, manualPagination, filteredRowCount],
+    [rowSelection, manualPagination, filteredRowCount],
   );
 
   const selectedAlert =
