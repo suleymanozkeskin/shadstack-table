@@ -31,7 +31,7 @@ export const SST_TableHeadCellSortLabel = <TData extends SST_RowData>({
 
   const sortTooltip =
     isLoading || showSkeletons
-      ? ''
+      ? localization.sortByColumnAsc.replace('{column}', columnDef.header)
       : column.getIsSorted()
         ? column.getIsSorted() === 'desc'
           ? localization.sortedByColumnDesc.replace('{column}', columnDef.header)
