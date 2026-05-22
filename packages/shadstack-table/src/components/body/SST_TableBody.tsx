@@ -45,7 +45,43 @@ export const SST_TableBody = <TData extends SST_RowData>({
     },
     refs: { tableFooterRef, tableHeadRef, tablePaperRef },
   } = table;
-  const { columnFilters, globalFilter, isFullScreen, rowPinning } = getState();
+  // Single point of subscription to table state. Each child row receives
+  // narrow primitive props derived from this snapshot, which lets the
+  // row/cell memos bail correctly on irrelevant state changes (see the
+  // comparators in SST_TableBodyRow and SST_TableBodyCell).
+  const {
+    actionCell,
+    columnFilters,
+    columnSizingInfo,
+    creatingRow,
+    density,
+    draggingColumn,
+    draggingRow,
+    editingCell,
+    editingRow,
+    globalFilter,
+    hoveredColumn,
+    hoveredRow,
+    isFullScreen,
+    isLoading,
+    rowPinning,
+    showSkeletons,
+  } = getState();
+
+  const actionCellId = actionCell?.id ?? null;
+  const draggingColumnId = draggingColumn?.id ?? null;
+  const draggingRowId = draggingRow?.id ?? null;
+  const editingCellId = editingCell?.id ?? null;
+  const editingCellRowId = editingCell?.row?.id ?? null;
+  const editingRowId = editingRow?.id ?? null;
+  const hoveredColumnId = hoveredColumn?.id ?? null;
+  const hoveredRowId = hoveredRow?.id ?? null;
+  const resizingColumnId = columnSizingInfo.isResizingColumn ?? false;
+  const creatingRowId = creatingRow?.id ?? null;
+  // RTL is resolved once at the body level — the previous per-cell
+  // `document.documentElement.dir` read was a synchronous DOM access on
+  // every render of every cell.
+  const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
 
   const tableBodyProps = {
     ...parseFromValuesOrFunc(slotProps?.tableBody, { table }),
@@ -72,11 +108,32 @@ export const SST_TableBody = <TData extends SST_RowData>({
 
   const isGrid = !!layoutMode?.startsWith('grid');
 
+  // Table-wide props every row sees identically. Per-row narrow primitives
+  // (isHoveredRow, editingCellIdInRow, ...) are appended via `rowStateProps`
+  // at each call site so the row's memo comparator sees stable refs for
+  // rows that don't match the hovered/editing/dragging target.
   const commonRowProps = {
     columnVirtualizer,
+    density,
+    draggingColumnId,
+    hoveredColumnId,
+    isFullScreen,
+    isLoading,
+    isRtl,
     numRows: rows.length,
+    resizingColumnId,
+    showSkeletons,
     table,
   };
+
+  const rowStateProps = (rowId: string) => ({
+    actionCellId,
+    editingCellIdInRow: editingCellRowId === rowId ? editingCellId : null,
+    isCreatingRow: creatingRowId === rowId,
+    isDraggingRow: draggingRowId === rowId,
+    isEditingRow: editingRowId === rowId,
+    isHoveredRow: hoveredRowId === rowId,
+  });
 
   return (
     <>
@@ -92,6 +149,7 @@ export const SST_TableBody = <TData extends SST_RowData>({
           {getTopRows().map((row, staticRowIndex) => {
             const props = {
               ...commonRowProps,
+              ...rowStateProps(row.id),
               row,
               staticRowIndex,
             };
@@ -155,6 +213,7 @@ export const SST_TableBody = <TData extends SST_RowData>({
                 }
                 const props = {
                   ...commonRowProps,
+                  ...rowStateProps(row.id),
                   pinnedRowIds,
                   row,
                   rowVirtualizer,
@@ -183,6 +242,7 @@ export const SST_TableBody = <TData extends SST_RowData>({
           {getBottomRows().map((row, staticRowIndex) => {
             const props = {
               ...commonRowProps,
+              ...rowStateProps(row.id),
               row,
               staticRowIndex,
             };

@@ -28,6 +28,8 @@ import {
 import { describe, expect, test } from 'vitest';
 import { type BenchPerson, makePeople } from './fixtures';
 
+type MemoMode = 'cells' | 'rows' | undefined;
+
 // Small enough that the test stays fast in happy-dom (a few hundred ms),
 // large enough that an amplification bug shows up as a 100×+ gap rather than
 // a borderline 2× one. Unvirtualized so every cell is actually rendered and
@@ -84,6 +86,7 @@ type ProbeProps = {
   data: BenchPerson[];
   columns: SST_ColumnDef<BenchPerson>[];
   action: NarrowAction | null;
+  memoMode: MemoMode;
   onTable: (table: SST_TableInstance<BenchPerson>) => void;
 };
 
@@ -91,11 +94,12 @@ type ProbeProps = {
 // narrow state change after the initial commit. The effect dep array uses
 // `action` directly so passing `null` keeps mount-only behavior — useful for
 // the "mount baseline" snapshot below.
-const Probe = ({ data, columns, action, onTable }: ProbeProps) => {
+const Probe = ({ data, columns, action, memoMode, onTable }: ProbeProps) => {
   const table = useShadStackTable({
     columns,
     data,
     enableRowVirtualization: false,
+    memoMode,
   });
 
   useEffect(() => {
@@ -109,7 +113,7 @@ const Probe = ({ data, columns, action, onTable }: ProbeProps) => {
 // Mount once, drain mount-phase cell counts, run the narrow action under
 // `act`, then return the *delta* — i.e. cells re-rendered solely because of
 // the action. That delta is what amplification bugs inflate.
-const measureAmplification = (action: NarrowAction) => {
+const measureAmplification = (action: NarrowAction, memoMode: MemoMode = undefined) => {
   const data = makePeople(ROW_COUNT);
   const counts: CellCounts = { firstName: 0, lastName: 0 };
   const columns = makeInstrumentedColumns(counts);
@@ -131,7 +135,7 @@ const measureAmplification = (action: NarrowAction) => {
   // screen. Capturing the table is the only side-effect of the mount effect.
   const handle = mount(
     <Profiler id="table" onRender={onRender}>
-      <Probe data={data} columns={columns} action={null} onTable={onTable} />
+      <Probe data={data} columns={columns} action={null} memoMode={memoMode} onTable={onTable} />
     </Profiler>,
   );
 
@@ -247,6 +251,105 @@ describe('cell-render counts under narrow state changes (100 rows, unvirtualized
           "commits": 5,
           "firstName": 20,
           "lastName": 20,
+        },
+        "rows": 100,
+        "update": {
+          "commits": 3,
+          "firstName": 10,
+          "lastName": 10,
+        },
+      }
+    `);
+  });
+});
+
+// Same scenarios with `memoMode='cells'` — Tier 1 refactor hoisted state out
+// of the cell component and made the memo comparator shallow-equal on
+// primitive props. These snapshots are where the win shows up: hovering,
+// editing, or dragging should now bail the memo for cells whose narrow
+// props didn't change, dropping the update cell-render count toward 0–1
+// instead of "every visible cell".
+describe('cell-render counts with memoMode=cells (Tier 1 win surface)', () => {
+  test('setHoveredRow — only the hovered row should re-render', () => {
+    const result = measureAmplification((table) => {
+      const target = table.getRowModel().rows[5];
+      if (target) table.setHoveredRow(target);
+    }, 'cells');
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "mount": {
+          "commits": 5,
+          "firstName": 10,
+          "lastName": 10,
+        },
+        "rows": 100,
+        "update": {
+          "commits": 2,
+          "firstName": 1,
+          "lastName": 1,
+        },
+      }
+    `);
+  });
+
+  test('setEditingCell — only the edited cell should re-render', () => {
+    const result = measureAmplification((table) => {
+      const target = table.getRowModel().rows[5]?.getAllCells()[0];
+      if (target) table.setEditingCell(target);
+    }, 'cells');
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "mount": {
+          "commits": 5,
+          "firstName": 10,
+          "lastName": 10,
+        },
+        "rows": 100,
+        "update": {
+          "commits": 2,
+          "firstName": 1,
+          "lastName": 0,
+        },
+      }
+    `);
+  });
+
+  test('setDraggingColumn — body cells should not re-render at all', () => {
+    const result = measureAmplification((table) => {
+      const target = table.getAllLeafColumns()[1];
+      if (target) table.setDraggingColumn(target);
+    }, 'cells');
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "mount": {
+          "commits": 5,
+          "firstName": 10,
+          "lastName": 10,
+        },
+        "rows": 100,
+        "update": {
+          "commits": 2,
+          "firstName": 0,
+          "lastName": 10,
+        },
+      }
+    `);
+  });
+
+  test('setColumnFilters — only matched rows should re-render', () => {
+    const result = measureAmplification((table) => {
+      table.setColumnFilters([{ id: 'firstName', value: 'a' }]);
+    }, 'cells');
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "mount": {
+          "commits": 5,
+          "firstName": 10,
+          "lastName": 10,
         },
         "rows": 100,
         "update": {

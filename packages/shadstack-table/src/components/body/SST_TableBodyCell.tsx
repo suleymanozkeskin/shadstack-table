@@ -23,8 +23,28 @@ export interface SST_TableBodyCellProps<
   TData extends SST_RowData,
 > extends React.ComponentProps<'td'> {
   cell: SST_Cell<TData>;
+  /**
+   * Render-state primitives lifted from `table.getState()` at the body level
+   * (see SST_TableBody). Passing them as discrete props instead of reading
+   * the wide state inside every cell is what lets `Memo_SST_TableBodyCell`
+   * bail correctly on narrow state changes — hovering one row no longer
+   * re-renders every cell.
+   */
+  density: 'compact' | 'comfortable' | 'spacious';
+  isActionCell: boolean;
+  isCreatingRow: boolean;
+  isDraggingColumn: boolean;
+  isDraggingRow: boolean;
+  isEditingCell: boolean;
+  isEditingRow: boolean;
+  isHoveredColumn: boolean;
+  isHoveredRow: boolean;
+  isLoading: boolean;
+  isResizingThisColumn: boolean;
+  isRtl: boolean;
   numRows?: number;
   rowRef: RefObject<HTMLTableRowElement | null>;
+  showSkeletons: boolean;
   staticColumnIndex?: number;
   staticRowIndex: number;
   table: SST_TableInstance<TData>;
@@ -33,16 +53,27 @@ export interface SST_TableBodyCellProps<
 export const SST_TableBodyCell = <TData extends SST_RowData>({
   cell,
   className,
+  density,
+  isActionCell,
+  isCreatingRow,
+  isDraggingColumn,
+  isDraggingRow,
+  isEditingCell,
+  isEditingRow,
+  isHoveredColumn,
+  isHoveredRow,
+  isLoading,
+  isResizingThisColumn,
+  isRtl,
   numRows,
   rowRef,
+  showSkeletons,
   staticColumnIndex,
   staticRowIndex,
   table,
   ...rest
 }: SST_TableBodyCellProps<TData>) => {
-  const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
   const {
-    getState,
     options: {
       columnResizeDirection,
       columnResizeMode,
@@ -60,20 +91,6 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
     },
     setHoveredColumn,
   } = table;
-  const {
-    actionCell,
-    columnSizingInfo,
-    creatingRow,
-    density,
-    draggingColumn,
-    draggingRow,
-    editingCell,
-    editingRow,
-    hoveredColumn,
-    hoveredRow,
-    isLoading,
-    showSkeletons,
-  } = getState();
   const { column, row } = cell;
   const { columnDef } = column;
   const { columnDefType } = columnDef;
@@ -107,22 +124,27 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
     );
   }, [isLoading, showSkeletons, column, columnDefType]);
 
+  const isEditable = isCellEditable({ cell, table });
+
+  const isEditing =
+    isEditable &&
+    !['custom', 'modal'].includes(editDisplayMode as string) &&
+    (editDisplayMode === 'table' || isEditingRow || isEditingCell) &&
+    !row.getIsGrouped();
+
+  const isCreating = isEditable && createDisplayMode === 'row' && isCreatingRow;
+
   const draggingBorders = useMemo(() => {
-    const isDraggingColumn = draggingColumn?.id === column.id;
-    const isHoveredColumn = hoveredColumn?.id === column.id;
-    const isDraggingRow = draggingRow?.id === row.id;
-    const isHoveredRow = hoveredRow?.id === row.id;
     const isFirstColumn = column.getIsFirstColumn();
     const isLastColumn = column.getIsLastColumn();
     const isLastRow = numRows && staticRowIndex === numRows - 1;
-    const isResizingColumn = columnSizingInfo.isResizingColumn === column.id;
-    const showResizeBorder = isResizingColumn && columnResizeMode === 'onChange';
+    const showResizeBorder = isResizingThisColumn && columnResizeMode === 'onChange';
 
     const borderStyle = showResizeBorder
       ? `2px solid ${draggingBorderColor}`
       : isDraggingColumn || isDraggingRow
         ? `1px dashed color-mix(in oklch, var(--foreground) 50%, transparent)`
-        : isHoveredColumn || isHoveredRow || isResizingColumn
+        : isHoveredColumn || isHoveredRow || isResizingThisColumn
           ? `2px dashed ${draggingBorderColor}`
           : undefined;
 
@@ -135,7 +157,7 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
     return borderStyle
       ? {
           borderBottom:
-            isDraggingRow || isHoveredRow || (isLastRow && !isResizingColumn)
+            isDraggingRow || isHoveredRow || (isLastRow && !isResizingThisColumn)
               ? borderStyle
               : undefined,
           borderLeft:
@@ -151,28 +173,19 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
           borderTop: isDraggingRow || isHoveredRow ? borderStyle : undefined,
         }
       : undefined;
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional narrow deps; column/row/draggingBorderColor/columnResizeMode are stable per cell-instance, and recomputing borders on every column-resize tick would tank perf. FOLLOW-UP: verify each "stable" dep is truly stable across the cell lifetime.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional narrow deps. column/columnResizeMode/columnResizeDirection/draggingBorderColor are stable for the cell's lifetime (column-resize mode is an option, not state).
   }, [
-    columnSizingInfo.isResizingColumn,
-    draggingColumn,
-    draggingRow,
-    hoveredColumn,
-    hoveredRow,
+    isDraggingColumn,
+    isDraggingRow,
+    isHoveredColumn,
+    isHoveredRow,
+    isResizingThisColumn,
+    numRows,
     staticRowIndex,
   ]);
 
   const isColumnPinned =
     enableColumnPinning && columnDef.columnDefType !== 'group' && column.getIsPinned();
-
-  const isEditable = isCellEditable({ cell, table });
-
-  const isEditing =
-    isEditable &&
-    !['custom', 'modal'].includes(editDisplayMode as string) &&
-    (editDisplayMode === 'table' || editingRow?.id === row.id || editingCell?.id === cell.id) &&
-    !row.getIsGrouped();
-
-  const isCreating = isEditable && createDisplayMode === 'row' && creatingRow?.id === row.id;
 
   const showClickToCopyButton =
     (parseFromValuesOrFunc(enableClickToCopy, cell) === true ||
@@ -198,10 +211,13 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
 
   const handleDragEnter = (e: DragEvent<HTMLTableCellElement>) => {
     tableCellProps?.onDragEnter?.(e);
-    if (enableGrouping && hoveredColumn?.id === 'drop-zone') {
+    // Handlers run on user events, not on every render — reading state once
+    // here is cheap and keeps the render path free of getState() calls.
+    const { draggingColumn: dragCol, hoveredColumn: hoverCol } = table.getState();
+    if (enableGrouping && hoverCol?.id === 'drop-zone') {
       setHoveredColumn(null);
     }
-    if (enableColumnOrdering && draggingColumn) {
+    if (enableColumnOrdering && dragCol) {
       setHoveredColumn(columnDef.enableColumnOrdering !== false ? column : null);
     }
   };
@@ -265,10 +281,9 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
           : isEditable && editDisplayMode === 'cell'
             ? 'pointer'
             : 'inherit',
-        outline:
-          actionCell?.id === cell.id
-            ? `1px solid color-mix(in oklch, var(--foreground) 50%, transparent)`
-            : undefined,
+        outline: isActionCell
+          ? `1px solid color-mix(in oklch, var(--foreground) 50%, transparent)`
+          : undefined,
         padding,
         textOverflow: columnDefType !== 'display' ? 'ellipsis' : undefined,
         whiteSpace: row.getIsPinned() || density === 'compact' ? 'nowrap' : 'normal',
@@ -322,7 +337,35 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
   );
 };
 
-export const Memo_SST_TableBodyCell = memo(
-  SST_TableBodyCell,
-  (prev, next) => next.cell === prev.cell,
-) as typeof SST_TableBodyCell;
+// The comparator previously bailed any time the cell reference matched —
+// which dropped re-renders triggered by hover/drag/edit because those used
+// to be read from `getState()` inside the component and the comparator
+// couldn't see them. Now those signals come in as discrete primitive props,
+// so a shallow-equal of the render-relevant ones is the correct gate.
+// `cell.id` rather than the cell instance: TanStack regenerates Cell
+// objects when `table.options.columns` is a fresh array reference (even with
+// stable contents), which would defeat reference equality. The cell id is
+// derived from (row.id, column.id) and is stable for a logical cell — and
+// the row/column identity stability is enforced upstream in
+// useSST_TableInstance, so id-based equality is sufficient here.
+export const Memo_SST_TableBodyCell = memo(SST_TableBodyCell, (prev, next) => {
+  return (
+    prev.cell.id === next.cell.id &&
+    prev.density === next.density &&
+    prev.isActionCell === next.isActionCell &&
+    prev.isCreatingRow === next.isCreatingRow &&
+    prev.isDraggingColumn === next.isDraggingColumn &&
+    prev.isDraggingRow === next.isDraggingRow &&
+    prev.isEditingCell === next.isEditingCell &&
+    prev.isEditingRow === next.isEditingRow &&
+    prev.isHoveredColumn === next.isHoveredColumn &&
+    prev.isHoveredRow === next.isHoveredRow &&
+    prev.isLoading === next.isLoading &&
+    prev.isResizingThisColumn === next.isResizingThisColumn &&
+    prev.isRtl === next.isRtl &&
+    prev.numRows === next.numRows &&
+    prev.showSkeletons === next.showSkeletons &&
+    prev.staticColumnIndex === next.staticColumnIndex &&
+    prev.staticRowIndex === next.staticRowIndex
+  );
+}) as typeof SST_TableBodyCell;

@@ -20,6 +20,29 @@ export interface SST_TableBodyRowProps<
   TData extends SST_RowData,
 > extends React.ComponentProps<'tr'> {
   columnVirtualizer?: SST_ColumnVirtualizer;
+  /**
+   * Render-state primitives lifted from `table.getState()` at the body level
+   * (see SST_TableBody). The row forwards the cell-relevant ones to each
+   * `<SST_TableBodyCell>` after narrowing them per-cell, so the row tree
+   * itself contains zero render-time `getState()` calls — the body is the
+   * single point that resolves table state into props.
+   */
+  actionCellId: string | null;
+  density: 'compact' | 'comfortable' | 'spacious';
+  draggingColumnId: string | null;
+  /** id of the editing cell, if that cell belongs to this row — else null */
+  editingCellIdInRow: string | null;
+  hoveredColumnId: string | null;
+  isCreatingRow: boolean;
+  isDraggingRow: boolean;
+  isEditingRow: boolean;
+  isFullScreen: boolean;
+  isHoveredRow: boolean;
+  isLoading: boolean;
+  isRtl: boolean;
+  /** id of the resizing column, or false if none */
+  resizingColumnId: string | false;
+  showSkeletons: boolean;
   numRows?: number;
   pinnedRowIds?: string[];
   row: SST_Row<TData>;
@@ -30,19 +53,32 @@ export interface SST_TableBodyRowProps<
 }
 
 export const SST_TableBodyRow = <TData extends SST_RowData>({
+  actionCellId,
   className,
   columnVirtualizer,
+  density,
+  draggingColumnId,
+  editingCellIdInRow,
+  hoveredColumnId,
+  isCreatingRow,
+  isDraggingRow,
+  isEditingRow,
+  isFullScreen,
+  isHoveredRow,
+  isLoading,
+  isRtl,
   numRows,
   pinnedRowIds,
+  resizingColumnId,
   row,
   rowVirtualizer,
+  showSkeletons,
   staticRowIndex,
   table,
   virtualRow,
   ...rest
 }: SST_TableBodyRowProps<TData>) => {
   const {
-    getState,
     options: {
       enableRowOrdering,
       enableRowPinning,
@@ -58,15 +94,6 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
     refs: { tableFooterRef, tableHeadRef },
     setHoveredRow,
   } = table;
-  const {
-    density,
-    draggingColumn,
-    draggingRow,
-    editingCell,
-    editingRow,
-    hoveredRow,
-    isFullScreen,
-  } = getState();
 
   const visibleCells = row.getVisibleCells();
 
@@ -74,8 +101,6 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
 
   const isRowSelected = getIsRowSelected({ row, table });
   const isRowPinned = enableRowPinning && row.getIsPinned();
-  const isDraggingRow = draggingRow?.id === row.id;
-  const isHoveredRow = hoveredRow?.id === row.id;
 
   const tableRowProps = {
     ...parseFromValuesOrFunc(slotProps?.tableBodyRow, {
@@ -109,7 +134,7 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
   const rowHeight = customRowHeight || defaultRowHeight;
 
   const handleDragEnter = (_e: DragEvent) => {
-    if (enableRowOrdering && draggingRow) {
+    if (enableRowOrdering && table.getState().draggingRow) {
       setHoveredRow(row);
     }
   };
@@ -184,27 +209,50 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
             staticColumnIndex = (cellOrVirtualCell as SST_VirtualItem).index;
             cell = visibleCells[staticColumnIndex];
           }
+          if (!cell) return null;
+          // Narrow the row-level state primitives down to this specific cell.
+          // These comparisons used to live inside SST_TableBodyCell's render,
+          // which forced every cell to re-render on any state change. Doing
+          // them here once means cells whose narrow primitives don't change
+          // can bail via Memo_SST_TableBodyCell's shallow-equal comparator.
+          const columnId = cell.column.id;
+          const isDraggingColumn = draggingColumnId === columnId;
+          const isHoveredColumn = hoveredColumnId === columnId;
+          const isResizingThisColumn = resizingColumnId === columnId;
+          const isEditingCell = editingCellIdInRow === cell.id;
+          const isActionCell = actionCellId === cell.id;
+
           const props = {
             cell,
+            density,
+            isActionCell,
+            isCreatingRow,
+            isDraggingColumn,
+            isDraggingRow,
+            isEditingCell,
+            isEditingRow,
+            isHoveredColumn,
+            isHoveredRow,
+            isLoading,
+            isResizingThisColumn,
+            isRtl,
             numRows,
             rowRef,
+            showSkeletons,
             staticColumnIndex,
             staticRowIndex,
             table,
           };
           const key = `${cell.id}-${staticRowIndex}`;
-          return cell ? (
-            memoMode === 'cells' &&
-            cell.column.columnDef.columnDefType === 'data' &&
-            !draggingColumn &&
-            !draggingRow &&
-            editingCell?.id !== cell.id &&
-            editingRow?.id !== row.id ? (
-              <Memo_SST_TableBodyCell key={key} {...props} />
-            ) : (
-              <SST_TableBodyCell key={key} {...props} />
-            )
-          ) : null;
+          // Memo gate is now safe to enable on every data cell — the
+          // comparator covers drag/edit/hover via the primitive props above,
+          // so we no longer need to fall back to the unmemoed component when
+          // those modes are active.
+          return memoMode === 'cells' && cell.column.columnDef.columnDefType === 'data' ? (
+            <Memo_SST_TableBodyCell key={key} {...props} />
+          ) : (
+            <SST_TableBodyCell key={key} {...props} />
+          );
         })}
         {virtualPaddingRight ? (
           <td style={{ display: 'flex', width: virtualPaddingRight }} />
@@ -224,7 +272,35 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
   );
 };
 
-export const Memo_SST_TableBodyRow = memo(
-  SST_TableBodyRow,
-  (prev, next) => prev.row === next.row && prev.staticRowIndex === next.staticRowIndex,
-) as typeof SST_TableBodyRow;
+// The old comparator only checked `row` + `staticRowIndex`. That meant rows
+// memoed on those two refs but ignored hover/drag/edit/density state — those
+// signals used to be read off `getState()` inside the row itself, hidden
+// from the memo's view. Now they're discrete primitive props passed from
+// SST_TableBody, so a shallow-equal of the render-relevant props is the
+// correct gate: irrelevant rows truly bail, the one row that needs to
+// update gets a different prop and re-renders.
+export const Memo_SST_TableBodyRow = memo(SST_TableBodyRow, (prev, next) => {
+  return (
+    prev.row === next.row &&
+    prev.staticRowIndex === next.staticRowIndex &&
+    prev.actionCellId === next.actionCellId &&
+    prev.columnVirtualizer === next.columnVirtualizer &&
+    prev.density === next.density &&
+    prev.draggingColumnId === next.draggingColumnId &&
+    prev.editingCellIdInRow === next.editingCellIdInRow &&
+    prev.hoveredColumnId === next.hoveredColumnId &&
+    prev.isCreatingRow === next.isCreatingRow &&
+    prev.isDraggingRow === next.isDraggingRow &&
+    prev.isEditingRow === next.isEditingRow &&
+    prev.isFullScreen === next.isFullScreen &&
+    prev.isHoveredRow === next.isHoveredRow &&
+    prev.isLoading === next.isLoading &&
+    prev.isRtl === next.isRtl &&
+    prev.numRows === next.numRows &&
+    prev.pinnedRowIds === next.pinnedRowIds &&
+    prev.resizingColumnId === next.resizingColumnId &&
+    prev.rowVirtualizer === next.rowVirtualizer &&
+    prev.showSkeletons === next.showSkeletons &&
+    prev.virtualRow === next.virtualRow
+  );
+}) as typeof SST_TableBodyRow;
