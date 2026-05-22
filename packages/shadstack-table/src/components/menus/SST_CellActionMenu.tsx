@@ -4,6 +4,7 @@ import { SST_ActionMenuItem } from './SST_ActionMenuItem';
 import { cn } from '../../lib/utils';
 import { type SST_RowData, type SST_TableInstance } from '../../types';
 import { openEditingCell } from '../../utils/cell.utils';
+import { copyToClipboard } from '../../utils/clipboard.utils';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 
 export interface SST_CellActionMenuProps<TData extends SST_RowData> extends React.ComponentProps<
@@ -58,7 +59,13 @@ export const SST_CellActionMenu = <TData extends SST_RowData>({
         label={localization.copy}
         onClick={(event) => {
           event.stopPropagation();
-          navigator.clipboard.writeText(cell.getValue() as string);
+          // Menu closes regardless — clipboard rejections route through
+          // `onCopyError`, and reopening the menu on failure would be worse UX.
+          void copyToClipboard(table, {
+            value: String(cell.getValue() ?? ''),
+            cell,
+            source: 'cell-menu',
+          });
           handleClose();
         }}
         table={table}

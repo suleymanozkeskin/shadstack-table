@@ -195,6 +195,25 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
   slotProps?: SST_TableSlotProps<TData>;
   onActionCellChange?: OnChangeFn<SST_Cell<TData> | null>;
   onColumnFilterFnsChange?: OnChangeFn<{ [key: string]: SST_FilterOption }>;
+  /**
+   * Called when a clipboard copy fails (insecure context, denied permission,
+   * iframe restrictions, Clipboard API absent, …). The library is silent by
+   * default on copy failure — wire this up if you want to surface a toast or
+   * log the error.
+   *
+   * `context.source` identifies which copy affordance triggered:
+   *  - `'button'`     — visible `SST_CopyButton` next to a cell value
+   *  - `'keyboard'`   — Cmd/Ctrl-C on a focused cell
+   *  - `'cell-menu'`  — the cell action (context) menu's Copy item
+   */
+  onCopyError?: (
+    error: Error,
+    context: {
+      value: string;
+      source: 'button' | 'keyboard' | 'cell-menu';
+      cell?: SST_Cell<TData>;
+    },
+  ) => void;
   onCreatingRowCancel?: (props: { row: SST_Row<TData>; table: SST_TableInstance<TData> }) => void;
   onCreatingRowChange?: OnChangeFn<SST_Row<TData> | null>;
   onCreatingRowSave?: (props: {
