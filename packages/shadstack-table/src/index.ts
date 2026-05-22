@@ -108,6 +108,10 @@ export * from './components/toolbar/SST_ToolbarDropZone';
 export * from './components/toolbar/SST_ToolbarInternalButtons';
 export * from './components/toolbar/SST_TopToolbar';
 
-export const VERSION = '0.0.0';
+// Replaced at build time by Vite's `define` with the package.json version.
+// oxlint-disable-next-line no-underscore-dangle -- compile-time substitution sentinel
+declare const __SST_VERSION__: string;
+// oxlint-disable-next-line no-underscore-dangle -- compile-time substitution sentinel
+export const VERSION: string = typeof __SST_VERSION__ === 'string' ? __SST_VERSION__ : '0.0.0';
 
 export type ShadstackTableMarker = typeof VERSION;

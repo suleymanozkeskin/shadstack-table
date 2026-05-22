@@ -1,15 +1,6 @@
-import {
-  type VirtualItem,
-  type Virtualizer,
-  type VirtualizerOptions,
-} from '@tanstack/react-virtual';
+import { type VirtualItem, type Virtualizer } from '@tanstack/react-virtual';
 
 export type SST_VirtualItem = VirtualItem;
-
-export type SST_VirtualizerOptions<
-  TScrollElement extends Element | Window = Element | Window,
-  TItemElement extends Element = Element,
-> = VirtualizerOptions<TScrollElement, TItemElement>;
 
 export type SST_ColumnVirtualizer<
   TScrollElement extends Element | Window = HTMLDivElement,
