@@ -9,18 +9,22 @@ import { parseFromValuesOrFunc } from '../../utils/utils';
 
 const defaultRowsPerPage = [5, 10, 15, 20, 25, 30, 50, 100];
 
-// Lazy init so document.dir is read once at mount-time and matches whatever
-// the post-mount effect would have set, avoiding a redundant setState bump
-// during mount. See SST_TopToolbar useMediaQuery for the same pattern.
-function useDirection() {
-  const [dir, setDir] = React.useState<'ltr' | 'rtl'>(() =>
-    typeof document !== 'undefined' && document.documentElement.dir === 'rtl' ? 'rtl' : 'ltr',
+// `useSyncExternalStore` with a fixed server snapshot ('ltr') keeps the SSR
+// output stable; the client snapshot reads `document.documentElement.dir`.
+// `dir` rarely changes at runtime, so the subscribe handler is a no-op —
+// React still reads getSnapshot on every render to detect changes, which is
+// the contract for store subscriptions.
+function useDirection(): 'ltr' | 'rtl' {
+  const subscribe = React.useCallback(() => () => {}, []);
+  const getSnapshot = React.useCallback(
+    () =>
+      typeof document !== 'undefined' && document.documentElement.dir === 'rtl'
+        ? ('rtl' as const)
+        : ('ltr' as const),
+    [],
   );
-  React.useEffect(() => {
-    if (typeof document === 'undefined') return;
-    setDir(document.documentElement.dir === 'rtl' ? 'rtl' : 'ltr');
-  }, []);
-  return dir;
+  const getServerSnapshot = () => 'ltr' as const;
+  return React.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 function getPageRange(currentPage: number, totalPages: number, siblings = 1) {

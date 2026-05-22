@@ -7,21 +7,25 @@ import { cn } from '../../lib/utils';
 import { type SST_RowData, type SST_TableInstance } from '../../types';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 
-// See SST_TopToolbar — same lazy-init pattern avoids a mount-time setState
-// bump when the query is already matching at first render.
+// See SST_TopToolbar useMediaQuery — useSyncExternalStore keeps the server
+// snapshot stable so hydration doesn't see a mismatch when the client's
+// matchMedia disagrees with the SSR default.
 function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = React.useState(() =>
-    typeof window !== 'undefined' ? window.matchMedia(query).matches : false,
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (typeof window === 'undefined') return () => {};
+      const mql = window.matchMedia(query);
+      mql.addEventListener('change', onChange);
+      return () => mql.removeEventListener('change', onChange);
+    },
+    [query],
   );
-  React.useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const mql = window.matchMedia(query);
-    const handler = () => setMatches(mql.matches);
-    handler();
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, [query]);
-  return matches;
+  const getSnapshot = React.useCallback(
+    () => (typeof window === 'undefined' ? false : window.matchMedia(query).matches),
+    [query],
+  );
+  const getServerSnapshot = () => false;
+  return React.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 export interface SST_BottomToolbarProps<

@@ -113,13 +113,13 @@ For deep customization of a specific surface — toolbar layout, empty state, ac
 
 ## Other options worth knowing
 
-| Option                       | Description                                                                                                                |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `localization`               | Override individual UI strings. See the [localization guide](../../guides/localization/).                                  |
-| `memoMode`                   | Memoize cells / rows / the whole body for very large datasets. See [memoize-components](../../guides/memoize-components/). |
-| `layoutMode`                 | `'semantic'` (default) renders `<table>` semantics; `'grid'` / `'grid-no-grow'` uses CSS Grid for tighter layout control.  |
-| `positionToolbarAlertBanner` | `'top'` / `'bottom'` / `'none'`. Controls where the selection/filter banner appears.                                       |
-| `icons`                      | Override the default lucide icon set with your own components. Keys match the `SST_Default_Icons` shape.                   |
+| Option                       | Description                                                                                                                                                                                          |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `localization`               | Override individual UI strings. See the [localization guide](../../guides/localization/).                                                                                                            |
+| `memoMode`                   | `'cells'` (default) / `'rows'` / `'off'`. Default cell-level memoization skips re-renders for unaffected cells on hover, drag, and edit. See [memoize-components](../../guides/memoize-components/). |
+| `layoutMode`                 | `'semantic'` (default) renders `<table>` semantics; `'grid'` / `'grid-no-grow'` uses CSS Grid for tighter layout control.                                                                            |
+| `positionToolbarAlertBanner` | `'top'` / `'bottom'` / `'none'`. Controls where the selection/filter banner appears.                                                                                                                 |
+| `icons`                      | Override the default lucide icon set with your own components. Keys match the `SST_Default_Icons` shape.                                                                                             |
 
 ## See also
 

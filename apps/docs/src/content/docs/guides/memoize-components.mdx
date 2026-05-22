@@ -1,43 +1,67 @@
 ---
 title: Memoize components
-description: For large datasets, opt into cell / row / table-body memoization to skip unnecessary re-renders.
+description: shadstack-table uses cell-level memoization by default. Choose between 'cells', 'rows', or 'off' to match your workload.
 ---
 
-By default `shadstack-table` re-renders cells whenever the table state changes — which is fine for small tables but expensive when you're rendering thousands of rows. The `memoMode` option lets you opt into one of three memoization strategies for those cases.
+`shadstack-table` ships with **cell-level memoization on by default** as of 0.3.0. A `<SST_TableBodyCell>` only re-renders when one of the props that affect its visible output changes — its `cell` reference, its row/column hover-or-drag state, its editing state, density, RTL, etc. Hovering one row no longer re-renders every cell in the table.
+
+If you don't need to change anything, you don't need to set `memoMode`.
 
 ```tsx
 useShadStackTable({
   columns,
   data,
-  memoMode: 'cells', // 'cells' | 'rows' | 'table-body'
+  // memoMode: 'cells' — implied; this is the default.
 });
 ```
 
-## When to reach for it
+## Modes
 
-| Symptom                                                                                   | Try                      |
-| ----------------------------------------------------------------------------------------- | ------------------------ |
-| Sorting / filtering a 1k+ row table feels slow.                                           | `memoMode: 'rows'`       |
-| Editing one cell shouldn't repaint thousands of unrelated cells.                          | `memoMode: 'cells'`      |
-| Almost the entire body is static and you only mutate one row's selection state at a time. | `memoMode: 'table-body'` |
-| Table is under ~200 rows and feels fine.                                                  | Don't set `memoMode`.    |
+```tsx
+useShadStackTable({
+  columns,
+  data,
+  memoMode: 'cells' | 'rows' | 'off',
+});
+```
 
-## What each mode skips
+- **`'cells'` (default)** — wraps each data cell in `React.memo` with a shallow-equal comparator on the cell's render-relevant props. A cell re-renders only when something that affects it actually changed. Best for most consumers.
+- **`'rows'`** — wraps each row in `React.memo`. Coarser than `'cells'` — when any state inside a row changes, all of that row's cells re-render together. Skips the per-cell comparator overhead, which can be worth it on very wide tables (50+ columns) where the per-cell comparison dominates.
+- **`'off'`** — disables both internal memos. Every cell re-renders on every table state change (the pre-0.3.0 behavior). Reach for this if your custom `Cell` renderer reads state from outside the props the comparator sees and your screen appears stale after an interaction.
 
-- **`'cells'`** — wraps each cell in `React.memo`. A cell re-renders only when its column/row state changes (the cell's value, its selection state, its expanded state, etc.). Other cells in the same row are untouched. Most useful when individual cell state mutates often (cell editing, click-to-copy).
-- **`'rows'`** — wraps each row in `React.memo`. A row re-renders only when something inside that row changes. Best for very wide tables where you don't want column-state changes to ripple across every row.
-- **`'table-body'`** — memoizes the entire `<tbody>`. Almost no re-renders inside the body once it's painted. Use sparingly — most state changes you actually care about (selection, expansion, edit, density) will then need explicit invalidation.
+## When to switch modes
+
+| Symptom                                                                                                       | Try                     |
+| ------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| Default feels fine.                                                                                           | Leave `memoMode` unset. |
+| Wide table (50+ columns), per-cell memo overhead is showing up in profiler.                                   | `memoMode: 'rows'`      |
+| Custom `Cell` renderer pulls data from React context or refs the table doesn't know about, and it goes stale. | `memoMode: 'off'`       |
+| You want pre-0.3.0 behavior for a specific table.                                                             | `memoMode: 'off'`       |
+
+## What changed in 0.3.0
+
+Before 0.3.0, `memoMode` was opt-in (`'cells'` or `'rows'`) and the default was no memoization. Setting `memoMode='cells'` was documented as breaking some dynamic rendering features — the memo comparator didn't see hover / drag / edit state, so opting in could leave those interactions stale.
+
+The Tier 1 perf refactor moved all body-state to discrete primitive props that the comparator can see, so the warning no longer applies. Flipping the default makes the win available to every consumer.
+
+The breaking part: if you previously passed `memoMode={undefined}` to mean "no memo", that now resolves to `'cells'`. Switch to `memoMode='off'` to preserve the old behavior.
+
+## How it interacts with `getRowId` and immutable data updates
+
+When you replace `data` immutably (e.g. `setData([{ ...row, value: 'new' }])`) and use `getRowId` to keep row identity stable, the cell memo correctly re-renders. The comparator uses `prev.cell === next.cell` (reference equality on TanStack's `Cell` instance), and TanStack regenerates Cell instances whenever the row model regenerates — which it does on every data replacement.
+
+This matters for streaming-data shapes (orderbooks, dashboards, log tails) where you'd otherwise get a memoized cell silently showing stale numbers. There's a regression test in `packages/shadstack-table/src/__tests__/memo-mode.test.tsx` that pins this behavior.
 
 ## Tradeoffs
 
-Memoization isn't free. The comparison runs on every render; for cheap rows it can cost more than the re-render itself. Measure before reaching for `'table-body'` — the more aggressive the mode, the more likely you'll find a state mutation that should update the DOM but doesn't, because the memo says "nothing changed".
+Memoization isn't free. The comparator runs on every render — for a 50-row visible page with 4 columns that's 200 comparator passes per render even when nothing changed. On very small tables (< 20 visible rows) the comparator overhead can exceed the work it saves. If profiling shows that, switch to `memoMode='off'` and rely on virtualization to bound the cost instead.
 
-The general progression:
+The general progression for performance work:
 
-1. Start with no `memoMode`.
-2. If you have a perf problem, add virtualization first (`enableRowVirtualization`, `enableColumnVirtualization`).
-3. If you still have a perf problem, then add `memoMode: 'cells'`.
-4. Only escalate to `'rows'` / `'table-body'` after measuring.
+1. Start with the default (`'cells'`).
+2. If you have a perf problem at scale, add virtualization (`enableRowVirtualization`, `enableColumnVirtualization`).
+3. If a custom renderer goes stale, switch to `'off'` for that table.
+4. If per-cell comparator overhead shows up on wide tables, try `'rows'`.
 
 ## See also
 
