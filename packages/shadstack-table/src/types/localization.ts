@@ -16,6 +16,8 @@ export interface SST_Localization {
   columnActions: string;
   copiedToClipboard: string;
   copy: string;
+  /** Title shown by the row-create dialog. Optional with a hardcoded 'Create' fallback so locale maintainers can opt in without breaking existing locales. */
+  create?: string;
   dropToGroupBy: string;
   edit: string;
   expand: string;

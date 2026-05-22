@@ -94,7 +94,9 @@ export const SST_EditRowModal = <TData extends SST_RowData>({
           {...slotContentRest}
         >
           <DialogHeader className="border-b px-6 py-4">
-            <DialogTitle className="text-center">{localization.edit}</DialogTitle>
+            <DialogTitle className="text-center">
+              {creatingRow ? (localization.create ?? 'Create') : localization.edit}
+            </DialogTitle>
           </DialogHeader>
           {/* intentional preventDefault: edit-row is an in-browser modal with no server-side submit fallback */}
           <form
