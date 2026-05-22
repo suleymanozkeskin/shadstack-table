@@ -32,6 +32,15 @@ export const SST_Table = <TData extends SST_RowData>({
 
   const Caption = parseFromValuesOrFunc(renderCaption, { table });
 
+  // Invariant: columnSizeVars must recompute whenever the headers list or their sizes
+  // change. getFlatHeaders() and header.getSize() are TanStack accessors that read
+  // through to the table instance; the lint rule can't see those reads, so we list
+  // each state slice they observe as an explicit invalidation key. Each entry below
+  // names which accessor it drives:
+  //   - columns          -> getFlatHeaders() header set (add/remove)
+  //   - columnVisibility -> getFlatHeaders() header set (filtered)
+  //   - columnSizing     -> header.getSize() values (persisted sizes)
+  //   - columnSizingInfo -> header.getSize() values during live resize
   const columnSizeVars = useMemo(() => {
     const headers = getFlatHeaders();
     const colSizes: { [key: string]: number } = {};
@@ -42,7 +51,7 @@ export const SST_Table = <TData extends SST_RowData>({
       colSizes[`--col-${parseCSSVarId(header.column.id)}-size`] = colSize;
     }
     return colSizes;
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional invalidation keys: getFlatHeaders() reads through to the table instance, so the listed state slices act as recompute triggers when sizing/visibility/columns change. FOLLOW-UP: include getFlatHeaders in deps (it is stable) or refactor to read header sizes directly through the table-state deps.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- deps are accessor-driven invalidation keys; see comment above for the accessor each slice triggers.
   }, [columns, columnSizing, columnSizingInfo, columnVisibility]);
 
   const columnVirtualizer = useSST_ColumnVirtualizer(table);
