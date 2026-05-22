@@ -5,10 +5,11 @@
 
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { dirname, resolve as resolvePath } from 'node:path';
+import { dirname, join as joinPath, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gzipSync } from 'node:zlib';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const requireFn = createRequire(import.meta.url);
@@ -187,6 +188,79 @@ counted('npm pack --dry-run shape', () => {
   // a few extra locales or icons before someone has to think about it again.
   const SIZE_BUDGET = 700_000;
   assert.ok(data.size <= SIZE_BUDGET, `tarball is ${data.size} bytes; budget is ${SIZE_BUDGET}`);
+});
+
+// --- Size budget -------------------------------------------------------------
+// Asserts the built artifacts stay within explicit gzip-size budgets so CI
+// catches accidental size regressions. If a check trips here, investigate
+// the diff — don't bump the budget. Budgets are also documented in
+// packages/shadstack-table/README.md under "API stability → Size budget".
+
+const distRoot = fileURLToPath(import.meta.resolve('shadstack-table')).replace(
+  /\/dist\/index\.js$/,
+  '/dist',
+);
+
+const gzipLen = (path) => gzipSync(readFileSync(path)).length;
+
+const ESM_GZIP_BUDGET = 60_000;
+const CJS_GZIP_BUDGET = 62_000;
+const CSS_GZIP_BUDGET = 3_000;
+const LOCALE_GZIP_BUDGET = 3_000;
+const LOCALE_DIR_RAW_BUDGET = 220_000;
+
+counted(`dist/index.js gzip <= ${ESM_GZIP_BUDGET} bytes`, () => {
+  const size = gzipLen(joinPath(distRoot, 'index.js'));
+  assert.ok(
+    size <= ESM_GZIP_BUDGET,
+    `dist/index.js is ${size} bytes gzip; budget is ${ESM_GZIP_BUDGET}`,
+  );
+});
+
+counted(`dist/index.cjs gzip <= ${CJS_GZIP_BUDGET} bytes`, () => {
+  const size = gzipLen(joinPath(distRoot, 'index.cjs'));
+  assert.ok(
+    size <= CJS_GZIP_BUDGET,
+    `dist/index.cjs is ${size} bytes gzip; budget is ${CJS_GZIP_BUDGET}`,
+  );
+});
+
+counted(`dist/style.css gzip <= ${CSS_GZIP_BUDGET} bytes`, () => {
+  const size = gzipLen(joinPath(distRoot, 'style.css'));
+  assert.ok(
+    size <= CSS_GZIP_BUDGET,
+    `dist/style.css is ${size} bytes gzip; budget is ${CSS_GZIP_BUDGET}`,
+  );
+});
+
+counted(`dist/locales/*.js per-file gzip <= ${LOCALE_GZIP_BUDGET} bytes`, () => {
+  const localesDir = joinPath(distRoot, 'locales');
+  const files = readdirSync(localesDir).filter((f) => f.endsWith('.js'));
+  assert.ok(files.length >= 39, `expected >=39 locale .js files, got ${files.length}`);
+  let worst = { file: '', size: 0 };
+  for (const file of files) {
+    const size = gzipLen(joinPath(localesDir, file));
+    if (size > worst.size) {
+      worst = { file, size };
+    }
+  }
+  assert.ok(
+    worst.size <= LOCALE_GZIP_BUDGET,
+    `${worst.file} is ${worst.size} bytes gzip; per-locale budget is ${LOCALE_GZIP_BUDGET}`,
+  );
+});
+
+counted(`dist/locales/*.js total raw size <= ${LOCALE_DIR_RAW_BUDGET} bytes`, () => {
+  const localesDir = joinPath(distRoot, 'locales');
+  const files = readdirSync(localesDir).filter((f) => f.endsWith('.js'));
+  let total = 0;
+  for (const file of files) {
+    total += statSync(joinPath(localesDir, file)).size;
+  }
+  assert.ok(
+    total <= LOCALE_DIR_RAW_BUDGET,
+    `dist/locales/*.js total is ${total} raw bytes; budget is ${LOCALE_DIR_RAW_BUDGET}`,
+  );
 });
 
 // --- summary -----------------------------------------------------------------

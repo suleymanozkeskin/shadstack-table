@@ -164,6 +164,10 @@ Currently re-exported from the package barrel for ergonomic access, but **not pa
 
 If you find yourself reaching for one of these, please open an issue describing the use case — that helps us decide what should be promoted to the stable tier before 1.0.
 
+### Size budget
+
+CI gates the published build against gzip-size budgets enforced in [`apps/consumer-fixture/verify.mjs`](../../apps/consumer-fixture/verify.mjs): `dist/index.js` ≤ 60 kB, `dist/index.cjs` ≤ 62 kB, `dist/style.css` ≤ 3 kB, and each `dist/locales/*.js` ≤ 3 kB gzip, with the locale directory capped at 220 kB raw bytes total. If a change trips one of these, investigate the diff before adjusting the number — the budget is the gate.
+
 ## v1 deferred features
 
 A small set of MRT features are deferred to a later minor:
