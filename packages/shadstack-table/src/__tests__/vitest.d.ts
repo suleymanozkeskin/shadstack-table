@@ -5,3 +5,5 @@
 // test-setup.ts at runtime via vitest.config.ts.
 // oxlint-disable-next-line no-unassigned-import -- side-effect import: extends Vitest's expect with jest-dom matchers (type-only)
 import '@testing-library/jest-dom/vitest';
+// oxlint-disable-next-line no-unassigned-import -- side-effect import: extends Vitest's expect with vitest-axe matchers (type-only)
+import 'vitest-axe/extend-expect';
