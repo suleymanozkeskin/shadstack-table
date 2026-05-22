@@ -1,4 +1,3 @@
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
 import * as React from 'react';
 import { type DragEvent, memo, useMemo, useRef } from 'react';
 import { type VirtualItem } from '@tanstack/react-virtual';
@@ -97,6 +96,7 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
     )
       return [];
     return [[...pinnedRowIds].reverse().indexOf(row.id), pinnedRowIds.indexOf(row.id)];
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- rowPinning kept as a coarse "pinning state changed" signal that flows from the table state; enableRowPinning / rowPinningDisplayMode are per-instance options that don't change at runtime. FOLLOW-UP: rowPinning dep is technically unnecessary now; verify and prune.
   }, [pinnedRowIds, rowPinning]);
 
   const tableHeadHeight =

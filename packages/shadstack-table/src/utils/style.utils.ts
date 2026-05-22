@@ -16,9 +16,7 @@ import { parseFromValuesOrFunc } from './utils';
 
 type CommonTableCellProps = {
   align?: 'inherit' | 'left' | 'center' | 'right' | 'justify' | 'char';
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any -- slot passthrough may forward sx-style objects from consumers
   sx?: any;
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any -- generic React cell prop bag for slot passthrough
   [key: string]: any;
 };
 
@@ -155,7 +153,6 @@ export const getCommonMRTCellStyles = <TData extends SST_RowData>({
           : 0,
     ...pinnedStyles,
     ...widthStyles,
-    // oxlint-disable-next-line @typescript-eslint/no-explicit-any -- legacy MUI sx passthrough
     ...(parseFromValuesOrFunc(tableCellProps?.sx, undefined) as any),
   };
 };

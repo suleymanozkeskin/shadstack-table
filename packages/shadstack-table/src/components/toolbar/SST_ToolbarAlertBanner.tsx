@@ -1,5 +1,3 @@
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
-// oxlint-disable react/no-array-index-key -- intentional; revisit when refactoring
 import * as React from 'react';
 import { Fragment, useMemo } from 'react';
 import { Alert, AlertTitle } from '../../_ui/alert';
@@ -60,6 +58,7 @@ export const SST_ToolbarAlertBanner = <TData extends SST_RowData>({
   const selectedRowCount = useMemo(
     () =>
       manualPagination ? Object.values(rowSelection).filter(Boolean).length : filteredRowCount,
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- upstream dep list; totalRowCount kept to recompute display banner when underlying row total changes
     [rowSelection, totalRowCount, manualPagination, filteredRowCount],
   );
 

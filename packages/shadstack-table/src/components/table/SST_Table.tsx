@@ -1,4 +1,3 @@
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
 import * as React from 'react';
 import { useMemo } from 'react';
 import { useSST_ColumnVirtualizer } from '../../hooks/useSST_ColumnVirtualizer';
@@ -43,6 +42,7 @@ export const SST_Table = <TData extends SST_RowData>({
       colSizes[`--col-${parseCSSVarId(header.column.id)}-size`] = colSize;
     }
     return colSizes;
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional invalidation keys: getFlatHeaders() reads through to the table instance, so the listed state slices act as recompute triggers when sizing/visibility/columns change. FOLLOW-UP: include getFlatHeaders in deps (it is stable) or refactor to read header sizes directly through the table-state deps.
   }, [columns, columnSizing, columnSizingInfo, columnVisibility]);
 
   const columnVirtualizer = useSST_ColumnVirtualizer(table);

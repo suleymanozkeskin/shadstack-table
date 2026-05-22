@@ -1,4 +1,3 @@
-// oxlint-disable eslint/no-underscore-dangle -- intentional; revisit when refactoring
 import * as React from 'react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../../_ui/dialog';
 import { cn } from '../../lib/utils';
@@ -72,6 +71,7 @@ export const SST_EditRowModal = <TData extends SST_RowData>({
             onEditingRowCancel?.({ row, table });
             setEditingRow(null);
           }
+          // oxlint-disable-next-line no-underscore-dangle -- _valuesCache is the documented internal property on TanStack Row used by upstream MRT for the same purpose
           row._valuesCache = {} as any;
         }
         rest.onOpenChange?.(nextOpen);

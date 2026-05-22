@@ -1,4 +1,3 @@
-// oxlint-disable react-hooks/exhaustive-deps -- intentional narrow dep array; revisit when refactoring
 import { useCallback, useMemo } from 'react';
 import { type Range, useVirtualizer } from '@tanstack/react-virtual';
 import { type SST_ColumnVirtualizer, type SST_RowData, type SST_TableInstance } from '../types';
@@ -43,6 +42,7 @@ export const useSST_ColumnVirtualizer = <
               .sort((a, b) => a - b),
           ]
         : [[], []],
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional invalidation keys: the memo body reads through `table.*` accessors so columnPinning/columnVisibility/enableColumnPinning act as recompute triggers. table and visibleColumns.length are stable per render of this hook.
     [columnPinning, columnVisibility, enableColumnPinning],
   );
 
@@ -52,6 +52,7 @@ export const useSST_ColumnVirtualizer = <
   const draggingColumnIndex = useMemo(
     () =>
       draggingColumn?.id ? visibleColumns.findIndex((c) => c.id === draggingColumn?.id) : undefined,
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: visibleColumns is read freshly each render, so we only need to recompute the index when the dragged column id changes. Including visibleColumns would re-fire on every render.
     [draggingColumn?.id],
   );
 
@@ -69,6 +70,7 @@ export const useSST_ColumnVirtualizer = <
         }
         return [...new Set([...leftPinnedIndexes, ...newIndexes, ...rightPinnedIndexes])];
       },
+      // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: numPinnedLeft/numPinnedRight are derived (length of the array deps) so changes flow through leftPinnedIndexes/rightPinnedIndexes; adding them explicitly would duplicate the trigger.
       [leftPinnedIndexes, rightPinnedIndexes, draggingColumnIndex],
     ),
     ...columnVirtualizerProps,
@@ -94,7 +96,7 @@ export const useSST_ColumnVirtualizer = <
   }
 
   if (columnVirtualizerInstanceRef) {
-    //@ts-expect-error
+    // @ts-expect-error -- columnVirtualizer is widened with our augmented .virtualColumns / padding fields; the public types don't yet model the augmentation
     columnVirtualizerInstanceRef.current = columnVirtualizer;
   }
 

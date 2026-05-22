@@ -1,5 +1,3 @@
-// oxlint-disable eslint/no-shadow -- intentional; revisit when refactoring
-// oxlint-disable react/no-array-index-key -- intentional; revisit when refactoring
 import * as React from 'react';
 import { type Dispatch, type DragEvent, type SetStateAction, useRef, useState } from 'react';
 import { Label } from '../../_ui/label';
@@ -50,6 +48,7 @@ export const SST_ShowHideColumnsMenuItems = <TData extends SST_RowData>({
 
   const switchChecked = column.getIsVisible();
 
+  // oxlint-disable-next-line no-shadow -- parameter named `column` intentionally matches the outer prop for caller-site clarity
   const handleToggleColumnHidden = (column: SST_Column<TData>) => {
     if (columnDefType === 'group') {
       column?.columns?.forEach?.((childColumn: SST_Column<TData>) => {
@@ -68,6 +67,7 @@ export const SST_ShowHideColumnsMenuItems = <TData extends SST_RowData>({
     setIsDragging(true);
     try {
       e.dataTransfer.setDragImage(menuItemRef.current as HTMLElement, 0, 0);
+      // oxlint-disable-next-line no-shadow -- catch binding intentionally reuses `e` for brevity
     } catch (e) {
       console.error(e);
     }

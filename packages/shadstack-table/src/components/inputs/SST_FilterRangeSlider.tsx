@@ -1,4 +1,3 @@
-// oxlint-disable eslint/no-underscore-dangle -- intentional; revisit when refactoring
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Slider } from '../../_ui/slider';
@@ -26,6 +25,7 @@ export const SST_FilterRangeSlider = <TData extends SST_RowData>({
   const { column } = header;
   const { columnDef } = column;
 
+  // oxlint-disable-next-line no-underscore-dangle -- _filterFn is the canonical internal property carried over from upstream MRT/TanStack column def shape
   const currentFilterOption = columnDef._filterFn;
 
   const showChangeModeButton =

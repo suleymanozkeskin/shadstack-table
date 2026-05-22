@@ -1,4 +1,3 @@
-// oxlint-disable jsx-a11y/no-static-element-interactions -- intentional; revisit when refactoring
 import * as React from 'react';
 import { cn } from '../../lib/utils';
 import { type SST_Header, type SST_RowData, type SST_TableInstance } from '../../types';
@@ -33,6 +32,7 @@ export const SST_TableHeadCellResizeHandle = <TData extends SST_RowData>({
   const isRtl = columnResizeDirection === 'rtl';
 
   return (
+    // oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- column-resize handle is a visual affordance only; keyboard resize is provided separately via the column action menu
     <div
       className={cn(
         // inset-y-0 anchors the wrapper to the full vertical extent of the
