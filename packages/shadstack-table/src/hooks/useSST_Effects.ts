@@ -26,22 +26,27 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
     }
   }, []);
 
-  //hide scrollbars when table is in full screen mode, preserve body scroll position after full screen exit
+  //hide scrollbars when table is in full screen mode, preserve body scroll
+  //position after full screen exit. The cleanup runs both when isFullScreen
+  //flips back to false AND when the table unmounts while still in full
+  //screen — previously the latter case left `document.body.style.height`
+  //set to '100dvh', leaking layout state into the host page.
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      if (isFullScreen) {
-        previousTop.current = document.body.getBoundingClientRect().top; //save scroll position
-        document.body.style.height = '100dvh'; //hide page scrollbars when table is in full screen mode
-      } else {
-        document.body.style.height = initialBodyHeight.current as string;
-        if (!previousTop.current) return;
-        //restore scroll position
-        window.scrollTo({
-          behavior: 'instant',
-          top: -1 * (previousTop.current as number),
-        });
-      }
-    }
+    if (typeof window === 'undefined') return;
+    if (!isFullScreen) return;
+
+    previousTop.current = document.body.getBoundingClientRect().top; //save scroll position
+    document.body.style.height = '100dvh'; //hide page scrollbars when table is in full screen mode
+
+    return () => {
+      document.body.style.height = initialBodyHeight.current ?? '';
+      if (!previousTop.current) return;
+      //restore scroll position
+      window.scrollTo({
+        behavior: 'instant',
+        top: -1 * previousTop.current,
+      });
+    };
   }, [isFullScreen]);
 
   //recalculate column order when the set of column ids changes — not just the
