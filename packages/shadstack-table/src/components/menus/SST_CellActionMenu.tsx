@@ -32,11 +32,11 @@ export const SST_CellActionMenu = <TData extends SST_RowData>({
   } = table;
   const { actionCell, density } = getState();
   const cell = actionCell!;
-  const virtualRef = React.useMemo<React.RefObject<HTMLElement | null> | undefined>(
-    () => (actionCellRef.current ? { current: actionCellRef.current } : undefined),
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: re-evaluates whenever the cell-action ref attaches/detaches. Note: ref.current mutations don't trigger recompute on their own — render cycles caused by other state (actionCell) carry this memo along. FOLLOW-UP: this is fragile; consider lifting the anchor target into state so the recompute is deterministic.
-    [actionCellRef.current],
-  );
+  // Invariant: actionCellRef is already a stable RefObject from useSST_TableInstance;
+  // Radix's PopoverAnchor reads `.current` lazily during positioning, so we can hand
+  // the ref through directly instead of synthesizing a wrapper object in a useMemo
+  // whose ref.current dep never triggers React invalidation anyway.
+  const virtualRef = actionCellRef;
 
   const handleClose = (event?: any) => {
     event?.stopPropagation();
@@ -100,7 +100,7 @@ export const SST_CellActionMenu = <TData extends SST_RowData>({
         if (!open) handleClose();
       }}
     >
-      {virtualRef && <PopoverAnchor virtualRef={virtualRef as any} />}
+      <PopoverAnchor virtualRef={virtualRef as any} />
       <PopoverContent
         align="start"
         sideOffset={8}
