@@ -1,4 +1,3 @@
-// oxlint-disable react/no-array-index-key -- intentional; revisit when refactoring
 import * as React from 'react';
 import { Button } from '../../_ui/button';
 import { Label } from '../../_ui/label';
@@ -144,7 +143,7 @@ export const SST_TablePagination = <TData extends SST_RowData>({
           </Button>
           {getPageRange(pageIndex + 1, numberOfPages).map((page, i) =>
             page === 'ellipsis' ? (
-              // stable by position — getPageRange emits at most 2 ellipses (left, right) in fixed order
+              // oxlint-disable-next-line react/no-array-index-key -- stable by position; getPageRange emits at most 2 ellipses (left, right) in fixed order
               <span key={`ellipsis-${i}`} className="px-2 text-muted-foreground">
                 …
               </span>

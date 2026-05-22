@@ -16,19 +16,17 @@ import { parseFromValuesOrFunc } from './utils';
 
 type CommonTableCellProps = {
   align?: 'inherit' | 'left' | 'center' | 'right' | 'justify' | 'char';
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any -- slot passthrough may forward sx-style objects from consumers
   sx?: any;
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any -- generic React cell prop bag for slot passthrough
   [key: string]: any;
 };
 
 export const parseCSSVarId = (id: string) => id.replace(/[^a-zA-Z0-9]/g, '_');
 
-export const getMRTTheme = <TData extends SST_RowData>(
-  mrtTheme: SST_TableOptions<TData>['mrtTheme'],
+export const getSST_Theme = <TData extends SST_RowData>(
+  themeInput: SST_TableOptions<TData>['theme'],
 ): SST_Theme => {
-  const mrtThemeOverrides = parseFromValuesOrFunc(mrtTheme, undefined);
-  const baseBackgroundColor = mrtThemeOverrides?.baseBackgroundColor ?? 'var(--background)';
+  const overrides = parseFromValuesOrFunc(themeInput, undefined);
+  const baseBackgroundColor = overrides?.baseBackgroundColor ?? 'var(--background)';
   return {
     baseBackgroundColor,
     cellNavigationOutlineColor: 'var(--ring)',
@@ -37,9 +35,15 @@ export const getMRTTheme = <TData extends SST_RowData>(
     menuBackgroundColor: 'var(--popover)',
     pinnedRowBackgroundColor: 'color-mix(in oklch, var(--accent) 60%, transparent)',
     selectedRowBackgroundColor: 'var(--muted)',
-    ...mrtThemeOverrides,
+    ...overrides,
   };
 };
+
+/**
+ * @deprecated Use `getSST_Theme` instead. This MRT-era alias will be removed
+ * in a future major.
+ */
+export const getMRTTheme = getSST_Theme;
 
 export const commonCellBeforeAfterStyles: CSSProperties = {
   content: '""',
@@ -149,7 +153,6 @@ export const getCommonMRTCellStyles = <TData extends SST_RowData>({
           : 0,
     ...pinnedStyles,
     ...widthStyles,
-    // oxlint-disable-next-line @typescript-eslint/no-explicit-any -- legacy MUI sx passthrough
     ...(parseFromValuesOrFunc(tableCellProps?.sx, undefined) as any),
   };
 };

@@ -1,6 +1,6 @@
 {
   "name": "shadstack-table",
-  "version": "0.1.6",
+  "version": "0.2.0",
   "description": "shadcn-native React data table — full data-table feature surface on TanStack Table v8 + shadcn/ui primitives.",
   "keywords": [
     "data-table",
@@ -43,11 +43,16 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./locales/*": {
+      "types": "./dist/locales/*.d.ts",
+      "import": "./dist/locales/*.js",
+      "require": "./dist/locales/*.cjs"
+    },
     "./style.css": "./dist/style.css"
   },
   "scripts": {
     "dev": "vite build --watch",
-    "build": "vite build",
+    "build": "vite build && vite build --mode locales",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -92,7 +97,8 @@
     "typescript": "^6.0.3",
     "vite": "^8.0.10",
     "vite-plugin-dts": "^5.0.0",
-    "vitest": "4.1.5"
+    "vitest": "4.1.5",
+    "vitest-axe": "1.0.0-pre.5"
   },
   "peerDependencies": {
     "react": ">=18",

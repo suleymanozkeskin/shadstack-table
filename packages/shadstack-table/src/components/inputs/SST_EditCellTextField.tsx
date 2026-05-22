@@ -1,4 +1,3 @@
-// oxlint-disable eslint/no-underscore-dangle -- intentional; revisit when refactoring
 import * as React from 'react';
 import { type ChangeEvent, type FocusEvent, type KeyboardEvent, useRef, useState } from 'react';
 import { Input } from '../../_ui/input';
@@ -69,7 +68,8 @@ export const SST_EditCellTextField = <TData extends SST_RowData>({
   );
 
   const saveInputValueToRowCache = (newValue: string) => {
-    //@ts-expect-error
+    // @ts-expect-error -- TanStack Row exposes _valuesCache as an internal mutable cache; the public types intentionally hide it but writing here keeps cell rendering in sync before a commit
+    // oxlint-disable-next-line no-underscore-dangle -- _valuesCache is the documented internal property on TanStack Row used by upstream MRT for the same purpose
     row._valuesCache[column.id] = newValue;
     if (isCreating) {
       setCreatingRow(row);

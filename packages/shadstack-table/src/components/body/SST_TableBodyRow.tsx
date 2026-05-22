@@ -1,4 +1,3 @@
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
 import * as React from 'react';
 import { type DragEvent, memo, useMemo, useRef } from 'react';
 import { type VirtualItem } from '@tanstack/react-virtual';
@@ -67,7 +66,6 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
     editingRow,
     hoveredRow,
     isFullScreen,
-    rowPinning,
   } = getState();
 
   const visibleCells = row.getVisibleCells();
@@ -97,7 +95,8 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
     )
       return [];
     return [[...pinnedRowIds].reverse().indexOf(row.id), pinnedRowIds.indexOf(row.id)];
-  }, [pinnedRowIds, rowPinning]);
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- enableRowPinning / rowPinningDisplayMode are per-instance options that don't change at runtime; row is intentionally read by id only when pinnedRowIds identity changes.
+  }, [pinnedRowIds]);
 
   const tableHeadHeight =
     ((enableStickyHeader || isFullScreen) && tableHeadRef.current?.clientHeight) || 0;

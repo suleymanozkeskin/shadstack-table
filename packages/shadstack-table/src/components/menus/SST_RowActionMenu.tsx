@@ -1,4 +1,3 @@
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
 import * as React from 'react';
 import { type ReactNode, useMemo, type MouseEvent } from 'react';
 import { Popover, PopoverAnchor, PopoverContent } from '../../_ui/popover';
@@ -66,6 +65,7 @@ export const SST_RowActionMenu = <TData extends SST_RowData>({
     });
     if (rowActionMenuItems?.length) items.push(...rowActionMenuItems);
     return items;
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional narrow deps; localization/enableEditing/handleEdit/setAnchorEl/editDisplayMode/EditIcon are stable per cell-lifetime (per-instance config from the table options). FOLLOW-UP: verify all listed "stable" deps are truly stable.
   }, [renderRowActionMenuItems, row, staticRowIndex, table]);
 
   if (!menuItems.length) return null;

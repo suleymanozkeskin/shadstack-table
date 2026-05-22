@@ -1,4 +1,3 @@
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
 import * as React from 'react';
 import { type DragEvent, useEffect } from 'react';
 import { cn } from '../../lib/utils';
@@ -41,6 +40,7 @@ export const SST_ToolbarDropZone = <TData extends SST_RowData>({
           !grouping.includes(draggingColumn.id),
       );
     }
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional narrow deps; the `table.options.state.showToolbarDropZone` read is a controlled-mode gate (consumer ownership) and setShowToolbarDropZone is a stable setter — adding either would cause render loops
   }, [enableGrouping, draggingColumn, grouping]);
 
   if (!showToolbarDropZone) return null;
@@ -48,7 +48,7 @@ export const SST_ToolbarDropZone = <TData extends SST_RowData>({
   return (
     <div
       className={cn(
-        'Mui-ToolbarDropZone absolute inset-0 z-[4] flex items-center justify-center backdrop-blur-sm border-2 border-dashed border-primary',
+        'SST-ToolbarDropZone absolute inset-0 z-[4] flex items-center justify-center backdrop-blur-sm border-2 border-dashed border-primary',
         'animate-in fade-in-0',
         hoveredColumn?.id === 'drop-zone' ? 'bg-primary/20' : 'bg-primary/10',
         className,

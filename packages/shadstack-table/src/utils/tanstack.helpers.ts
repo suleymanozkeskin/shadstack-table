@@ -19,7 +19,7 @@ export const flexRender = _flexRender as (
   props: any,
 ) => JSX.Element | ReactNode;
 
-export function createMRTColumnHelper<TData extends SST_RowData>(): SST_ColumnHelper<TData> {
+export function createSSTColumnHelper<TData extends SST_RowData>(): SST_ColumnHelper<TData> {
   return {
     accessor: (accessor, column) => {
       return typeof accessor === 'function'
@@ -36,6 +36,12 @@ export function createMRTColumnHelper<TData extends SST_RowData>(): SST_ColumnHe
     group: (column) => column as SST_GroupColumnDef<TData>,
   };
 }
+
+/**
+ * @deprecated Use `createSSTColumnHelper` instead. This MRT-era alias is kept
+ * for migration compatibility and will be removed in a future major.
+ */
+export const createMRTColumnHelper = createSSTColumnHelper;
 
 export const createRow = <TData extends SST_RowData>(
   table: SST_TableInstance<TData>,

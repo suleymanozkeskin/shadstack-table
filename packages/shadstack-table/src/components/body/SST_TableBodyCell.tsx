@@ -1,4 +1,3 @@
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
 import * as React from 'react';
 import {
   type DragEvent,
@@ -7,6 +6,7 @@ import {
   memo,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { Skeleton } from '../../_ui/skeleton';
@@ -93,15 +93,19 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
   });
 
   const [skeletonWidth, setSkeletonWidth] = useState(100);
+  // Invariant: skeleton width is measured exactly once per cell lifetime, on the first
+  // loading-entry the effect observes. Ref guard avoids stale closures from re-running deps.
+  const measuredOnce = useRef(false);
   useEffect(() => {
-    if ((!isLoading && !showSkeletons) || skeletonWidth !== 100) return;
+    if ((!isLoading && !showSkeletons) || measuredOnce.current) return;
+    measuredOnce.current = true;
     const size = column.getSize();
     setSkeletonWidth(
       columnDefType === 'display'
         ? size / 2
         : Math.round(Math.random() * (size - size / 3) + size / 3),
     );
-  }, [isLoading, showSkeletons]);
+  }, [isLoading, showSkeletons, column, columnDefType]);
 
   const draggingBorders = useMemo(() => {
     const isDraggingColumn = draggingColumn?.id === column.id;
@@ -147,6 +151,7 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
           borderTop: isDraggingRow || isHoveredRow ? borderStyle : undefined,
         }
       : undefined;
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional narrow deps; column/row/draggingBorderColor/columnResizeMode are stable per cell-instance, and recomputing borders on every column-resize tick would tank perf. FOLLOW-UP: verify each "stable" dep is truly stable across the cell lifetime.
   }, [
     columnSizingInfo.isResizingColumn,
     draggingColumn,
@@ -173,7 +178,7 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
     (parseFromValuesOrFunc(enableClickToCopy, cell) === true ||
       parseFromValuesOrFunc(columnDef.enableClickToCopy, cell) === true) &&
     !['context-menu', false].includes(
-      // @ts-expect-error
+      // @ts-expect-error -- Array.prototype.includes's narrowed (string | false) signature doesn't accept the wider union returned by parseFromValuesOrFunc; the runtime check is intentional
       parseFromValuesOrFunc(columnDef.enableClickToCopy, cell),
     );
 

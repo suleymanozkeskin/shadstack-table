@@ -1,0 +1,13 @@
+{
+  "name": "consumer-fixture",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Non-aliased package consumer used to verify shadstack-table's published exports resolve correctly. Imports through the package name (workspace symlink), so Node honors the exports field exactly as a real consumer would.",
+  "type": "module",
+  "scripts": {
+    "verify:package": "node verify.mjs"
+  },
+  "dependencies": {
+    "shadstack-table": "workspace:*"
+  }
+}

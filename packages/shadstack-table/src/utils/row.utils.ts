@@ -35,8 +35,9 @@ export const getSST_Rows = <TData extends SST_RowData>(
           : getRowModel().rows
         : getCenterRows();
   } else {
-    // fuzzy ranking adjustments
-    rows = getPrePaginationRowModel().rows.sort((a, b) => rankGlobalFuzzy(a, b));
+    // fuzzy ranking adjustments — clone before sorting so TanStack's
+    // internal row-model array isn't mutated by reorder
+    rows = [...getPrePaginationRowModel().rows].sort((a, b) => rankGlobalFuzzy(a, b));
     if (enablePagination && !manualPagination && !all) {
       const start = pagination.pageIndex * pagination.pageSize;
       rows = rows.slice(start, start + pagination.pageSize);

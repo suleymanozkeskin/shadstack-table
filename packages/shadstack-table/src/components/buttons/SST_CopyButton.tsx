@@ -4,6 +4,7 @@ import { Button } from '../../_ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
 import { cn } from '../../lib/utils';
 import { type SST_Cell, type SST_RowData, type SST_TableInstance } from '../../types';
+import { copyToClipboard } from '../../utils/clipboard.utils';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 
 export interface SST_CopyButtonProps<TData extends SST_RowData> extends React.ComponentProps<
@@ -27,11 +28,17 @@ export const SST_CopyButton = <TData extends SST_RowData>({
 
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = (event: MouseEvent, text: unknown) => {
+  const handleCopy = async (event: MouseEvent, text: unknown) => {
     event.stopPropagation();
-    navigator.clipboard.writeText(text as string);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 4000);
+    const ok = await copyToClipboard(table, {
+      value: String(text ?? ''),
+      cell,
+      source: 'button',
+    });
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 4000);
+    }
   };
 
   const buttonProps = {

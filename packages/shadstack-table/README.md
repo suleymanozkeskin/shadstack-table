@@ -1,10 +1,10 @@
 # shadstack-table
 
-A shadcn/ui-native React data table with the same feature surface as [`material-react-table`](https://github.com/KevinVandy/material-react-table) — minus the MUI dependency. Built on TanStack Table v8 + TanStack Virtual.
+A shadcn/ui-native React data table that follows the [`material-react-table`](https://github.com/KevinVandy/material-react-table) API direction — minus the MUI dependency. Built on TanStack Table v8 + TanStack Virtual.
 
 **👉 [Documentation & live demo](https://suleymanozkeskin.github.io/shadstack-table/)** · [GitHub](https://github.com/suleymanozkeskin/shadstack-table) · [Changelog](https://github.com/suleymanozkeskin/shadstack-table/blob/main/CHANGELOG.md)
 
-> **Status: pre-1.0.** The full MRT feature surface is ported; API is stable in shape but may receive breaking refinements before 1.0.
+> **Status: pre-1.0.** The MRT-compatible API surface is in place; a small set of features are deferred. The API is stable in shape but may receive breaking refinements before 1.0.
 
 ## Install
 
@@ -14,82 +14,14 @@ bun add shadstack-table
 npm install shadstack-table
 ```
 
-Peer dependencies: `react` and `react-dom` `>=18`. shadstack-table also depends on `@tanstack/react-table` v8, `@tanstack/react-virtual` v3, `tailwindcss` v4, `tw-animate-css`, and a set of `@radix-ui/*` primitives — install those alongside if your project doesn't already use them.
-
-### CSS setup (Tailwind v4)
-
-As of 0.1.4 the library no longer ships a full Tailwind utility bundle (that broke consumer cascades — see CHANGELOG). Instead, your own Tailwind build scans the library source for the utility classes its components use, and you import a small library-specific stylesheet for tokens and component CSS.
-
-In your app's globals.css:
-
-```css
-@import 'tailwindcss';
-@import 'tw-animate-css';
-
-/* path is relative to globals.css */
-@source '../node_modules/shadstack-table/dist';
-
-@custom-variant dark (&:is(.dark *));
-
-/* Map the library's CSS tokens onto Tailwind v4's named-color theme so
-   utilities like `bg-background`, `border-border`, `text-foreground` resolve. */
-@theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-}
-
-/* shadcn baseline — every element borrows the theme `--border` / `--ring`. */
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-}
-```
-
-If you ran `shadcn init` already, the `@theme inline` and `@layer base` blocks are in your `globals.css` from that step — leave them. The token _values_ (`--background: oklch(1 0 0)` etc.) are provided by `shadstack-table/style.css`, so anything you don't override falls through to the library's shadcn-neutral defaults. Without the `@theme inline` block, Tailwind utilities like `bg-background` and `border-border` are unknown classes and the table renders unstyled.
-
-And once at your app entry:
-
-```ts
-import 'shadstack-table/style.css';
-```
-
-The imported `style.css` is ~5 KB and contains only shadcn token defaults (wrapped in `:where()` so your tokens win automatically), table-scoped scrollbar styles, the keyboard-focus ring, and the pinned-cell overlay. No Tailwind utilities, no preflight — your Tailwind build owns those, exactly once, in a cascade position you control.
-
-### Upgrading from 0.1.3 or earlier
-
-If you upgraded from 0.1.0–0.1.3 and previously relied on `import 'shadstack-table/style.css'` alone, add the `@source` line above to your globals.css and add `@import 'tw-animate-css'` if you don't already. Without `@source`, the library's components render but utility classes won't be generated.
+Peer dependencies: `react` and `react-dom` `>=18`, plus a Tailwind v4 build (see CSS setup below).
 
 ## Quick start
 
 ```tsx
 import { useMemo } from 'react';
 import { ShadStackTable, useShadStackTable, type SST_ColumnDef } from 'shadstack-table';
+import 'shadstack-table/style.css';
 
 type Person = { name: string; age: number; email: string };
 
@@ -109,32 +41,33 @@ export function PeopleTable() {
   );
 
   const table = useShadStackTable({ columns, data });
-
   return <ShadStackTable table={table} />;
 }
 ```
 
-## Migrating from `material-react-table`
+## Tailwind setup
 
-The consumer-facing rename is one-to-one:
+This library expects Tailwind v4 in the consuming app. Without an `@source` directive and the matching `@theme inline` block in your `globals.css`, the table renders unstyled. The full snippet is in [Getting started → CSS setup](https://suleymanozkeskin.github.io/shadstack-table/getting-started/#wire-tailwind-to-scan-the-library).
+
+## Migrating from `material-react-table`
 
 ```diff
 - import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef } from 'material-react-table';
 + import { ShadStackTable,    useShadStackTable,    type SST_ColumnDef } from 'shadstack-table';
 ```
 
-1. Rename `MaterialReactTable` → `ShadStackTable`, `useMaterialReactTable` → `useShadStackTable`.
-2. Find-replace the `MRT_*` type prefix with `SST_*`.
-3. Replace built-in column IDs (`'mrt-row-select'`, `'mrt-row-actions'`, `'mrt-row-expand'`, `'mrt-row-drag'`, `'mrt-row-numbers'`, `'mrt-row-pin'`, `'mrt-row-spacer'`) — swap the `mrt-` prefix for `sst-`.
-4. Apply the `muiXxxProps` → `slotProps.xxx` rename pass — every MUI-prefixed slot prop is now under `slotProps` (e.g. `muiTableBodyRowProps` → `slotProps.tableBodyRow`).
+Full step-by-step (component rename, `MRT_*` → `SST_*` types, `mrt-` → `sst-` column IDs, `muiXxxProps` → `slotProps`) lives in [Migrating from material-react-table](https://suleymanozkeskin.github.io/shadstack-table/guides/migrating-from-mrt/).
 
-## v1 deferred features
+## Deferred features
 
 A small set of MRT features are deferred to a later minor:
 
 - `filterVariant: 'autocomplete'` — falls back to a text input with a one-time `console.warn`.
-- Column drag-reorder — not in v1; column resize and pinning are supported.
-- `filterVariant: 'time' | 'datetime' | 'time-range' | 'datetime-range'` — use a native `<input>` until a shadcn time picker recipe exists. `date` and `date-range` already use shadcn `Popover` + `Calendar`.
+- `filterVariant: 'time' | 'datetime' | 'time-range' | 'datetime-range'` — native `<input>` until a shadcn time picker recipe lands. `date` and `date-range` already use shadcn `Popover` + `Calendar`.
+
+## API stability
+
+The public surface is split into Stable / Deprecated / Internal tiers and the package ships under a gzip size budget. See [API stability](https://suleymanozkeskin.github.io/shadstack-table/guides/api-stability/) for the full list and budgets.
 
 ## Acknowledgements
 

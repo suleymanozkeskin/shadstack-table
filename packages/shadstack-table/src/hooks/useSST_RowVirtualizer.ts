@@ -71,7 +71,7 @@ export const useSST_RowVirtualizer = <
   rowVirtualizer.virtualRows = rowVirtualizer.getVirtualItems() as any;
 
   if (rowVirtualizerInstanceRef) {
-    //@ts-expect-error
+    // @ts-expect-error -- rowVirtualizer is widened with .virtualRows; the public types don't yet model the augmentation
     rowVirtualizerInstanceRef.current = rowVirtualizer;
   }
 

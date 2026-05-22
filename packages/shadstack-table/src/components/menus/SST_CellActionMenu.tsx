@@ -1,10 +1,10 @@
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
 import * as React from 'react';
 import { Popover, PopoverAnchor, PopoverContent } from '../../_ui/popover';
 import { SST_ActionMenuItem } from './SST_ActionMenuItem';
 import { cn } from '../../lib/utils';
 import { type SST_RowData, type SST_TableInstance } from '../../types';
 import { openEditingCell } from '../../utils/cell.utils';
+import { copyToClipboard } from '../../utils/clipboard.utils';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 
 export interface SST_CellActionMenuProps<TData extends SST_RowData> extends React.ComponentProps<
@@ -33,10 +33,11 @@ export const SST_CellActionMenu = <TData extends SST_RowData>({
   } = table;
   const { actionCell, density } = getState();
   const cell = actionCell!;
-  const virtualRef = React.useMemo<React.RefObject<HTMLElement | null> | undefined>(
-    () => (actionCellRef.current ? { current: actionCellRef.current } : undefined),
-    [actionCellRef.current],
-  );
+  // Invariant: actionCellRef is already a stable RefObject from useSST_TableInstance;
+  // Radix's PopoverAnchor reads `.current` lazily during positioning, so we can hand
+  // the ref through directly instead of synthesizing a wrapper object in a useMemo
+  // whose ref.current dep never triggers React invalidation anyway.
+  const virtualRef = actionCellRef;
 
   const handleClose = (event?: any) => {
     event?.stopPropagation();
@@ -58,7 +59,13 @@ export const SST_CellActionMenu = <TData extends SST_RowData>({
         label={localization.copy}
         onClick={(event) => {
           event.stopPropagation();
-          navigator.clipboard.writeText(cell.getValue() as string);
+          // Menu closes regardless — clipboard rejections route through
+          // `onCopyError`, and reopening the menu on failure would be worse UX.
+          void copyToClipboard(table, {
+            value: String(cell.getValue() ?? ''),
+            cell,
+            source: 'cell-menu',
+          });
           handleClose();
         }}
         table={table}
@@ -100,7 +107,7 @@ export const SST_CellActionMenu = <TData extends SST_RowData>({
         if (!open) handleClose();
       }}
     >
-      {virtualRef && <PopoverAnchor virtualRef={virtualRef as any} />}
+      <PopoverAnchor virtualRef={virtualRef as any} />
       <PopoverContent
         align="start"
         sideOffset={8}

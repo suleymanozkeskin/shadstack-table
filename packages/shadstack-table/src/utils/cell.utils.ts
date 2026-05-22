@@ -1,4 +1,5 @@
 import { type SST_Cell, type SST_Header, type SST_RowData, type SST_TableInstance } from '../types';
+import { copyToClipboard } from './clipboard.utils';
 import { getSST_RowSelectionHandler, getSST_SelectAllHandler } from './row.utils';
 import { parseFromValuesOrFunc } from './utils';
 
@@ -77,14 +78,17 @@ export const cellKeyboardShortcuts = <TData extends SST_RowData = SST_RowData>({
   const currentCell = event.currentTarget;
 
   if (cellValue && isWinCtrlMacMeta(event) && event.key === 'c') {
-    navigator.clipboard.writeText(cellValue);
+    // Fire-and-forget: nothing visual to roll back on failure. Rejections
+    // route through `table.options.onCopyError`; we deliberately don't await
+    // in a keyboard handler so the rest of the shortcut chain stays sync.
+    void copyToClipboard(table, { value: cellValue, cell, source: 'keyboard' });
   } else if (['Enter', ' '].includes(event.key)) {
     if (cell?.column?.id === 'sst-row-select') {
       event.preventDefault();
       getSST_RowSelectionHandler({
         row: cell.row,
         table,
-        //@ts-expect-error
+        // @ts-expect-error -- event.target on a synthetic React keyboard event is typed as EventTarget; we know it's an Element with data-index here because this branch only fires from sst-row-select cells
         staticRowIndex: +event.target.getAttribute('data-index'),
       })(event as any);
     } else if (header?.column?.id === 'sst-row-select' && table.options.enableSelectAll) {

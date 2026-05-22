@@ -1,5 +1,3 @@
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
-// oxlint-disable react/no-array-index-key -- intentional; revisit when refactoring
 import * as React from 'react';
 import { useMemo, useState } from 'react';
 import { Button } from '../../_ui/button';
@@ -50,7 +48,7 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
       mrtTheme: { menuBackgroundColor },
     },
   } = table;
-  const { columnOrder, columnPinning, density } = getState();
+  const { columnOrder, density } = getState();
   const virtualRef = useMemo<React.RefObject<HTMLElement | null> | undefined>(
     () => (anchorEl ? { current: anchorEl } : undefined),
     [anchorEl],
@@ -79,12 +77,16 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
       ].filter(Boolean);
     }
     return columns;
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: snapshot the row-model column accessors as deps so identity changes (re-sort/re-filter) re-fire the memo.
   }, [
     columnOrder,
-    columnPinning,
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional accessor snapshot, see above
     getAllColumns(),
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional accessor snapshot, see above
     getCenterLeafColumns(),
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional accessor snapshot, see above
     getLeftLeafColumns(),
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional accessor snapshot, see above
     getRightLeafColumns(),
   ]) as SST_Column<TData>[];
 

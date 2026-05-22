@@ -1,4 +1,3 @@
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
 import * as React from 'react';
 import { useMemo } from 'react';
 import { useSST_ColumnVirtualizer } from '../../hooks/useSST_ColumnVirtualizer';
@@ -22,15 +21,7 @@ export const SST_Table = <TData extends SST_RowData>({
   const {
     getFlatHeaders,
     getState,
-    options: {
-      columns,
-      enableTableFooter,
-      enableTableHead,
-      layoutMode,
-      memoMode,
-      renderCaption,
-      slotProps,
-    },
+    options: { columns, enableTableFooter, enableTableHead, layoutMode, renderCaption, slotProps },
   } = table;
   const { columnSizing, columnSizingInfo, columnVisibility } = getState();
 
@@ -41,6 +32,15 @@ export const SST_Table = <TData extends SST_RowData>({
 
   const Caption = parseFromValuesOrFunc(renderCaption, { table });
 
+  // Invariant: columnSizeVars must recompute whenever the headers list or their sizes
+  // change. getFlatHeaders() and header.getSize() are TanStack accessors that read
+  // through to the table instance; the lint rule can't see those reads, so we list
+  // each state slice they observe as an explicit invalidation key. Each entry below
+  // names which accessor it drives:
+  //   - columns          -> getFlatHeaders() header set (add/remove)
+  //   - columnVisibility -> getFlatHeaders() header set (filtered)
+  //   - columnSizing     -> header.getSize() values (persisted sizes)
+  //   - columnSizingInfo -> header.getSize() values during live resize
   const columnSizeVars = useMemo(() => {
     const headers = getFlatHeaders();
     const colSizes: { [key: string]: number } = {};
@@ -51,6 +51,7 @@ export const SST_Table = <TData extends SST_RowData>({
       colSizes[`--col-${parseCSSVarId(header.column.id)}-size`] = colSize;
     }
     return colSizes;
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- deps are accessor-driven invalidation keys; see comment above for the accessor each slice triggers.
   }, [columns, columnSizing, columnSizingInfo, columnVisibility]);
 
   const columnVirtualizer = useSST_ColumnVirtualizer(table);
@@ -75,7 +76,7 @@ export const SST_Table = <TData extends SST_RowData>({
     >
       {!!Caption && <caption>{Caption}</caption>}
       {enableTableHead && <SST_TableHead {...commonTableGroupProps} />}
-      {memoMode === 'table-body' || columnSizingInfo.isResizingColumn ? (
+      {columnSizingInfo.isResizingColumn ? (
         <Memo_SST_TableBody {...commonTableGroupProps} />
       ) : (
         <SST_TableBody {...commonTableGroupProps} />

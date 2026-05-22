@@ -1,7 +1,3 @@
-// oxlint-disable jsx-a11y/click-events-have-key-events -- intentional; revisit when refactoring
-// oxlint-disable jsx-a11y/no-static-element-interactions -- intentional; revisit when refactoring
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
-// oxlint-disable typescript/no-non-null-asserted-optional-chain -- intentional; revisit when refactoring
 import * as React from 'react';
 import { type DragEvent, useMemo, useCallback } from 'react';
 import { SST_TableHeadCellColumnActionsButton } from './SST_TableHeadCellColumnActionsButton';
@@ -94,6 +90,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
     if (showColumnActions) pl += 1.75;
     if (showDragHandle) pl += 1.5;
     return pl;
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- column is the table-column proxy; getCanSort() never changes for a given column instance, so the dep list is intentionally narrow. FOLLOW-UP: verify and possibly inline column.getCanSort() into the dep array.
   }, [showColumnActions, showDragHandle]);
 
   const draggingBorders = useMemo(() => {
@@ -122,6 +119,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
           borderTop: borderStyle,
         }
       : undefined;
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional narrow deps; resize-border state must only react to drag/hover/resize transitions. column.id / columnResizeMode / columnResizeDirection / draggingBorderColor / header.subHeaders.length are effectively per-instance constants over the cell lifetime, and including them would cause unnecessary recomputes during column-resize streams. FOLLOW-UP: verify all listed deps are truly stable.
   }, [draggingColumn, hoveredColumn, columnSizingInfo.isResizingColumn]);
 
   const handleDragEnter = (_e: DragEvent) => {
@@ -250,7 +248,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
         : (tableCellProps.children ?? (
             <div
               className={cn(
-                'Mui-TableHeadCell-Content relative w-full flex items-center gap-2',
+                'SST-TableHeadCell-Content relative w-full flex items-center gap-2',
                 tableCellProps?.style?.textAlign === 'right' ? 'flex-row-reverse' : 'flex-row',
                 columnDefType === 'group' || (tableCellProps as any)?.align === 'center'
                   ? 'justify-center'
@@ -259,9 +257,10 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
                     : 'justify-start',
               )}
             >
+              {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events -- parent <th> has tabIndex / onKeyDown wired via cellKeyboardShortcuts; this inner div is a click-affordance overlay for the sort label */}
               <div
                 className={cn(
-                  'Mui-TableHeadCell-Content-Labels flex items-center gap-1.5 min-w-0',
+                  'SST-TableHeadCell-Content-Labels flex items-center gap-1.5 min-w-0',
                   tableCellProps?.style?.textAlign === 'right' ? 'flex-row-reverse' : 'flex-row',
                   columnDefType === 'data' && 'overflow-hidden',
                   column.getCanSort() && columnDefType !== 'group' && 'cursor-pointer',
@@ -274,7 +273,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
               >
                 <div
                   className={cn(
-                    'Mui-TableHeadCell-Content-Wrapper text-ellipsis hover:text-clip',
+                    'SST-TableHeadCell-Content-Wrapper text-ellipsis hover:text-clip',
                     columnDefType === 'data' && 'overflow-hidden',
                     (columnDef.header?.length ?? 0) < 20
                       ? 'whitespace-nowrap'
@@ -297,13 +296,17 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
                 )}
               </div>
               {columnDefType !== 'group' && (
-                <div className="Mui-TableHeadCell-Content-Actions flex items-center gap-0.5 whitespace-nowrap">
+                <div className="SST-TableHeadCell-Content-Actions flex items-center gap-0.5 whitespace-nowrap">
                   {showDragHandle && (
                     <SST_TableHeadCellGrabHandle
                       column={column}
                       table={table}
+                      // Invariant: prop type is `RefObject<... | null>`, so passing an
+                      // explicit `null` when the parent ref entry hasn't attached yet
+                      // is type-safe; the grab handle reads `.current` only inside
+                      // event handlers (post-attach), so it tolerates this gracefully.
                       tableHeadCellRef={{
-                        current: tableHeadCellRefs.current?.[column.id]!,
+                        current: tableHeadCellRefs.current?.[column.id] ?? null,
                       }}
                     />
                   )}

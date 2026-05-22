@@ -1,6 +1,3 @@
-// oxlint-disable eslint/no-underscore-dangle -- intentional; revisit when refactoring
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
-// oxlint-disable react/no-array-index-key -- intentional; revisit when refactoring
 import * as React from 'react';
 import { useMemo } from 'react';
 import { Popover, PopoverAnchor, PopoverContent } from '../../_ui/popover';
@@ -167,10 +164,12 @@ export const SST_FilterOptionMenu = <TData extends SST_RowData>({
           : (!globalFilterModeOptions || globalFilterModeOptions.includes(filterOption.option)) &&
             ['contains', 'fuzzy', 'startsWith'].includes(filterOption.option),
       ),
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional empty deps: localization, columnDef, globalFilterModeOptions, allowedColumnFilterOptions are all read once when the menu mounts; the menu is short-lived (closes on selection) so capturing them at mount is safe. FOLLOW-UP: stale-closure risk if filter mode options change while the menu is open.
     [],
   );
 
   const handleSelectFilterMode = (option: SST_FilterOption) => {
+    // oxlint-disable-next-line no-underscore-dangle -- _filterFn is the canonical internal property carried over from upstream MRT/TanStack column def shape
     const prevFilterMode = columnDef?._filterFn ?? '';
     if (!header || !column) {
       // global filter mode
@@ -232,6 +231,7 @@ export const SST_FilterOptionMenu = <TData extends SST_RowData>({
     onSelect?.();
   };
 
+  // oxlint-disable-next-line no-underscore-dangle -- _filterFn is the canonical internal property carried over from upstream MRT/TanStack column def shape
   const filterOption = !!header && columnDef ? columnDef._filterFn : globalFilterFn;
 
   return (

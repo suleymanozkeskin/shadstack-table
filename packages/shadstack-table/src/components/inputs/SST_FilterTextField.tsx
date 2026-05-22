@@ -1,27 +1,18 @@
-// oxlint-disable eslint/no-shadow -- intentional; revisit when refactoring
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
-// oxlint-disable react/no-array-index-key -- intentional; revisit when refactoring
 import * as React from 'react';
 import { type ChangeEvent, type MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { Badge } from '../../_ui/badge';
 import { Button } from '../../_ui/button';
 import { Checkbox } from '../../_ui/checkbox';
 import { Input } from '../../_ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '../../_ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../_ui/select';
 import { cn } from '../../lib/utils';
 import { type SST_Header, type SST_RowData, type SST_TableInstance } from '../../types';
 import { getColumnFilterInfo, useDropdownOptions } from '../../utils/column.utils';
+import { debounce } from '../../utils/debounce';
 import { getValueAndLabel, parseFromValuesOrFunc } from '../../utils/utils';
 import { SST_FilterOptionMenu } from '../menus/SST_FilterOptionMenu';
 import { SST_DateFilter } from './SST_DateFilter';
-
-function debounce<F extends (...args: any[]) => void>(fn: F, ms: number) {
-  let timer: ReturnType<typeof setTimeout> | null = null;
-  return (...args: Parameters<F>) => {
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), ms);
-  };
-}
 
 let warnedAutocomplete = false;
 
@@ -135,14 +126,15 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
         : ((column.getFilterValue() as string) ?? ''),
   );
 
+  // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: useCallback wraps a debounce() factory so the debounced timer survives renders. Passing an inline function as the rule suggests would re-bind the timer every render and defeat the purpose.
   const handleChangeDebounced = useCallback(
     debounce(
       (newValue: any) => {
         if (isRangeFilter) {
           column.setFilterValue((old: Array<Date | null | number | string>) => {
-            const newFilterValues = old ?? ['', ''];
-            newFilterValues[rangeFilterIndex as number] = newValue ?? undefined;
-            return newFilterValues;
+            const next = [...(old ?? ['', ''])];
+            next[rangeFilterIndex as number] = newValue ?? undefined;
+            return next;
           });
         } else {
           column.setFilterValue(newValue ?? undefined);
@@ -152,6 +144,11 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
     ),
     [],
   );
+
+  // Clear any pending debounced filter update when the cell unmounts so the
+  // trailing invocation can't call column.setFilterValue against a stale
+  // table instance.
+  useEffect(() => () => handleChangeDebounced.cancel(), [handleChangeDebounced]);
 
   const handleChange = (newValue: any) => {
     setFilterValue(newValue ?? '');
@@ -176,9 +173,9 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
     } else if (isRangeFilter) {
       setFilterValue('');
       column.setFilterValue((old: [string | undefined, string | undefined]) => {
-        const newFilterValues = (Array.isArray(old) && old) || ['', ''];
-        newFilterValues[rangeFilterIndex as number] = undefined;
-        return newFilterValues;
+        const next = [...(Array.isArray(old) ? old : ['', ''])];
+        next[rangeFilterIndex as number] = undefined;
+        return next;
       });
     } else {
       setFilterValue('');
@@ -203,6 +200,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
 
   useEffect(() => {
     if (isMounted.current) {
+      // oxlint-disable-next-line no-shadow -- intentional re-binding: the outer filterValue is local state; this snapshot reads the latest column value to reconcile against
       const filterValue = column.getFilterValue();
       if (filterValue === undefined) {
         handleClear();
@@ -213,6 +211,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
       }
     }
     isMounted.current = true;
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: track column.getFilterValue() identity as the sole reconciliation trigger; handleClear/isRangeFilter/rangeFilterIndex/column are stable per cell-lifetime. FOLLOW-UP: extract the call into a `const externalFilterValue = column.getFilterValue();` to satisfy the complex-expression check.
   }, [column.getFilterValue()]);
 
   if (columnDef.Filter) {
@@ -237,7 +236,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
           `filter${
             currentFilterOption?.charAt(0)?.toUpperCase() + currentFilterOption?.slice(1)
           }` as keyof typeof localization
-        ],
+        ] ?? '',
       )}
     </p>
   ) : null;
@@ -311,7 +310,12 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
           ? 'min-w-[110px]'
           : 'min-w-[90px]'
         : !filterChipLabel
-          ? 'min-w-[120px]'
+          ? // Default text/select filter: shrink with the column rather than
+            // overflowing it. The column cell clips with `overflow: hidden`, so
+            // a hard 120px floor would render the input rounded on the left
+            // and cut off on the right whenever the column is narrower. `w-full`
+            // above still expands the input to the available column width.
+            'min-w-0'
           : 'min-w-fit',
   );
 
@@ -329,6 +333,19 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
   };
 
   const onSelectChange = (newValue: string) => handleChange(newValue);
+
+  const multiSelectArray = Array.isArray(filterValue) ? filterValue : [];
+  const toggleMultiSelectValue = (value: string, checked: boolean) => {
+    const next = checked
+      ? multiSelectArray.includes(value)
+        ? multiSelectArray
+        : [...multiSelectArray, value]
+      : multiSelectArray.filter((v) => v !== value);
+    setFilterValue(next);
+    column.setFilterValue(next.length === 0 ? undefined : next);
+  };
+  const multiSelectTriggerLabel =
+    multiSelectArray.length === 0 ? filterPlaceholder : `${multiSelectArray.length} selected`;
 
   const buttonRefFn = (el: HTMLButtonElement | null) => {
     filterInputRefs.current![`${column.id}-${rangeFilterIndex ?? 0}`] = el as any;
@@ -376,13 +393,65 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
       />
       {endAdornment}
     </div>
-  ) : isSelectFilter || isMultiSelectFilter ? (
+  ) : isMultiSelectFilter ? (
     <div className={wrapperClass}>
       {startAdornment}
-      <Select
-        value={Array.isArray(filterValue) ? filterValue.join(',') : (filterValue as string)}
-        onValueChange={onSelectChange}
-      >
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            ref={buttonRefFn as any}
+            type="button"
+            variant="outline"
+            aria-label={filterPlaceholder}
+            title={filterPlaceholder}
+            className={cn(
+              inputClass,
+              'h-9 justify-start font-normal',
+              multiSelectArray.length === 0 && 'text-muted-foreground',
+            )}
+          >
+            <span className="truncate">{multiSelectTriggerLabel}</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          className="w-[var(--radix-popover-trigger-width)] min-w-[12rem] p-1"
+        >
+          <div className="max-h-64 overflow-y-auto">
+            {dropdownOptions?.map((option) => {
+              const { label, value } = getValueAndLabel(option);
+              const checked = multiSelectArray.includes(value);
+              const itemId = `${column.id}-multi-${value}`;
+              return (
+                <div
+                  key={value}
+                  className="hover:bg-accent flex items-center gap-2 rounded px-2 py-1.5 text-sm"
+                >
+                  <Checkbox
+                    id={itemId}
+                    checked={checked}
+                    onCheckedChange={(next) => toggleMultiSelectValue(value, next === true)}
+                  />
+                  <label htmlFor={itemId} className="flex-1 cursor-pointer truncate">
+                    {label}
+                  </label>
+                  {!columnDef.filterSelectOptions && (
+                    <span className="text-muted-foreground text-xs">
+                      ({facetedUniqueValues.get(value)})
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </PopoverContent>
+      </Popover>
+      {endAdornment}
+    </div>
+  ) : isSelectFilter ? (
+    <div className={wrapperClass}>
+      {startAdornment}
+      <Select value={(filterValue as string) ?? ''} onValueChange={onSelectChange}>
         <SelectTrigger
           ref={inputRefFn as any}
           className={inputClass}
@@ -397,12 +466,6 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
             return (
               <SelectItem key={value} value={value}>
                 <span className="flex items-center gap-2">
-                  {isMultiSelectFilter && (
-                    <Checkbox
-                      checked={((column.getFilterValue() ?? []) as string[]).includes(value)}
-                      className="mr-1"
-                    />
-                  )}
                   {label}
                   {!columnDef.filterSelectOptions && ` (${facetedUniqueValues.get(value)})`}
                 </span>

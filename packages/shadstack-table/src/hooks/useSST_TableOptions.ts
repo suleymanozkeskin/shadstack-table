@@ -1,5 +1,4 @@
-// oxlint-disable react-hooks/exhaustive-deps -- intentional narrow dep array; revisit when refactoring
-import { useId, useMemo } from 'react';
+import { useId, useMemo, useRef } from 'react';
 import {
   getCoreRowModel,
   getExpandedRowModel,
@@ -17,7 +16,7 @@ import { SST_SortingFns } from '../fns/sortingFns';
 import { SST_Default_Icons } from '../icons';
 import { SST_Localization_EN } from '../locales/en';
 import { type SST_DefinedTableOptions, type SST_RowData, type SST_TableOptions } from '../types';
-import { getMRTTheme } from '../utils/style.utils';
+import { getSST_Theme } from '../utils/style.utils';
 
 export const SST_DefaultColumn = {
   filterVariant: 'text',
@@ -88,7 +87,7 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
   enableTopToolbar = true,
   filterFns,
   icons,
-  id = useId(),
+  id,
   layoutMode,
   localization,
   manualFiltering,
@@ -96,6 +95,7 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
   manualPagination,
   manualSorting,
   mrtTheme,
+  theme,
   paginationDisplayMode = 'default',
   positionActionsColumn = 'first',
   positionCreatingRow = 'top',
@@ -110,6 +110,8 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
   sortingFns,
   ...rest
 }: SST_TableOptions<TData>) => {
+  const generatedId = useId();
+  id = id ?? generatedId;
   icons = useMemo(() => ({ ...SST_Default_Icons, ...icons }), [icons]);
   localization = useMemo(
     () => ({
@@ -118,10 +120,19 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
     }),
     [localization],
   );
-  mrtTheme = useMemo(() => getMRTTheme(mrtTheme), [mrtTheme]);
-  aggregationFns = useMemo(() => ({ ...SST_AggregationFns, ...aggregationFns }), []);
-  filterFns = useMemo(() => ({ ...SST_FilterFns, ...filterFns }), []);
-  sortingFns = useMemo(() => ({ ...SST_SortingFns, ...sortingFns }), []);
+  // `theme` is the canonical input; `mrtTheme` remains as a deprecated alias.
+  // The normalized options expose the resolved value on BOTH fields (same
+  // reference) so legacy components reading `options.mrtTheme.<color>` keep
+  // working.
+  const resolvedTheme = useMemo(() => getSST_Theme(theme ?? mrtTheme), [theme, mrtTheme]);
+  //Merge consumer-provided fn maps with built-ins. Previously these
+  //memoized with `[]` and a stable identity, which froze consumer
+  //overrides at the first render. Including the consumer input in the
+  //dep list lets later renders see updated overrides while still
+  //skipping the merge when nothing changed.
+  aggregationFns = useMemo(() => ({ ...SST_AggregationFns, ...aggregationFns }), [aggregationFns]);
+  filterFns = useMemo(() => ({ ...SST_FilterFns, ...filterFns }), [filterFns]);
+  sortingFns = useMemo(() => ({ ...SST_SortingFns, ...sortingFns }), [sortingFns]);
   defaultColumn = useMemo(() => ({ ...SST_DefaultColumn, ...defaultColumn }), [defaultColumn]);
   defaultDisplayColumn = useMemo(
     () => ({
@@ -130,11 +141,19 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
     }),
     [defaultDisplayColumn],
   );
-  //cannot be changed after initialization
-  [enableColumnVirtualization, enableRowVirtualization] = useMemo(
-    () => [enableColumnVirtualization, enableRowVirtualization],
-    [],
-  );
+  //Virtualization mode is captured at mount and intentionally cannot
+  //change afterwards: TanStack Virtual measures DOM nodes in layout
+  //effects and switching between virtualized/non-virtualized rendering
+  //mid-life breaks ref-based measurement (and would require unmounting
+  //the table body entirely). We pin the boolean to its first-render
+  //value via a ref so the empty dep array isn't load-bearing for
+  //correctness.
+  const virtualizationModeRef = useRef<{ col: boolean | undefined; row: boolean | undefined }>({
+    col: enableColumnVirtualization,
+    row: enableRowVirtualization,
+  });
+  enableColumnVirtualization = virtualizationModeRef.current.col;
+  enableRowVirtualization = virtualizationModeRef.current.row;
 
   if (!columnResizeDirection) {
     // TODO: theme-aware styling moved to CSS vars in _ui/styles.css
@@ -228,7 +247,8 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
     manualGrouping,
     manualPagination,
     manualSorting,
-    mrtTheme,
+    theme: resolvedTheme,
+    mrtTheme: resolvedTheme,
     paginationDisplayMode,
     positionActionsColumn,
     positionCreatingRow,

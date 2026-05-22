@@ -1,4 +1,3 @@
-// oxlint-disable react-hooks/exhaustive-deps -- intentional narrow dep array; revisit when refactoring
 import { useMemo, useRef, useState } from 'react';
 import { useReactTable } from '@tanstack/react-table';
 import {
@@ -21,9 +20,11 @@ import {
   type SST_Updater,
 } from '../types';
 import {
+  createPrepareColumnsCache,
   getAllLeafColumnDefs,
   getColumnId,
   getDefaultColumnFilterFn,
+  type PrepareColumnsCache,
   prepareColumns,
 } from '../utils/column.utils';
 import {
@@ -67,9 +68,14 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
   const tableHeadRef = useRef<HTMLTableSectionElement>(null);
   const tableFooterRef = useRef<HTMLTableSectionElement>(null);
 
-  //transform initial state with proper column order
+  //transform initial state with proper column order — derived immutably
+  //from the consumer-provided options. We only need to derive this once
+  //per mount (it's the *initial* state); the empty dep array is the
+  //correct shape here.
   const initialState: Partial<SST_TableState<TData>> = useMemo(() => {
-    const initState = definedTableOptions.initialState ?? {};
+    const initState: Partial<SST_TableState<TData>> = {
+      ...(definedTableOptions.initialState ?? {}),
+    };
     initState.columnOrder =
       initState.columnOrder ??
       getDefaultColumnOrderIds({
@@ -81,9 +87,10 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
       } as SST_StatefulTableOptions<TData>);
     initState.globalFilterFn = definedTableOptions.globalFilterFn ?? 'fuzzy';
     return initState;
+    // initialState is intentionally captured once at mount — re-deriving
+    // it on every render would defeat the "initial state" contract.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  definedTableOptions.initialState = initialState;
 
   const [actionCell, setActionCell] = useState<SST_Cell<TData> | null>(
     initialState.actionCell ?? null,
@@ -150,7 +157,11 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
     initialState?.showToolbarDropZone ?? false,
   );
 
-  definedTableOptions.state = {
+  //Derive a fresh stateful options bag (spread + override) rather than
+  //mutating the consumer-owned `definedTableOptions` in place. State
+  //provided directly on `definedTableOptions` still wins via the spread
+  //order — same precedence as before.
+  const mergedState = {
     actionCell,
     columnFilterFns,
     columnOrder,
@@ -174,17 +185,27 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
     ...definedTableOptions.state,
   };
 
-  //The table options now include all state needed to help determine column visibility and order logic
-  const statefulTableOptions = definedTableOptions as SST_StatefulTableOptions<TData>;
+  //The table options now include all state needed to help determine
+  //column visibility and order logic. We treat this as a new object so
+  //downstream code never sees the consumer's options mutated.
+  let statefulTableOptions: SST_StatefulTableOptions<TData> = {
+    ...definedTableOptions,
+    initialState,
+    state: mergedState,
+  } as SST_StatefulTableOptions<TData>;
 
   //don't recompute columnDefs while resizing column or dragging column/row
   const columnDefsRef = useRef<SST_ColumnDef<TData>[]>([]);
-  statefulTableOptions.columns =
+  //WeakMap cache that preserves enriched column-def identity across
+  //renders so TanStack's column-def-keyed memoization stays warm.
+  const prepareColumnsCacheRef = useRef<PrepareColumnsCache<TData>>(createPrepareColumnsCache());
+  const preparedColumns =
     statefulTableOptions.state.columnSizingInfo.isResizingColumn ||
     statefulTableOptions.state.draggingColumn ||
     statefulTableOptions.state.draggingRow
       ? columnDefsRef.current
       : prepareColumns({
+          cache: prepareColumnsCacheRef.current,
           columnDefs: [
             ...([
               showRowPinningColumn(statefulTableOptions) &&
@@ -208,10 +229,10 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
           ],
           tableOptions: statefulTableOptions,
         });
-  columnDefsRef.current = statefulTableOptions.columns;
+  columnDefsRef.current = preparedColumns;
 
   //if loading, generate blank rows to show skeleton loaders
-  statefulTableOptions.data = useMemo(
+  const preparedData = useMemo(
     () =>
       (statefulTableOptions.state.isLoading || statefulTableOptions.state.showSkeletons) &&
       !statefulTableOptions.data.length
@@ -219,18 +240,26 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
             () =>
               Object.assign(
                 {},
-                ...getAllLeafColumnDefs(statefulTableOptions.columns).map((col) => ({
+                ...getAllLeafColumnDefs(preparedColumns).map((col) => ({
                   [getColumnId(col)]: null,
                 })),
               ),
           )
         : statefulTableOptions.data,
     [
+      preparedColumns,
       statefulTableOptions.data,
       statefulTableOptions.state.isLoading,
+      statefulTableOptions.state.pagination.pageSize,
       statefulTableOptions.state.showSkeletons,
     ],
   );
+
+  statefulTableOptions = {
+    ...statefulTableOptions,
+    columns: preparedColumns,
+    data: preparedData,
+  };
 
   //@ts-expect-error
   const table = useReactTable({

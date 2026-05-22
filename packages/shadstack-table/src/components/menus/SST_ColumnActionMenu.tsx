@@ -1,4 +1,3 @@
-// oxlint-disable eslint/no-underscore-dangle -- intentional; revisit when refactoring
 import * as React from 'react';
 import { type MouseEvent, useState } from 'react';
 import { Popover, PopoverAnchor, PopoverContent } from '../../_ui/popover';
@@ -110,6 +109,7 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
   const handleClearFilter = () => {
     column.setFilterValue(undefined);
     setAnchorEl(null);
+    // oxlint-disable-next-line no-underscore-dangle -- _filterFn is the canonical internal property carried over from upstream MRT/TanStack column def shape
     if (['empty', 'notEmpty'].includes(columnDef._filterFn)) {
       setColumnFilterFns((prev) => ({
         ...prev,

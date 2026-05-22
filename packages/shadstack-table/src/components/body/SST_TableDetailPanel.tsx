@@ -64,7 +64,7 @@ export const SST_TableDetailPanel = <TData extends SST_RowData>({
 
   return (
     <tr
-      className={cn('Mui-TableBodyCell-DetailPanel', isGrid && 'flex')}
+      className={cn('SST-TableBodyCell-DetailPanel', isGrid && 'flex')}
       data-index={renderDetailPanel ? staticRowIndex * 2 + 1 : staticRowIndex}
       ref={(node: HTMLTableRowElement | null) => {
         if (node) {
@@ -82,7 +82,7 @@ export const SST_TableDetailPanel = <TData extends SST_RowData>({
     >
       <td
         className={cn(
-          'Mui-TableBodyCell-DetailPanel w-full',
+          'SST-TableBodyCell-DetailPanel w-full',
           isGrid && 'flex',
           !row.getIsExpanded() && 'border-b-0',
           className,

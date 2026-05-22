@@ -1,4 +1,3 @@
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
 import * as React from 'react';
 import { memo, useMemo } from 'react';
 import { type VirtualItem } from '@tanstack/react-virtual';
@@ -64,6 +63,7 @@ export const SST_TableBody = <TData extends SST_RowData>({
       if (row.getIsPinned()) ids.push(row.id);
     }
     return ids;
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: getRowModel() is a stable accessor from the TanStack table instance; using its `.rows` snapshot as a dep tracks row-model identity changes without retaining a getRowModel reference. FOLLOW-UP: extract `const rowModelRows = getRowModel().rows` to satisfy the complex-expression rule.
   }, [rowPinning, getRowModel().rows]);
 
   const rows = useSST_Rows(table);
@@ -198,7 +198,13 @@ export const SST_TableBody = <TData extends SST_RowData>({
   );
 };
 
+// Memoizes the body while a column is being resized. The previous
+// comparator skipped re-renders whenever `data` was reference-stable, which
+// also swallowed selection/filter/pagination updates whose row arrays
+// didn't change identity. Now the memo skips *only* while the user is
+// actively dragging a column resize handle — every other state change
+// flows through unimpeded.
 export const Memo_SST_TableBody = memo(
   SST_TableBody,
-  (prev, next) => prev.table.options.data === next.table.options.data,
+  (_prev, next) => !!next.table.getState().columnSizingInfo.isResizingColumn,
 ) as typeof SST_TableBody;

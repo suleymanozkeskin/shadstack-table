@@ -4,6 +4,53 @@ All notable changes to `shadstack-table` are recorded here. The format is based 
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-05-22
+
+A maintenance release that locks in the audit-driven hardening work shipped during May 2026. No new features; the highlights are robustness fixes (clipboard reliability, full-screen unmount cleanup, debounced filter cancellation on unmount, immutable option derivation), a deeper test base (39 → 56 unit tests plus axe a11y smoke, pinning/virtualization/RTL coverage, render benchmarks, and Playwright smoke), CI gates wired to the `maintenance` branch with a size budget on the published build, and one breaking change in `highlightWords`. Internal: `types.ts` (1,215 lines) split into 15 ownership-scoped modules, lint suppressions audited and tightened, hook patterns redesigned. Full per-PR detail across `#35–#54` is on the repo.
+
+### Added
+
+- `onCopyError(error, context)` option on `SST_TableOptions`. The library no longer logs to console on clipboard failure; consumers wire their own toast/log via this callback. `context.source` identifies which copy path triggered: `'button'`, `'keyboard'`, or `'cell-menu'`.
+- Optional `create?: string` field on `SST_Localization`. Used by the row-create modal title; falls back to the literal `'Create'` for locales that haven't opted in. The English locale ships with it.
+- Optional `theme` option as the non-deprecated name for `mrtTheme`. Both still resolve.
+- `createSSTColumnHelper` as the non-deprecated name for `createMRTColumnHelper`. Both still resolve.
+- First-party Starlight docs site at `apps/docs/` with `Migrating from material-react-table` and `API stability` guides.
+- Bundle gzip-size budget enforced by `verify:package` (ESM ≤ 60 kB, CJS ≤ 62 kB, CSS ≤ 3 kB, per-locale ≤ 3 kB, locale dir ≤ 220 kB raw).
+- Playwright smoke for the playground (`apps/e2e/`) and render benchmarks at 1k/10k/50k rows (`apps/bench/`, workflow_dispatch).
+- Axe a11y smoke tests covering basic render, the edit modal, the multi-select filter popover, and the loading overlay.
+
+### Changed
+
+- `useSST_TableInstance` now derives table options immutably via spread instead of mutating the consumer-provided options object in place. `prepareColumns` produces a fresh array; consumer column-def references stay untouched, with object identity preserved across renders via an internal `WeakMap` cache.
+- `useSST_TableOptions` no longer freezes consumer-provided `aggregationFns` / `filterFns` / `sortingFns` at first render; overrides on later renders now propagate. Virtualization mode is still pinned at mount but via a `useRef` capture rather than an empty dep array.
+- `SST_TableContainer` measures toolbar height via a single `ResizeObserver` per container with a value-change guard, replacing a depless layout effect that ran on every render.
+- `SST_TableHeadCellSortLabel` is now a real `<button type="button">` with native keyboard activation (Enter / Space) and a `focus-visible` ring. Was previously a `<span>` with `onClick` and an `aria-label`, which tripped `aria-prohibited-attr`.
+- Row-create modal renders `localization.create ?? 'Create'` instead of unconditionally rendering `localization.edit`.
+- Default column-filter input wrapper switched from `min-w-[120px]` to `min-w-0`, so narrow columns shrink their filter inputs instead of overflowing and being clipped by the column boundary.
+- `types.ts` (1,215 lines) split into 15 ownership-scoped modules under `src/types/`. Public import path `from 'shadstack-table'` is unchanged.
+
+### Fixed
+
+- Full-screen mode now restores `document.body.style.height` on unmount, not only on `isFullScreen → false`. Previously, unmounting the table while in full-screen left the host page stuck at `100dvh`.
+- Debounced column-filter and global-filter inputs cancel their pending timers on unmount via a shared `debounce().cancel()` helper. The trailing invocation can no longer call `column.setFilterValue` / `setGlobalFilter` against a stale table.
+- Sort-label `aria-label` stays populated while the table is in the loading state; previously it was set to an empty string and tripped axe's `button-name` rule.
+- Clipboard copy is now properly hardened across all three call sites (`SST_CopyButton`, keyboard `Cmd/Ctrl+C`, cell-action menu). The "Copied" tooltip only fires on confirmed success.
+- A handful of fragile hook patterns flagged by the audit redesigned: skeleton-width ref guard in `SST_TableBodyCell`, dropped a no-op `useMemo` keyed on `ref.current` in `SST_CellActionMenu`, removed unnecessary `useMemo` deps that triggered stale recomputes, replaced an unsafe `?.[id]!` non-null assertion in the grab-handle ref with a safe `?? null` fallback.
+
+### Removed
+
+- `highlightWords` no longer recognizes the `/pattern/flags` (or `~pattern~`, `@pattern@`, etc.) delimiter shorthand for passing a raw regular expression in the `query` string. All input is escaped before being wrapped in the search regex, eliminating a client-side ReDoS footgun where any consumer accepting filter input from end-users was effectively passing it to `new RegExp()` unchecked. Plain-string queries continue to work identically; if you were relying on the delimiter shorthand to filter with a custom pattern, build the matching upstream and feed the literal terms in instead. **Breaking pre-1.0 refinement.**
+- Dead `SST_VirtualizerOptions` type removed from the public surface.
+
+### Documentation
+
+- README files trimmed: package README 185 → 79 lines (npm landing surface), root README rebalanced for repo browsers. Long-form CSS setup, MRT migration steps, and API stability tiers moved to dedicated docs pages.
+- Corrected a long-standing claim that listed column drag-reorder as deferred. The feature has actually shipped since 0.1.0 (`enableColumnOrdering` + `SST_TableHeadCellGrabHandle`); the documentation was the only thing wrong.
+
+### Known limitations
+
+- Public types intentionally contain `any` in a few places where a designed generic isn't in place yet: `SST_RowData = Record<string, any>`, the `columns` array on `SST_TableOptions`, and the edit-value callback payloads. A generic redesign is planned for a later minor.
+
 ## [0.1.6] — 2026-05-18
 
 Fixes a packaging bug: `dist/index.{js,cjs}` imported 21 packages that were marked external in the rollup config but never declared in `package.json`. They only resolved when the consumer's `node_modules` happened to contain them transitively — a clean install of just `shadstack-table` broke at runtime.
@@ -165,5 +212,6 @@ First public pre-release. The full `material-react-table` feature surface is por
 - Column drag-reorder.
 - `filterVariant: 'time' | 'datetime' | 'time-range' | 'datetime-range'` — native `<input>` is used until a shadcn time picker recipe lands.
 
+[0.2.0]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.6...v0.2.0
 [0.1.1]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/suleymanozkeskin/shadstack-table/releases/tag/v0.1.0

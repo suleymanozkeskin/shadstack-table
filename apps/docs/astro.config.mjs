@@ -41,6 +41,8 @@ export default defineConfig({
             { label: 'Display columns', slug: 'guides/display-columns' },
             { label: 'Localization', slug: 'guides/localization' },
             { label: 'Memoize components', slug: 'guides/memoize-components' },
+            { label: 'Migrating from material-react-table', slug: 'guides/migrating-from-mrt' },
+            { label: 'API stability', slug: 'guides/api-stability' },
           ],
         },
       ],
