@@ -301,9 +301,12 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
                     <SST_TableHeadCellGrabHandle
                       column={column}
                       table={table}
+                      // Invariant: prop type is `RefObject<... | null>`, so passing an
+                      // explicit `null` when the parent ref entry hasn't attached yet
+                      // is type-safe; the grab handle reads `.current` only inside
+                      // event handlers (post-attach), so it tolerates this gracefully.
                       tableHeadCellRef={{
-                        // oxlint-disable-next-line typescript/no-non-null-asserted-optional-chain -- by the time SST_TableHeadCellGrabHandle mounts, the parent <th> ref has been assigned and the entry exists for this column.id. FOLLOW-UP: refactor to use a stable ref callback that doesn't require this.
-                        current: tableHeadCellRefs.current?.[column.id]!,
+                        current: tableHeadCellRefs.current?.[column.id] ?? null,
                       }}
                     />
                   )}
