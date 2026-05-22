@@ -5,16 +5,9 @@ import { Collapsible, CollapsibleContent } from '../../_ui/collapsible';
 import { Input } from '../../_ui/input';
 import { cn } from '../../lib/utils';
 import { type SST_RowData, type SST_TableInstance } from '../../types';
+import { debounce } from '../../utils/debounce';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 import { SST_FilterOptionMenu } from '../menus/SST_FilterOptionMenu';
-
-function debounce<F extends (...args: any[]) => void>(fn: F, ms: number) {
-  let timer: ReturnType<typeof setTimeout> | null = null;
-  return (...args: Parameters<F>) => {
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), ms);
-  };
-}
 
 export interface SST_GlobalFilterTextFieldProps<
   TData extends SST_RowData,
@@ -62,6 +55,10 @@ export const SST_GlobalFilterTextField = <TData extends SST_RowData>({
     ),
     [],
   );
+
+  // Clear any pending debounced search update when the toolbar unmounts so the
+  // trailing invocation can't call setGlobalFilter against a stale table.
+  useEffect(() => () => handleChangeDebounced.cancel(), [handleChangeDebounced]);
 
   const applyGlobalFilterValue = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchValue(event.target.value);

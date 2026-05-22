@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SST_Table } from './SST_Table';
 import { SST_TableLoadingOverlay } from './SST_TableLoadingOverlay';
 import { cn } from '../../lib/utils';
@@ -7,8 +7,6 @@ import { type SST_RowData, type SST_TableInstance } from '../../types';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 import { SST_CellActionMenu } from '../menus/SST_CellActionMenu';
 import { SST_EditRowModal } from '../modals/SST_EditRowModal';
-
-const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 export interface SST_TableContainerProps<
   TData extends SST_RowData,
@@ -48,15 +46,36 @@ export const SST_TableContainer = <TData extends SST_RowData>({
     ...rest,
   };
 
-  useIsomorphicLayoutEffect(() => {
-    const topToolbarHeight =
-      typeof document !== 'undefined' ? (topToolbarRef.current?.offsetHeight ?? 0) : 0;
+  // Toolbar height drives `maxHeight` for full-screen + sticky-header layouts.
+  // Use a single ResizeObserver per container instead of measuring on every
+  // render: the previous depless layout effect ran on every re-render even when
+  // toolbar size hadn't changed. We measure once on mount and then let the
+  // observer fire only when one of the toolbars actually resizes (responsive
+  // breakpoints, dynamic chips, font load, etc.). `setTotalToolbarHeight` only
+  // commits when the summed value changes, so observer noise doesn't bump
+  // React state.
+  useEffect(() => {
+    const measure = () => {
+      const top = topToolbarRef.current?.offsetHeight ?? 0;
+      const bottom = bottomToolbarRef?.current?.offsetHeight ?? 0;
+      const next = top + bottom;
+      setTotalToolbarHeight((prev) => (prev === next ? prev : next));
+    };
 
-    const bottomToolbarHeight =
-      typeof document !== 'undefined' ? (bottomToolbarRef?.current?.offsetHeight ?? 0) : 0;
+    measure();
 
-    setTotalToolbarHeight(topToolbarHeight + bottomToolbarHeight);
-  });
+    // SSR / older browsers without ResizeObserver — fall back to the one-time
+    // mount measurement above; the toolbar geometry is rarely dynamic in
+    // those environments.
+    if (typeof ResizeObserver === 'undefined') return;
+
+    const ro = new ResizeObserver(measure);
+    if (topToolbarRef.current) ro.observe(topToolbarRef.current);
+    if (bottomToolbarRef?.current) ro.observe(bottomToolbarRef.current);
+
+    return () => ro.disconnect();
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: refs are stable across renders and the observer reacts to dynamic content size; depending on the ref objects themselves would not change observer behavior.
+  }, []);
 
   const createModalOpen = createDisplayMode === 'modal' && creatingRow;
   const editModalOpen = editDisplayMode === 'modal' && editingRow;

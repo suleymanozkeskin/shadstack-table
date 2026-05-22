@@ -9,17 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { cn } from '../../lib/utils';
 import { type SST_Header, type SST_RowData, type SST_TableInstance } from '../../types';
 import { getColumnFilterInfo, useDropdownOptions } from '../../utils/column.utils';
+import { debounce } from '../../utils/debounce';
 import { getValueAndLabel, parseFromValuesOrFunc } from '../../utils/utils';
 import { SST_FilterOptionMenu } from '../menus/SST_FilterOptionMenu';
 import { SST_DateFilter } from './SST_DateFilter';
-
-function debounce<F extends (...args: any[]) => void>(fn: F, ms: number) {
-  let timer: ReturnType<typeof setTimeout> | null = null;
-  return (...args: Parameters<F>) => {
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), ms);
-  };
-}
 
 let warnedAutocomplete = false;
 
@@ -151,6 +144,11 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
     ),
     [],
   );
+
+  // Clear any pending debounced filter update when the cell unmounts so the
+  // trailing invocation can't call column.setFilterValue against a stale
+  // table instance.
+  useEffect(() => () => handleChangeDebounced.cancel(), [handleChangeDebounced]);
 
   const handleChange = (newValue: any) => {
     setFilterValue(newValue ?? '');
