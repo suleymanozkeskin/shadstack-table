@@ -1,4 +1,3 @@
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
 import * as React from 'react';
 import { Popover, PopoverAnchor, PopoverContent } from '../../_ui/popover';
 import { SST_ActionMenuItem } from './SST_ActionMenuItem';
@@ -35,6 +34,7 @@ export const SST_CellActionMenu = <TData extends SST_RowData>({
   const cell = actionCell!;
   const virtualRef = React.useMemo<React.RefObject<HTMLElement | null> | undefined>(
     () => (actionCellRef.current ? { current: actionCellRef.current } : undefined),
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: re-evaluates whenever the cell-action ref attaches/detaches. Note: ref.current mutations don't trigger recompute on their own — render cycles caused by other state (actionCell) carry this memo along. FOLLOW-UP: this is fragile; consider lifting the anchor target into state so the recompute is deterministic.
     [actionCellRef.current],
   );
 

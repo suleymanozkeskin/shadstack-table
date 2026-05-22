@@ -1,5 +1,3 @@
-// oxlint-disable jsx-a11y/click-events-have-key-events -- intentional; revisit when refactoring
-// oxlint-disable jsx-a11y/prefer-tag-over-role -- intentional; revisit when refactoring
 import * as React from 'react';
 import { type MouseEvent, type ReactNode } from 'react';
 import { Separator } from '../../_ui/separator';
@@ -53,7 +51,9 @@ export const SST_ActionMenuItem = <TData extends SST_RowData>({
           {label}
         </span>
         {onOpenSubMenu && (
+          /* oxlint-disable-next-line jsx-a11y/click-events-have-key-events -- cannot use <button> (would nest inside parent <button>, invalid HTML); parent <button> already owns keyboard activation, this span is just the visual hover affordance */
           <span
+            /* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- cannot use <button> here (would nest inside parent <button>) */
             role="button"
             tabIndex={-1}
             onClick={onOpenSubMenu}
