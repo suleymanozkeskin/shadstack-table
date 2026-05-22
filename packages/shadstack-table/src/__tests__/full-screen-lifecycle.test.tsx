@@ -39,15 +39,26 @@ const installHeightWriteSpy = () => {
   return { writes, restore };
 };
 
+// A deliberately non-empty initial height — proves the cleanup restores the
+// value captured at mount, not just falls back to '' (the previous test's
+// default, which would mask a regression that always wrote '' regardless of
+// what initialBodyHeight.current held).
+const INITIAL_BODY_HEIGHT = '42px';
+
 describe('full-screen lifecycle — body height cleanup', () => {
   let spy: ReturnType<typeof installHeightWriteSpy>;
 
   beforeEach(() => {
+    // Set the initial value BEFORE installing the spy so the underlying
+    // store accepts '42px' (valid CSS) and the useSST_Effects mount-time
+    // ref captures it via the unspied getter.
+    document.body.style.height = INITIAL_BODY_HEIGHT;
     spy = installHeightWriteSpy();
   });
 
   afterEach(() => {
     spy.restore();
+    document.body.style.height = '';
   });
 
   it('restores body height when toggling out of full-screen', async () => {
@@ -57,15 +68,17 @@ describe('full-screen lifecycle — body height cleanup', () => {
     const toggle = screen.getByRole('button', { name: /toggle full screen/i });
 
     await user.click(toggle);
-    // Entering FS: effect body sets '100dvh'
+    // Entering FS: effect body writes '100dvh'.
     expect(spy.writes).toContain('100dvh');
 
     spy.writes.length = 0;
 
     await user.click(toggle);
-    // Exiting FS: cleanup writes back the captured initial body height
-    // (empty string in jsdom/happy-dom by default).
-    expect(spy.writes).toContain('');
+    // Exiting FS: cleanup writes the captured initial body height back —
+    // here '42px', not the empty-string fallback. This is what proves the
+    // production code reads initialBodyHeight.current rather than blindly
+    // resetting to ''.
+    expect(spy.writes).toContain(INITIAL_BODY_HEIGHT);
   });
 
   it('restores body height when the table unmounts while still in full-screen', async () => {
@@ -79,8 +92,8 @@ describe('full-screen lifecycle — body height cleanup', () => {
     unmount();
 
     // The unmount-while-FS cleanup is exactly what PR #50 added. Without it
-    // the host page is stuck at 100dvh after the table component is gone.
-    expect(spy.writes).toContain('');
+    // the host page would be stuck at 100dvh after the table is gone.
+    expect(spy.writes).toContain(INITIAL_BODY_HEIGHT);
   });
 
   it('does not touch body height when full-screen is never entered', () => {

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { ShadStackTable } from '../components/ShadStackTable';
 import { people, personColumns } from './fixtures';
 
@@ -43,9 +43,19 @@ describe('ShadStackTable — editing (cell mode)', () => {
     await user.clear(input);
     await user.type(input, 'Augusta');
 
-    // Enter calls input.blur(); commitEditOnBlur writes the value into the
-    // row's value cache and clears the editing cell.
+    // Two assertions stacked here:
+    //   (1) Enter must wire through to input.blur() — that's the only
+    //       contract handleEnterKeyDown has. Spying on the instance method
+    //       proves that without depending on the downstream React onBlur
+    //       firing. If a future refactor stopped calling input.blur(),
+    //       fireEvent.blur(input) below would still mask the regression.
+    //   (2) The commit itself is observed via the DOM transition after
+    //       fireEvent.blur — happy-dom doesn't always dispatch React's
+    //       onBlur from a native input.blur() call, so we trigger the
+    //       blur event explicitly to exercise commitEditOnBlur.
+    const blurSpy = vi.spyOn(input, 'blur');
     fireEvent.keyDown(input, { key: 'Enter' });
+    expect(blurSpy).toHaveBeenCalledTimes(1);
     fireEvent.blur(input);
 
     // After commit the editable input is gone and the cell shows the new value.
