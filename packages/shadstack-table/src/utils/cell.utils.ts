@@ -84,7 +84,7 @@ export const cellKeyboardShortcuts = <TData extends SST_RowData = SST_RowData>({
       getSST_RowSelectionHandler({
         row: cell.row,
         table,
-        //@ts-expect-error
+        // @ts-expect-error -- event.target on a synthetic React keyboard event is typed as EventTarget; we know it's an Element with data-index here because this branch only fires from sst-row-select cells
         staticRowIndex: +event.target.getAttribute('data-index'),
       })(event as any);
     } else if (header?.column?.id === 'sst-row-select' && table.options.enableSelectAll) {
