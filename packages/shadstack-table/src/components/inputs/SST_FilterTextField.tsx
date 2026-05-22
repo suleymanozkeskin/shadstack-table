@@ -1,6 +1,3 @@
-// oxlint-disable eslint/no-shadow -- intentional; revisit when refactoring
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
-// oxlint-disable react/no-array-index-key -- intentional; revisit when refactoring
 import * as React from 'react';
 import { type ChangeEvent, type MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { Badge } from '../../_ui/badge';
@@ -136,6 +133,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
         : ((column.getFilterValue() as string) ?? ''),
   );
 
+  // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: useCallback wraps a debounce() factory so the debounced timer survives renders. Passing an inline function as the rule suggests would re-bind the timer every render and defeat the purpose.
   const handleChangeDebounced = useCallback(
     debounce(
       (newValue: any) => {
@@ -204,6 +202,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
 
   useEffect(() => {
     if (isMounted.current) {
+      // oxlint-disable-next-line no-shadow -- intentional re-binding: the outer filterValue is local state; this snapshot reads the latest column value to reconcile against
       const filterValue = column.getFilterValue();
       if (filterValue === undefined) {
         handleClear();
@@ -214,6 +213,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
       }
     }
     isMounted.current = true;
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: track column.getFilterValue() identity as the sole reconciliation trigger; handleClear/isRangeFilter/rangeFilterIndex/column are stable per cell-lifetime. FOLLOW-UP: extract the call into a `const externalFilterValue = column.getFilterValue();` to satisfy the complex-expression check.
   }, [column.getFilterValue()]);
 
   if (columnDef.Filter) {

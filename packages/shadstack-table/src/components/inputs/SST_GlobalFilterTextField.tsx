@@ -1,4 +1,3 @@
-// oxlint-disable react-hooks/exhaustive-deps -- intentional; revisit when refactoring
 import * as React from 'react';
 import { type ChangeEvent, type MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '../../_ui/button';
@@ -53,6 +52,7 @@ export const SST_GlobalFilterTextField = <TData extends SST_RowData>({
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [searchValue, setSearchValue] = useState(globalFilter ?? '');
 
+  // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: useCallback wraps a debounce() factory so the debounced timer survives renders. Passing an inline function as the rule suggests would re-bind the timer every keystroke.
   const handleChangeDebounced = useCallback(
     debounce(
       (newValue: string) => {
@@ -86,6 +86,7 @@ export const SST_GlobalFilterTextField = <TData extends SST_RowData>({
       }
     }
     isMounted.current = true;
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: only re-sync local state when the external globalFilter identity changes. handleClear is stable across renders by construction (no captured render-dependent state) and including it would loop.
   }, [globalFilter]);
 
   return (
