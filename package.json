@@ -20,6 +20,7 @@
     "test": "bun run --filter=shadstack-table test",
     "test:coverage": "bun run --filter=shadstack-table test:coverage",
     "verify:package": "bun run --filter=shadstack-table build && bun run --filter=consumer-fixture verify:package",
+    "bench": "bun run --filter=bench bench",
     "prepare": "husky"
   },
   "dependencies": {
