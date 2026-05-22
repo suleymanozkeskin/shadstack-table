@@ -6,14 +6,13 @@ import { ShadStackTable } from '../components/ShadStackTable';
 import { people, personColumns } from './fixtures';
 
 // WCAG 2.1 A + AA scope — see comment in a11y-basic-table.test.tsx for the
-// rationale behind the two disabled rules.
+// rationale behind the disabled Radix focus-guard rule.
 const axeOptions = {
   runOnly: {
     type: 'tag' as const,
     values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'],
   },
   rules: {
-    'aria-prohibited-attr': { enabled: false },
     'aria-hidden-focus': { enabled: false },
   },
 };

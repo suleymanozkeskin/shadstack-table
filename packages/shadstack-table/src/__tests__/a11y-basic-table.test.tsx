@@ -8,22 +8,20 @@ import { people, personColumns } from './fixtures';
 // the "best-practice" rule set carries noise that's not actionable for a
 // library at this layer (e.g. region landmarks on isolated component renders).
 //
-// Two rules are disabled at the suite level and tracked as follow-ups in the
-// Phase 4 PR body:
-//   - aria-prohibited-attr: SST_TableHeadCellSortLabel renders an interactive
-//     <span aria-label="Sort by ..."> without role="button". Fixing it requires
-//     converting the wrapper to a button (or adding role+keyboard handlers),
-//     out of scope for this gate-only PR.
+// One rule stays disabled at the suite level:
 //   - aria-hidden-focus: Radix Popover/Dialog inject focus-guard <span>s with
 //     tabindex="0" + aria-hidden="true". This is upstream Radix behavior and
 //     a widely-acknowledged axe false positive for that pattern.
+//
+// (aria-prohibited-attr was previously disabled for SST_TableHeadCellSortLabel
+// — the interactive <span> was converted to a <button> in the 0.2.0 cycle, so
+// the rule runs again on every render.)
 const axeOptions = {
   runOnly: {
     type: 'tag' as const,
     values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'],
   },
   rules: {
-    'aria-prohibited-attr': { enabled: false },
     'aria-hidden-focus': { enabled: false },
   },
 };
