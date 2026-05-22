@@ -74,23 +74,21 @@ const regexpQuery = ({
   return `(${matchExactly ? escapedTerms : termsToRegExpString(escapedTerms)})`;
 };
 
+/**
+ * Builds a case-insensitive `RegExp` from the search terms.
+ *
+ * All input is escaped before being wrapped in the search pattern; no special
+ * delimiter syntax (e.g. `/foo/i`) is recognized. This avoids accepting
+ * user-supplied regular expressions, which would be a client-side ReDoS
+ * footgun.
+ */
 const buildRegexp = ({
   matchExactly = false,
   terms,
 }: {
   matchExactly?: boolean;
   terms: string;
-}): RegExp => {
-  try {
-    const fromString = /^([/~@;%#'])(.*?)\1([gimsuy]*)$/.exec(terms);
-    if (fromString) {
-      return new RegExp(fromString[2]!, fromString[3]);
-    }
-    return new RegExp(regexpQuery({ matchExactly, terms }), 'ig');
-  } catch {
-    throw new TypeError('Expected terms to be either a string or a RegExp!');
-  }
-};
+}): RegExp => new RegExp(regexpQuery({ matchExactly, terms }), 'ig');
 
 const HEX = (() => {
   let idx = 36;

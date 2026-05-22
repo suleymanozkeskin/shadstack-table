@@ -4,6 +4,10 @@ All notable changes to `shadstack-table` are recorded here. The format is based 
 
 ## [Unreleased]
 
+### Removed
+
+- `highlightWords` no longer recognizes the `/pattern/flags` (or `~pattern~`, `@pattern@`, etc.) delimiter shorthand for passing a raw regular expression in the `query` string. All input is escaped before being wrapped in the search regex, eliminating a client-side ReDoS footgun where any consumer accepting filter input from end-users was effectively passing it to `new RegExp()` unchecked. Plain-string queries continue to work identically; if you were relying on the delimiter shorthand to filter with a custom pattern, build the matching upstream and feed the literal terms in instead.
+
 ## [0.1.6] — 2026-05-18
 
 Fixes a packaging bug: `dist/index.{js,cjs}` imported 21 packages that were marked external in the rollup config but never declared in `package.json`. They only resolved when the consumer's `node_modules` happened to contain them transitively — a clean install of just `shadstack-table` broke at runtime.
