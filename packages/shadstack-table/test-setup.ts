@@ -1,5 +1,7 @@
 // oxlint-disable-next-line no-unassigned-import -- side-effect import: extends Vitest's expect with jest-dom matchers
 import '@testing-library/jest-dom/vitest';
+// oxlint-disable-next-line no-unassigned-import -- side-effect import: extends Vitest's expect with vitest-axe matchers (toHaveNoViolations)
+import 'vitest-axe/extend-expect';
 import { cleanup } from '@testing-library/react';
 import { afterEach } from 'vitest';
 

@@ -48,7 +48,7 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
       mrtTheme: { menuBackgroundColor },
     },
   } = table;
-  const { columnOrder, columnPinning, density } = getState();
+  const { columnOrder, density } = getState();
   const virtualRef = useMemo<React.RefObject<HTMLElement | null> | undefined>(
     () => (anchorEl ? { current: anchorEl } : undefined),
     [anchorEl],
@@ -77,10 +77,9 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
       ].filter(Boolean);
     }
     return columns;
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: snapshot the row-model column accessors as deps so identity changes (re-sort/re-filter) re-fire the memo. FOLLOW-UP: extract each accessor call to a const to silence the complex-expression rule; also verify whether columnPinning is still needed (currently flagged as unnecessary).
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: snapshot the row-model column accessors as deps so identity changes (re-sort/re-filter) re-fire the memo.
   }, [
     columnOrder,
-    columnPinning,
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional accessor snapshot, see above
     getAllColumns(),
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional accessor snapshot, see above

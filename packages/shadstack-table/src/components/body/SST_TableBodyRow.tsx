@@ -66,7 +66,6 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
     editingRow,
     hoveredRow,
     isFullScreen,
-    rowPinning,
   } = getState();
 
   const visibleCells = row.getVisibleCells();
@@ -96,8 +95,8 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
     )
       return [];
     return [[...pinnedRowIds].reverse().indexOf(row.id), pinnedRowIds.indexOf(row.id)];
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- rowPinning kept as a coarse "pinning state changed" signal that flows from the table state; enableRowPinning / rowPinningDisplayMode are per-instance options that don't change at runtime. FOLLOW-UP: rowPinning dep is technically unnecessary now; verify and prune.
-  }, [pinnedRowIds, rowPinning]);
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- enableRowPinning / rowPinningDisplayMode are per-instance options that don't change at runtime; row is intentionally read by id only when pinnedRowIds identity changes.
+  }, [pinnedRowIds]);
 
   const tableHeadHeight =
     ((enableStickyHeader || isFullScreen) && tableHeadRef.current?.clientHeight) || 0;
