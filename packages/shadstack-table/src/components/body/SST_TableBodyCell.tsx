@@ -6,6 +6,7 @@ import {
   memo,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { Skeleton } from '../../_ui/skeleton';
@@ -92,16 +93,19 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
   });
 
   const [skeletonWidth, setSkeletonWidth] = useState(100);
+  // Invariant: skeleton width is measured exactly once per cell lifetime, on the first
+  // loading-entry the effect observes. Ref guard avoids stale closures from re-running deps.
+  const measuredOnce = useRef(false);
   useEffect(() => {
-    if ((!isLoading && !showSkeletons) || skeletonWidth !== 100) return;
+    if ((!isLoading && !showSkeletons) || measuredOnce.current) return;
+    measuredOnce.current = true;
     const size = column.getSize();
     setSkeletonWidth(
       columnDefType === 'display'
         ? size / 2
         : Math.round(Math.random() * (size - size / 3) + size / 3),
     );
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional one-shot skeleton-width init keyed on loading transition; skeletonWidth is read as a re-entry guard. FOLLOW-UP: stale-closure risk if column.getSize() or columnDefType change after the first loading entry; consider rewriting with a ref.
-  }, [isLoading, showSkeletons]);
+  }, [isLoading, showSkeletons, column, columnDefType]);
 
   const draggingBorders = useMemo(() => {
     const isDraggingColumn = draggingColumn?.id === column.id;
