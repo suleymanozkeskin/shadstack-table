@@ -1,4 +1,3 @@
-// oxlint-disable react-hooks/exhaustive-deps -- intentional narrow dep array; revisit when refactoring
 import { useEffect, useReducer, useRef } from 'react';
 import { type SST_RowData, type SST_SortingState, type SST_TableInstance } from '../types';
 import { getAllLeafColumnDefs, getColumnId } from '../utils/column.utils';
@@ -53,6 +52,7 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
     .join('|');
   useEffect(() => {
     table.setColumnOrder(getDefaultColumnOrderIds(table.options));
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: only re-fire when the column-id signature changes; `table` is a stable instance and depending on it would cause this to fire on every state change.
   }, [sourceColumnSignature]);
 
   //if page index is out of bounds, set it to the last page
@@ -65,6 +65,7 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
     if (isOutOfBounds) {
       table.setPageIndex(totalPages - 1);
     }
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: pagination.pageSize / pageIndex are read but reacting to them would cause infinite-loop on the setPageIndex below. The bounds check only needs to re-run when the row count or loading flags change.
   }, [totalRowCount, enablePagination, isLoading, showSkeletons]);
 
   //turn off sort when global filter is looking for ranked results, and restore
@@ -83,6 +84,7 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
       table.setSorting(() => userIntendedSort.current);
     }
     prevGlobalFilter.current = globalFilter;
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: sorting is read into a ref snapshot (userIntendedSort), and including it in deps would cause the snapshot to be overwritten every time the user changes sort, defeating the restore-on-filter-exit behavior.
   }, [globalFilter]);
 
   //fix pinned row top style when density changes
@@ -92,5 +94,6 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
         rerender();
       }, 150);
     }
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: only re-fire on density transitions; enableRowPinning is a per-instance option and getIsSomeRowsPinned/rerender are stable accessors.
   }, [density]);
 };
