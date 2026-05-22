@@ -1,6 +1,3 @@
-// oxlint-disable eslint/no-underscore-dangle -- intentional; revisit when refactoring
-// oxlint-disable jsx-a11y/click-events-have-key-events -- intentional; revisit when refactoring
-// oxlint-disable jsx-a11y/no-static-element-interactions -- intentional; revisit when refactoring
 import * as React from 'react';
 import { Button } from '../../_ui/button';
 import { Spinner } from '../../_ui/spinner';
@@ -50,6 +47,7 @@ export const SST_EditActionButtons = <TData extends SST_RowData>({
       onEditingRowCancel?.({ row, table });
       setEditingRow(null);
     }
+    // oxlint-disable-next-line no-underscore-dangle -- _valuesCache is the documented internal property on TanStack Row used by upstream MRT for the same purpose
     row._valuesCache = {} as any; //reset values cache
   };
 
@@ -57,8 +55,10 @@ export const SST_EditActionButtons = <TData extends SST_RowData>({
     //look for auto-filled input values
     for (const input of Object.values(editInputRefs.current ?? {})) {
       if (row.id !== input?.name?.split('_')?.[0]) continue;
+      // oxlint-disable-next-line no-underscore-dangle -- _valuesCache is the documented internal property on TanStack Row used by upstream MRT for the same purpose
       if (input.value !== undefined && Object.hasOwn(row?._valuesCache as object, input.name)) {
-        // @ts-expect-error
+        // @ts-expect-error -- TanStack Row exposes _valuesCache as an internal mutable cache; public types intentionally hide it but writing here syncs auto-filled inputs before commit
+        // oxlint-disable-next-line no-underscore-dangle -- see comment on the surrounding _valuesCache reads
         row._valuesCache[input.name] = input.value;
       }
     }
@@ -67,6 +67,7 @@ export const SST_EditActionButtons = <TData extends SST_RowData>({
         exitCreatingMode: () => setCreatingRow(null),
         row,
         table,
+        // oxlint-disable-next-line no-underscore-dangle -- _valuesCache is the documented internal property on TanStack Row used by upstream MRT for the same purpose
         values: row._valuesCache,
       });
     else if (isEditing) {
@@ -74,12 +75,14 @@ export const SST_EditActionButtons = <TData extends SST_RowData>({
         exitEditingMode: () => setEditingRow(null),
         row,
         table,
+        // oxlint-disable-next-line no-underscore-dangle -- _valuesCache is the documented internal property on TanStack Row used by upstream MRT for the same purpose
         values: row?._valuesCache,
       });
     }
   };
 
   return (
+    // oxlint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events -- onClick is a stopPropagation barrier to prevent the row click from firing while editing; the buttons inside are the actual keyboard-focusable controls
     <div onClick={(e) => e.stopPropagation()} className={cn('flex gap-3', className)} {...rest}>
       {variant === 'icon' ? (
         <>

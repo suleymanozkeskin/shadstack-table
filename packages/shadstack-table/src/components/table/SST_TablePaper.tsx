@@ -1,4 +1,3 @@
-// oxlint-disable jsx-a11y/no-static-element-interactions -- intentional; revisit when refactoring
 import * as React from 'react';
 import { SST_TableContainer } from './SST_TableContainer';
 import { cn } from '../../lib/utils';
@@ -38,6 +37,7 @@ export const SST_TablePaper = <TData extends SST_RowData>({
   };
 
   return (
+    // oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- the wrapper <div> is a layout container; the onKeyDown is a global Escape handler for fullscreen exit. Adding a role would mis-announce the wrapper to AT.
     <div
       onKeyDown={(e) => e.key === 'Escape' && table.setIsFullScreen(false)}
       {...paperProps}
