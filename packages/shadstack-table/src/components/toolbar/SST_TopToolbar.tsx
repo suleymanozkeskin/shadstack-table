@@ -9,8 +9,16 @@ import { type SST_RowData, type SST_TableInstance } from '../../types';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 import { SST_GlobalFilterTextField } from '../inputs/SST_GlobalFilterTextField';
 
+// Seed `matches` with the actual matchMedia result via a lazy initializer.
+// The previous shape — `useState(false)` plus a post-mount setMatches —
+// always handed React a state transition during mount if the query was
+// already matching, producing an extra nested-update commit. Using the lazy
+// init means the post-mount handler() call bails when the value is
+// unchanged, and the subscription only fires on real viewport changes.
 function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = React.useState(false);
+  const [matches, setMatches] = React.useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(query).matches : false,
+  );
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
     const mql = window.matchMedia(query);

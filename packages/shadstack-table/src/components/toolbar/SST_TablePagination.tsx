@@ -9,8 +9,13 @@ import { parseFromValuesOrFunc } from '../../utils/utils';
 
 const defaultRowsPerPage = [5, 10, 15, 20, 25, 30, 50, 100];
 
+// Lazy init so document.dir is read once at mount-time and matches whatever
+// the post-mount effect would have set, avoiding a redundant setState bump
+// during mount. See SST_TopToolbar useMediaQuery for the same pattern.
 function useDirection() {
-  const [dir, setDir] = React.useState<'ltr' | 'rtl'>('ltr');
+  const [dir, setDir] = React.useState<'ltr' | 'rtl'>(() =>
+    typeof document !== 'undefined' && document.documentElement.dir === 'rtl' ? 'rtl' : 'ltr',
+  );
   React.useEffect(() => {
     if (typeof document === 'undefined') return;
     setDir(document.documentElement.dir === 'rtl' ? 'rtl' : 'ltr');

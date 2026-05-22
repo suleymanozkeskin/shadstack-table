@@ -7,8 +7,12 @@ import { cn } from '../../lib/utils';
 import { type SST_RowData, type SST_TableInstance } from '../../types';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 
+// See SST_TopToolbar — same lazy-init pattern avoids a mount-time setState
+// bump when the query is already matching at first render.
 function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = React.useState(false);
+  const [matches, setMatches] = React.useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(query).matches : false,
+  );
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
     const mql = window.matchMedia(query);
