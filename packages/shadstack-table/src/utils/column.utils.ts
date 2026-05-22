@@ -33,10 +33,45 @@ export const getAllLeafColumnDefs = <TData extends SST_RowData>(
   return allLeafColumnDefs;
 };
 
+/**
+ * Per-column cache entry used by `prepareColumns` to preserve enriched
+ * column-def identity across renders. TanStack `useReactTable` partly
+ * memoizes on column-def reference equality, so if we returned a fresh
+ * object every render the table would needlessly re-derive internal state.
+ *
+ * The cache is keyed by the original (consumer-owned) column-def
+ * reference, and additionally records the inputs that affect enrichment.
+ * When any of those inputs change between renders, the cached entry is
+ * discarded and a fresh enriched def is built.
+ */
+type PreparedColumnCacheEntry<TData extends SST_RowData> = {
+  enriched: SST_DefinedColumnDef<TData>;
+  // inputs that, when changed, invalidate the cached enriched def
+  aggregationFns: Record<string, unknown>;
+  filterFns: Record<string, unknown>;
+  sortingFns: Record<string, unknown>;
+  filterFnId: string | undefined;
+  defaultDisplayColumn: unknown;
+  // the original columns array reference (for group columns) — if a
+  // group's children array reference changes we rebuild children too
+  childrenRef: unknown;
+};
+
+export type PrepareColumnsCache<TData extends SST_RowData> = WeakMap<
+  SST_ColumnDef<TData>,
+  PreparedColumnCacheEntry<TData>
+>;
+
+export const createPrepareColumnsCache = <
+  TData extends SST_RowData,
+>(): PrepareColumnsCache<TData> => new WeakMap();
+
 export const prepareColumns = <TData extends SST_RowData>({
+  cache,
   columnDefs,
   tableOptions,
 }: {
+  cache?: PrepareColumnsCache<TData>;
   columnDefs: SST_ColumnDef<TData>[];
   tableOptions: SST_DefinedTableOptions<TData>;
 }): SST_DefinedColumnDef<TData>[] => {
@@ -48,22 +83,42 @@ export const prepareColumns = <TData extends SST_RowData>({
     state: { columnFilterFns = {} } = {},
   } = tableOptions;
   return columnDefs.map((columnDef) => {
-    //assign columnId
-    if (!columnDef.id) columnDef.id = getColumnId(columnDef);
+    const id = columnDef.id ?? getColumnId(columnDef);
+    const filterFnId = columnFilterFns[id];
+    const childrenRef = columnDef.columns;
+
+    //fast path: return cached enriched def if no relevant inputs changed
+    const cached = cache?.get(columnDef);
+    if (
+      cached &&
+      cached.aggregationFns === aggregationFns &&
+      cached.filterFns === filterFns &&
+      cached.sortingFns === sortingFns &&
+      cached.filterFnId === filterFnId &&
+      cached.defaultDisplayColumn === defaultDisplayColumn &&
+      cached.childrenRef === childrenRef
+    ) {
+      return cached.enriched;
+    }
+
+    //start from a shallow copy — never mutate the consumer-owned def
+    let enriched: SST_ColumnDef<TData> = { ...columnDef, id };
+
     //assign columnDefType
-    if (!columnDef.columnDefType) columnDef.columnDefType = 'data';
-    if (columnDef.columns?.length) {
-      columnDef.columnDefType = 'group';
+    if (!enriched.columnDefType) enriched.columnDefType = 'data';
+    if (enriched.columns?.length) {
+      enriched.columnDefType = 'group';
       //recursively prepare columns if this is a group column
-      columnDef.columns = prepareColumns({
-        columnDefs: columnDef.columns,
+      enriched.columns = prepareColumns({
+        cache,
+        columnDefs: enriched.columns,
         tableOptions,
       });
-    } else if (columnDef.columnDefType === 'data') {
+    } else if (enriched.columnDefType === 'data') {
       //assign aggregationFns if multiple aggregationFns are provided
-      if (Array.isArray(columnDef.aggregationFn)) {
-        const aggFns = columnDef.aggregationFn as string[];
-        columnDef.aggregationFn = (
+      if (Array.isArray(enriched.aggregationFn)) {
+        const aggFns = enriched.aggregationFn as string[];
+        enriched.aggregationFn = (
           columnId: string,
           leafRows: Row<TData>[],
           childRows: Row<TData>[],
@@ -71,25 +126,36 @@ export const prepareColumns = <TData extends SST_RowData>({
       }
 
       //assign filterFns
-      if (Object.keys(filterFns).includes(columnFilterFns[columnDef.id])) {
-        columnDef.filterFn = filterFns[columnFilterFns[columnDef.id]] ?? filterFns.fuzzy;
+      if (filterFnId !== undefined && Object.keys(filterFns).includes(filterFnId)) {
+        enriched.filterFn = filterFns[filterFnId] ?? filterFns.fuzzy;
         // oxlint-disable-next-line no-underscore-dangle
-        (columnDef as SST_DefinedColumnDef<TData>)._filterFn = columnFilterFns[columnDef.id];
+        (enriched as SST_DefinedColumnDef<TData>)._filterFn = filterFnId;
       }
 
       //assign sortingFns
-      if (Object.keys(sortingFns).includes(columnDef.sortingFn as string)) {
+      if (Object.keys(sortingFns).includes(enriched.sortingFn as string)) {
         // @ts-expect-error
-        columnDef.sortingFn = sortingFns[columnDef.sortingFn];
+        enriched.sortingFn = sortingFns[enriched.sortingFn];
       }
-    } else if (columnDef.columnDefType === 'display') {
-      columnDef = {
+    } else if (enriched.columnDefType === 'display') {
+      enriched = {
         ...(defaultDisplayColumn as SST_ColumnDef<TData>),
-        ...columnDef,
+        ...enriched,
       };
     }
-    return columnDef;
-  }) as SST_DefinedColumnDef<TData>[];
+
+    const result = enriched as SST_DefinedColumnDef<TData>;
+    cache?.set(columnDef, {
+      aggregationFns,
+      childrenRef,
+      defaultDisplayColumn,
+      enriched: result,
+      filterFnId,
+      filterFns,
+      sortingFns,
+    });
+    return result;
+  });
 };
 
 export const reorderColumn = <TData extends SST_RowData>(

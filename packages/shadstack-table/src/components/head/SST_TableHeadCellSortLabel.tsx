@@ -5,7 +5,7 @@ import { type SST_Header, type SST_RowData, type SST_TableInstance } from '../..
 
 export interface SST_TableHeadCellSortLabelProps<
   TData extends SST_RowData,
-> extends React.ComponentProps<'span'> {
+> extends React.ComponentProps<'button'> {
   header: SST_Header<TData>;
   table: SST_TableInstance<TData>;
 }
@@ -31,7 +31,7 @@ export const SST_TableHeadCellSortLabel = <TData extends SST_RowData>({
 
   const sortTooltip =
     isLoading || showSkeletons
-      ? ''
+      ? localization.sortByColumnAsc.replace('{column}', columnDef.header)
       : column.getIsSorted()
         ? column.getIsSorted() === 'desc'
           ? localization.sortedByColumnDesc.replace('{column}', columnDef.header)
@@ -49,8 +49,8 @@ export const SST_TableHeadCellSortLabel = <TData extends SST_RowData>({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events -- visual sort indicator; keyboard sorting is handled by the parent SST_TableHeadCell button which wraps this span */}
-        <span
+        <button
+          type="button"
           aria-label={sortTooltip}
           onClick={(e) => {
             e.stopPropagation();
@@ -58,7 +58,7 @@ export const SST_TableHeadCellSortLabel = <TData extends SST_RowData>({
           }}
           {...rest}
           className={cn(
-            'relative inline-flex items-center justify-center flex-none size-3.5 transition-all duration-150 ease-in-out',
+            'relative inline-flex items-center justify-center flex-none size-3.5 transition-all duration-150 ease-in-out bg-transparent border-0 p-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 rounded-sm',
             isSorted ? 'opacity-100' : 'opacity-50',
             className,
           )}
@@ -75,7 +75,7 @@ export const SST_TableHeadCellSortLabel = <TData extends SST_RowData>({
               {sortIndex}
             </span>
           )}
-        </span>
+        </button>
       </TooltipTrigger>
       <TooltipContent side="top">{sortTooltip}</TooltipContent>
     </Tooltip>

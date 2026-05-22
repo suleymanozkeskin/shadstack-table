@@ -1,0 +1,26 @@
+{
+  "name": "bench",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Render benchmarks for shadstack-table — measures initial mount, virtualized mount, and post-mount sort change at 1k / 10k / 50k rows.",
+  "type": "module",
+  "scripts": {
+    "bench": "vitest bench --run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "shadstack-table": "workspace:*"
+  },
+  "devDependencies": {
+    "@testing-library/react": "16.3.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "happy-dom": "20.9.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.10",
+    "vitest": "4.1.5"
+  }
+}
