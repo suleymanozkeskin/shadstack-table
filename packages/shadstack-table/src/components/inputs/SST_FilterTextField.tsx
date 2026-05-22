@@ -310,7 +310,12 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
           ? 'min-w-[110px]'
           : 'min-w-[90px]'
         : !filterChipLabel
-          ? 'min-w-[120px]'
+          ? // Default text/select filter: shrink with the column rather than
+            // overflowing it. The column cell clips with `overflow: hidden`, so
+            // a hard 120px floor would render the input rounded on the left
+            // and cut off on the right whenever the column is narrower. `w-full`
+            // above still expands the input to the available column width.
+            'min-w-0'
           : 'min-w-fit',
   );
 
