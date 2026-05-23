@@ -106,16 +106,20 @@ const benchOpts = { time: 1_000, iterations: 5, warmupIterations: 1, warmupTime:
 // the bench measures mount + a single follow-up render driven by that action.
 type NarrowAction = (table: SST_TableInstance<BenchPerson>) => void;
 
+type MemoModeOpt = 'cells' | 'off';
+
 type NarrowTriggerProps = {
   data: BenchPerson[];
   action: NarrowAction;
+  memoMode: MemoModeOpt;
 };
 
-const NarrowTrigger = ({ data, action }: NarrowTriggerProps) => {
+const NarrowTrigger = ({ data, action, memoMode }: NarrowTriggerProps) => {
   const table = useShadStackTable({
     columns: benchColumns,
     data,
     enableRowVirtualization: true,
+    memoMode,
   });
 
   useEffect(() => {
@@ -206,40 +210,91 @@ for (const { label, n } of SIZES) {
   // unvirtualized at 10k+ would be dominated by mount and obscure the signal.
   // Skipped at 50k for the same reason the existing sort/mount cases throttle
   // back there: the time budget is better spent on actionable sizes.
+  //
+  // Each scenario runs TWICE — once with `memoMode='cells'` (the default) and
+  // once with `memoMode='off'`. The delta between the two pairs measures the
+  // net cost / benefit of internal memoization: comparator overhead vs cells
+  // skipped. The win shows up as cells × the cost-per-cell-render saved;
+  // the cost shows up as comparator overhead × every visible cell × every
+  // mount-time render.
   describe(`narrow state change after mount — ${label} rows`, () => {
     const data = makePeople(n);
 
     bench.skipIf(n >= 50_000)(
-      `mount + setHoveredRow, virtualized (${label})`,
+      `mount + setHoveredRow, virtualized, memoMode=cells (${label})`,
       () => {
-        const handle = mount(<NarrowTrigger data={data} action={hoverRowAction} />);
+        const handle = mount(
+          <NarrowTrigger data={data} action={hoverRowAction} memoMode="cells" />,
+        );
         teardown(handle);
       },
       benchOpts,
     );
 
     bench.skipIf(n >= 50_000)(
-      `mount + setEditingCell, virtualized (${label})`,
+      `mount + setHoveredRow, virtualized, memoMode=off (${label})`,
       () => {
-        const handle = mount(<NarrowTrigger data={data} action={editCellAction} />);
+        const handle = mount(<NarrowTrigger data={data} action={hoverRowAction} memoMode="off" />);
         teardown(handle);
       },
       benchOpts,
     );
 
     bench.skipIf(n >= 50_000)(
-      `mount + setDraggingColumn, virtualized (${label})`,
+      `mount + setEditingCell, virtualized, memoMode=cells (${label})`,
       () => {
-        const handle = mount(<NarrowTrigger data={data} action={dragColumnAction} />);
+        const handle = mount(
+          <NarrowTrigger data={data} action={editCellAction} memoMode="cells" />,
+        );
         teardown(handle);
       },
       benchOpts,
     );
 
     bench.skipIf(n >= 50_000)(
-      `mount + setColumnFilters, virtualized (${label})`,
+      `mount + setEditingCell, virtualized, memoMode=off (${label})`,
       () => {
-        const handle = mount(<NarrowTrigger data={data} action={filterAction} />);
+        const handle = mount(<NarrowTrigger data={data} action={editCellAction} memoMode="off" />);
+        teardown(handle);
+      },
+      benchOpts,
+    );
+
+    bench.skipIf(n >= 50_000)(
+      `mount + setDraggingColumn, virtualized, memoMode=cells (${label})`,
+      () => {
+        const handle = mount(
+          <NarrowTrigger data={data} action={dragColumnAction} memoMode="cells" />,
+        );
+        teardown(handle);
+      },
+      benchOpts,
+    );
+
+    bench.skipIf(n >= 50_000)(
+      `mount + setDraggingColumn, virtualized, memoMode=off (${label})`,
+      () => {
+        const handle = mount(
+          <NarrowTrigger data={data} action={dragColumnAction} memoMode="off" />,
+        );
+        teardown(handle);
+      },
+      benchOpts,
+    );
+
+    bench.skipIf(n >= 50_000)(
+      `mount + setColumnFilters, virtualized, memoMode=cells (${label})`,
+      () => {
+        const handle = mount(<NarrowTrigger data={data} action={filterAction} memoMode="cells" />);
+        teardown(handle);
+      },
+      benchOpts,
+    );
+
+    bench.skipIf(n >= 50_000)(
+      `mount + setColumnFilters, virtualized, memoMode=off (${label})`,
+      () => {
+        const handle = mount(<NarrowTrigger data={data} action={filterAction} memoMode="off" />);
         teardown(handle);
       },
       benchOpts,
