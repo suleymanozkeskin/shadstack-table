@@ -1,27 +1,27 @@
 /**
  * Real-browser bench for memoMode='cells' vs memoMode='off'.
  *
- * The Vitest+happy-dom benches showed the wall-clock A/B between the two
- * modes is a wash — cell-render bodies are cheap when there's no real
- * layout/paint, so the memo's savings have nothing to amortise against.
- * This script runs the same shape against real Chromium so the memo cost
- * (comparator overhead) and benefit (skipped real-DOM updates) both bear
- * actual costs.
+ * Two scenarios:
+ *   1. `hover` — 200 sustained setHoveredRow calls in a row, one per
+ *      requestAnimationFrame so we measure per-action commit+paint cost.
+ *      Stresses the narrow-state-change path the memo was designed for.
+ *   2. `orderbook` — 5 seconds of immutable data replacement at 60 Hz,
+ *      ~50 rows mutated per tick (an orderbook/streaming shape). Stresses
+ *      the row-model-regen path where `getRowId` keeps row identity stable
+ *      but cell contents change — the same shape that earlier caught a
+ *      stale-data correctness bug in the memo comparator.
  *
- * Structure:
- *   - Start playground dev server on port 5181
- *   - For each (rows, memoMode) pair:
- *     - Launch a fresh Chromium page at /?bench=true&rows=N&memoMode=M
- *     - Wait for `window.__sstBenchReady === true`
- *     - In page context: run a loop of `table.setHoveredRow(...)`,
- *       cycling through visible rows, timing the whole loop via
- *       performance.now()
- *   - Print a comparison table
+ * The orderbook scenario complements hover: hover bails the memo most of
+ * the time (only the hovered row changes); orderbook gives the memo a
+ * harder workout where many cells legitimately change every tick. If
+ * `cells` keeps pace with `off` on orderbook, the comparator overhead is
+ * paid for by the bailouts on cells whose values *didn't* change in the
+ * batch — and the default flip is robust against the streaming-data case.
  *
- * Run once via:
- *   bun run apps/bench/playwright/run-bench.mjs
+ * Run via:
+ *   bun run --filter=bench bench:browser
  *
- * Defaults: 200 iterations per case, 5 warmup, 1k & 10k rows.
+ * Defaults: hover 200 iters / 20 warmup; orderbook 5s / 60Hz / batch 50.
  */
 import { spawn } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -29,15 +29,18 @@ import { chromium } from 'playwright';
 
 const PORT = Number(process.env.BENCH_PORT ?? 5181);
 const BASE_URL = `http://localhost:${PORT}`;
-const ITERATIONS = Number(process.env.BENCH_ITERS ?? 200);
-const WARMUP = Number(process.env.BENCH_WARMUP ?? 20);
+const HOVER_ITERATIONS = Number(process.env.BENCH_ITERS ?? 200);
+const HOVER_WARMUP = Number(process.env.BENCH_WARMUP ?? 20);
+const ORDERBOOK_DURATION_MS = Number(process.env.BENCH_ORDERBOOK_MS ?? 5000);
+const ORDERBOOK_RATE = Number(process.env.BENCH_ORDERBOOK_HZ ?? 60);
+const ORDERBOOK_BATCH = Number(process.env.BENCH_ORDERBOOK_BATCH ?? 50);
 
 const ROWS = [1000, 10_000];
 const MODES = /** @type {const} */ (['cells', 'off']);
 
-// 1) Boot the dev server. We pin the port so the page URL is deterministic
-// across runs and so collisions with a contributor's existing dev server
-// fail loud instead of silently driving the wrong app.
+// 1) Boot the dev server. Pin the port so the page URL is deterministic
+// across runs and collisions with a contributor's existing dev server fail
+// loud instead of silently driving the wrong app.
 console.log(`[bench] starting playground dev server on :${PORT}`);
 const dev = spawn(
   'bun',
@@ -48,7 +51,7 @@ const dev = spawn(
     // Start a new process group so we can signal the *whole tree* on
     // teardown. Without `detached`, sending SIGTERM to the bun wrapper
     // leaves the vite child orphaned, holding the port — which makes the
-    // *next* `--strictPort` run fail. detached + `kill(-pid)` below sends
+    // next `--strictPort` run fail. detached + `kill(-pid)` below sends
     // the signal to every process in the group.
     detached: true,
   },
@@ -68,86 +71,111 @@ const serverReadyPromise = new Promise((resolve, reject) => {
   dev.on('exit', (code) => {
     if (!serverReady) reject(new Error(`Vite exited (${code}) before becoming ready`));
   });
-  // Hard timeout — never want a CI run to hang on a wedged Vite.
   delay(30_000).then(() => {
     if (!serverReady) reject(new Error('Vite did not report ready within 30s'));
   });
 });
 
+const attachPageDiagnostics = (page) => {
+  page.on('pageerror', (err) => console.error(`[page-error] ${err.message}`));
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') console.error(`[page-console-error] ${msg.text()}`);
+  });
+};
+
+/**
+ * Run a single hover scenario in the page and return its samples.
+ */
+const runHoverInPage = (page, iterations, warmup) =>
+  page.evaluate(
+    async ({ iterations, warmup }) => {
+      const win = /** @type {any} */ (window);
+      const table = win.__sstBench;
+      const rowsModel = table.getRowModel().rows;
+      const cycle = Math.min(rowsModel.length, 10);
+      for (let i = 0; i < warmup; i++) {
+        table.setHoveredRow(rowsModel[i % cycle]);
+        await new Promise((r) => requestAnimationFrame(r));
+      }
+      const durations = [];
+      for (let i = 0; i < iterations; i++) {
+        const t0 = performance.now();
+        table.setHoveredRow(rowsModel[i % cycle]);
+        await new Promise((r) => requestAnimationFrame(r));
+        durations.push(performance.now() - t0);
+      }
+      const total = durations.reduce((a, b) => a + b, 0);
+      return { durations, total };
+    },
+    { iterations, warmup },
+  );
+
+/**
+ * Run a single orderbook scenario in the page. Returns the stats object
+ * the harness produces (mean / p50 / p75 / p95 commit ms + rates).
+ */
+const runOrderbookInPage = (page, durationMs) =>
+  page.evaluate(async (durationMs) => {
+    const win = /** @type {any} */ (window);
+    win.__sstBenchStart();
+    // Poll for done with a hard ceiling (durationMs + 2s) to never hang.
+    const deadline = performance.now() + durationMs + 2000;
+    while (!win.__sstBenchDone) {
+      if (performance.now() > deadline) throw new Error('Orderbook bench timed out');
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    return win.__sstBenchStats;
+  }, durationMs);
+
 try {
   await serverReadyPromise;
-  // Vite reports "Local: ..." sometimes before the server actually accepts
-  // connections. Give it a beat.
   await delay(500);
   console.log(`[bench] dev server ready at ${BASE_URL}`);
 
   const browser = await chromium.launch({ headless: true });
   try {
-    /** @type {Array<{rows: number, mode: string, durations: number[], total: number}>} */
-    const results = [];
+    /** @type {Array<{scenario: 'hover', rows: number, mode: string, durations: number[], total: number}>} */
+    const hoverResults = [];
+    /** @type {Array<{scenario: 'orderbook', rows: number, mode: string, stats: any}>} */
+    const orderbookResults = [];
+
     for (const rows of ROWS) {
       for (const mode of MODES) {
-        const url = `${BASE_URL}/?bench=true&rows=${rows}&memoMode=${mode}`;
-        console.log(`[bench] running ${url}`);
-        const page = await browser.newPage();
-        // Capture page console errors so a runtime exception in the bench
-        // page surfaces in the script output instead of being silently
-        // swallowed by Playwright.
-        page.on('pageerror', (err) => {
-          console.error(`[page-error] ${err.message}`);
-        });
-        page.on('console', (msg) => {
-          if (msg.type() === 'error') console.error(`[page-console-error] ${msg.text()}`);
-        });
-
-        await page.goto(url, { waitUntil: 'networkidle' });
-        await page.waitForFunction(() => /** @type {any} */ (window).__sstBenchReady === true, {
-          timeout: 30_000,
-        });
-
-        // Drive the bench fully inside the page so we measure with the
-        // browser's own clock and avoid IPC latency between Playwright and
-        // the renderer.
-        const data = await page.evaluate(
-          async ({ iterations, warmup }) => {
-            const win = /** @type {any} */ (window);
-            const table = win.__sstBench;
-            const rowsModel = table.getRowModel().rows;
-            // Cycle through the first 10 rows so each setHoveredRow flips
-            // state (setting to the same row would no-op).
-            const cycle = Math.min(rowsModel.length, 10);
-
-            // Warmup — pay JIT cost, allocate scratch buffers, etc.
-            for (let i = 0; i < warmup; i++) {
-              table.setHoveredRow(rowsModel[i % cycle]);
-              // microtask gap so React commits before the next set
-              await new Promise((r) => requestAnimationFrame(r));
-            }
-
-            const durations = [];
-            for (let i = 0; i < iterations; i++) {
-              const t0 = performance.now();
-              table.setHoveredRow(rowsModel[i % cycle]);
-              // requestAnimationFrame waits for the browser to commit + paint
-              await new Promise((r) => requestAnimationFrame(r));
-              durations.push(performance.now() - t0);
-            }
-
-            const total = durations.reduce((a, b) => a + b, 0);
-            return { durations, total };
-          },
-          { iterations: ITERATIONS, warmup: WARMUP },
-        );
-
-        results.push({ rows, mode, ...data });
-        await page.close();
+        // ---- hover ----
+        {
+          const url = `${BASE_URL}/?bench=true&action=hover&rows=${rows}&memoMode=${mode}`;
+          console.log(`[bench] hover ${url}`);
+          const page = await browser.newPage();
+          attachPageDiagnostics(page);
+          await page.goto(url, { waitUntil: 'networkidle' });
+          await page.waitForFunction(() => /** @type {any} */ (window).__sstBenchReady === true, {
+            timeout: 30_000,
+          });
+          const data = await runHoverInPage(page, HOVER_ITERATIONS, HOVER_WARMUP);
+          hoverResults.push({ scenario: 'hover', rows, mode, ...data });
+          await page.close();
+        }
+        // ---- orderbook ----
+        {
+          const url = `${BASE_URL}/?bench=true&action=orderbook&rows=${rows}&memoMode=${mode}&rate=${ORDERBOOK_RATE}&batch=${ORDERBOOK_BATCH}&duration=${ORDERBOOK_DURATION_MS}`;
+          console.log(`[bench] orderbook ${url}`);
+          const page = await browser.newPage();
+          attachPageDiagnostics(page);
+          await page.goto(url, { waitUntil: 'networkidle' });
+          await page.waitForFunction(() => /** @type {any} */ (window).__sstBenchReady === true, {
+            timeout: 30_000,
+          });
+          const stats = await runOrderbookInPage(page, ORDERBOOK_DURATION_MS);
+          orderbookResults.push({ scenario: 'orderbook', rows, mode, stats });
+          await page.close();
+        }
       }
     }
 
-    // Report
-    console.log('\n[bench] results:');
+    // ---- report: hover ----
+    console.log('\n[bench] hover results:');
     console.log('rows\tmode\titers\tmean(ms)\tp50(ms)\tp75(ms)\tp95(ms)\ttotal(ms)');
-    for (const r of results) {
+    for (const r of hoverResults) {
       const sorted = [...r.durations].sort((a, b) => a - b);
       const p = (q) => sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * q))];
       const mean = r.total / r.durations.length;
@@ -155,18 +183,41 @@ try {
         `${r.rows}\t${r.mode}\t${r.durations.length}\t${mean.toFixed(2)}\t${p(0.5).toFixed(2)}\t${p(0.75).toFixed(2)}\t${p(0.95).toFixed(2)}\t${r.total.toFixed(1)}`,
       );
     }
-
-    // Pairwise delta: cells vs off at the same row count.
-    console.log('\n[bench] cells vs off delta (negative means cells is faster):');
+    console.log('\n[bench] hover cells vs off delta (negative means cells is faster):');
     for (const rows of ROWS) {
-      const cells = results.find((r) => r.rows === rows && r.mode === 'cells');
-      const off = results.find((r) => r.rows === rows && r.mode === 'off');
+      const cells = hoverResults.find((r) => r.rows === rows && r.mode === 'cells');
+      const off = hoverResults.find((r) => r.rows === rows && r.mode === 'off');
       if (!cells || !off) continue;
-      const cellsMean = cells.total / cells.durations.length;
-      const offMean = off.total / off.durations.length;
-      const pct = ((cellsMean - offMean) / offMean) * 100;
+      const cMean = cells.total / cells.durations.length;
+      const oMean = off.total / off.durations.length;
+      const pct = ((cMean - oMean) / oMean) * 100;
       console.log(
-        `  ${rows} rows: cells ${cellsMean.toFixed(2)}ms vs off ${offMean.toFixed(2)}ms — ${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`,
+        `  ${rows} rows: cells ${cMean.toFixed(2)}ms vs off ${oMean.toFixed(2)}ms — ${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`,
+      );
+    }
+
+    // ---- report: orderbook ----
+    console.log('\n[bench] orderbook results:');
+    console.log(
+      'rows\tmode\tcommits\tcommits/s\tupdates/s\tmean(ms)\tp50(ms)\tp75(ms)\tp95(ms)\tmax(ms)',
+    );
+    for (const r of orderbookResults) {
+      const s = r.stats;
+      console.log(
+        `${r.rows}\t${r.mode}\t${s.commits}\t${s.commitsPerSecond.toFixed(1)}\t${s.updatesPerSecond.toFixed(0)}\t${s.meanCommitMs.toFixed(2)}\t${s.p50CommitMs.toFixed(2)}\t${s.p75CommitMs.toFixed(2)}\t${s.p95CommitMs.toFixed(2)}\t${s.maxCommitMs.toFixed(2)}`,
+      );
+    }
+    console.log(
+      '\n[bench] orderbook cells vs off delta (mean commit ms, negative = cells faster):',
+    );
+    for (const rows of ROWS) {
+      const cells = orderbookResults.find((r) => r.rows === rows && r.mode === 'cells');
+      const off = orderbookResults.find((r) => r.rows === rows && r.mode === 'off');
+      if (!cells || !off) continue;
+      const pct =
+        ((cells.stats.meanCommitMs - off.stats.meanCommitMs) / off.stats.meanCommitMs) * 100;
+      console.log(
+        `  ${rows} rows: cells ${cells.stats.meanCommitMs.toFixed(2)}ms vs off ${off.stats.meanCommitMs.toFixed(2)}ms — ${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`,
       );
     }
   } finally {
@@ -174,18 +225,12 @@ try {
   }
 } finally {
   console.log('[bench] stopping dev server');
-  // Signal the whole process group (created via `detached: true`). The
-  // negative pid is the POSIX convention for "send this signal to every
-  // process whose PGID == this number". Falls back to dev.kill() if pid
-  // is missing (process never started).
   try {
     if (dev.pid) process.kill(-dev.pid, 'SIGTERM');
     else dev.kill('SIGTERM');
   } catch {
     // already gone — ignore
   }
-  // Wait up to 2s for the port to clear before exit. Without this the
-  // *next* run can race the kernel's TIME_WAIT and fail --strictPort.
   for (let i = 0; i < 20; i++) {
     await delay(100);
     if (dev.exitCode !== null || dev.killed) break;
