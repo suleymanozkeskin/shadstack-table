@@ -42,7 +42,16 @@ console.log(`[bench] starting playground dev server on :${PORT}`);
 const dev = spawn(
   'bun',
   ['run', '--filter=playground', 'dev', '--', '--port', String(PORT), '--strictPort'],
-  { cwd: new URL('../../..', import.meta.url).pathname, stdio: ['ignore', 'pipe', 'pipe'] },
+  {
+    cwd: new URL('../../..', import.meta.url).pathname,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    // Start a new process group so we can signal the *whole tree* on
+    // teardown. Without `detached`, sending SIGTERM to the bun wrapper
+    // leaves the vite child orphaned, holding the port — which makes the
+    // *next* `--strictPort` run fail. detached + `kill(-pid)` below sends
+    // the signal to every process in the group.
+    detached: true,
+  },
 );
 let serverReady = false;
 const serverReadyPromise = new Promise((resolve, reject) => {
@@ -165,7 +174,20 @@ try {
   }
 } finally {
   console.log('[bench] stopping dev server');
-  dev.kill('SIGTERM');
-  // Give Vite a moment to release the port before the script exits.
-  await delay(500);
+  // Signal the whole process group (created via `detached: true`). The
+  // negative pid is the POSIX convention for "send this signal to every
+  // process whose PGID == this number". Falls back to dev.kill() if pid
+  // is missing (process never started).
+  try {
+    if (dev.pid) process.kill(-dev.pid, 'SIGTERM');
+    else dev.kill('SIGTERM');
+  } catch {
+    // already gone — ignore
+  }
+  // Wait up to 2s for the port to clear before exit. Without this the
+  // *next* run can race the kernel's TIME_WAIT and fail --strictPort.
+  for (let i = 0; i < 20; i++) {
+    await delay(100);
+    if (dev.exitCode !== null || dev.killed) break;
+  }
 }
