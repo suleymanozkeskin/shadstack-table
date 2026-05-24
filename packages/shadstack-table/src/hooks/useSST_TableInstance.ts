@@ -199,36 +199,49 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
   //WeakMap cache that preserves enriched column-def identity across
   //renders so TanStack's column-def-keyed memoization stays warm.
   const prepareColumnsCacheRef = useRef<PrepareColumnsCache<TData>>(createPrepareColumnsCache());
-  const preparedColumns =
+  let preparedColumns: SST_ColumnDef<TData>[];
+  if (
     statefulTableOptions.state.columnSizingInfo.isResizingColumn ||
     statefulTableOptions.state.draggingColumn ||
     statefulTableOptions.state.draggingRow
-      ? columnDefsRef.current
-      : prepareColumns({
-          cache: prepareColumnsCacheRef.current,
-          columnDefs: [
-            ...([
-              showRowPinningColumn(statefulTableOptions) &&
-                getSST_RowPinningColumnDef(statefulTableOptions),
-              showRowDragColumn(statefulTableOptions) &&
-                getSST_RowDragColumnDef(statefulTableOptions),
-              showRowActionsColumn(statefulTableOptions) &&
-                getSST_RowActionsColumnDef(statefulTableOptions),
-              showRowExpandColumn(statefulTableOptions) &&
-                getSST_RowExpandColumnDef(statefulTableOptions),
-              showRowSelectionColumn(statefulTableOptions) &&
-                getSST_RowSelectColumnDef(statefulTableOptions),
-              showRowNumbersColumn(statefulTableOptions) &&
-                getSST_RowNumbersColumnDef(statefulTableOptions),
-            ].filter(Boolean) as SST_ColumnDef<TData>[]),
-            ...statefulTableOptions.columns,
-            ...([
-              showRowSpacerColumn(statefulTableOptions) &&
-                getSST_RowSpacerColumnDef(statefulTableOptions),
-            ].filter(Boolean) as SST_ColumnDef<TData>[]),
-          ],
-          tableOptions: statefulTableOptions,
-        });
+  ) {
+    preparedColumns = columnDefsRef.current;
+  } else {
+    const next = prepareColumns({
+      cache: prepareColumnsCacheRef.current,
+      columnDefs: [
+        ...([
+          showRowPinningColumn(statefulTableOptions) &&
+            getSST_RowPinningColumnDef(statefulTableOptions),
+          showRowDragColumn(statefulTableOptions) && getSST_RowDragColumnDef(statefulTableOptions),
+          showRowActionsColumn(statefulTableOptions) &&
+            getSST_RowActionsColumnDef(statefulTableOptions),
+          showRowExpandColumn(statefulTableOptions) &&
+            getSST_RowExpandColumnDef(statefulTableOptions),
+          showRowSelectionColumn(statefulTableOptions) &&
+            getSST_RowSelectColumnDef(statefulTableOptions),
+          showRowNumbersColumn(statefulTableOptions) &&
+            getSST_RowNumbersColumnDef(statefulTableOptions),
+        ].filter(Boolean) as SST_ColumnDef<TData>[]),
+        ...statefulTableOptions.columns,
+        ...([
+          showRowSpacerColumn(statefulTableOptions) &&
+            getSST_RowSpacerColumnDef(statefulTableOptions),
+        ].filter(Boolean) as SST_ColumnDef<TData>[]),
+      ],
+      tableOptions: statefulTableOptions,
+    });
+    // Reference-stability layer for the columns array itself. prepareColumns
+    // already returns stable per-column refs (via its WeakMap cache), but the
+    // *outer* array is rebuilt each render. TanStack's `getAllColumns` memo
+    // is keyed on `table.options.columns` by reference, so a fresh outer
+    // array forces every `Column` and downstream `Cell` to be regenerated —
+    // which would invalidate every body-cell memo. Returning the prior array
+    // when the contents shallow-match keeps the entire downstream chain warm.
+    const prev = columnDefsRef.current;
+    preparedColumns =
+      prev.length === next.length && prev.every((c, i) => c === next[i]) ? prev : next;
+  }
   columnDefsRef.current = preparedColumns;
 
   //if loading, generate blank rows to show skeleton loaders

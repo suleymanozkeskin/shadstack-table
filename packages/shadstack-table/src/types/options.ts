@@ -173,12 +173,22 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
    */
   localization?: Partial<SST_Localization>;
   /**
-   * Memoize cells, rows, or the entire table body to potentially improve render performance.
+   * Controls internal memoization of row and cell components.
    *
-   * @warning This will break some dynamic rendering features. See the memoization guide:
+   * - `'cells'` (default) — cell-level memoization. Each `<SST_TableBodyCell>`
+   *   only re-renders when one of its narrow primitive props changes
+   *   (hover/drag/edit state for its column or row, the cell ref itself, etc.).
+   *   Hovering one row no longer re-renders every visible cell.
+   * - `'rows'` — row-level memoization. Each `<SST_TableBodyRow>` only
+   *   re-renders when its props change. Coarser than `'cells'` but skips
+   *   the per-cell comparator overhead. Useful for very wide tables.
+   * - `'off'` — disable both memos and re-render every cell on every table
+   *   state change. Match this when you have a custom `Cell` renderer that
+   *   reads state from outside the props the comparator sees (rare).
+   *
    * @link https://suleymanozkeskin.github.io/shadstack-table/guides/memoize-components/
    */
-  memoMode?: 'cells' | 'rows';
+  memoMode?: 'cells' | 'rows' | 'off';
   /**
    * Override the colors used for selected/pinned-row backgrounds, the drag/drop
    * border, the cell-navigation focus ring, the global-filter match highlight,

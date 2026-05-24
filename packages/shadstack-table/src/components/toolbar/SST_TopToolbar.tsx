@@ -9,17 +9,30 @@ import { type SST_RowData, type SST_TableInstance } from '../../types';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 import { SST_GlobalFilterTextField } from '../inputs/SST_GlobalFilterTextField';
 
+// `useSyncExternalStore` is the SSR-safe shape for subscribing to a browser
+// API. The server snapshot is a stable constant (`false`); the client
+// snapshot reads the real `matchMedia` result. React handles the hydration
+// transition internally — no useState bump, no hydration warning, and no
+// risk of the server-rendered "non-matching" class persisting after a
+// matching client snapshot arrives. The earlier shape (lazy `useState`
+// reading `matchMedia` during init) produced a hydration mismatch when the
+// query matched on the client but not on the server.
 function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = React.useState(false);
-  React.useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const mql = window.matchMedia(query);
-    const handler = () => setMatches(mql.matches);
-    handler();
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, [query]);
-  return matches;
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (typeof window === 'undefined') return () => {};
+      const mql = window.matchMedia(query);
+      mql.addEventListener('change', onChange);
+      return () => mql.removeEventListener('change', onChange);
+    },
+    [query],
+  );
+  const getSnapshot = React.useCallback(
+    () => (typeof window === 'undefined' ? false : window.matchMedia(query).matches),
+    [query],
+  );
+  const getServerSnapshot = () => false;
+  return React.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 export interface SST_TopToolbarProps<TData extends SST_RowData> {

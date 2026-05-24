@@ -94,6 +94,16 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
   manualGrouping,
   manualPagination,
   manualSorting,
+  // Default to cell-level memoization. Tier 1 of the perf audit reworked
+  // SST_TableBodyCell so it takes its render-relevant state as discrete
+  // primitive props, which lets `Memo_SST_TableBodyCell` bail correctly on
+  // narrow state changes (hover/drag/edit only re-render the cells that
+  // actually changed). Previously this was opt-in via `memoMode='cells'`;
+  // making it the default brings the same win to every consumer.
+  //
+  // To explicitly disable: pass `memoMode='off'`. To memo at the row level
+  // instead (coarser but cheaper per-cell), pass `memoMode='rows'`.
+  memoMode = 'cells',
   mrtTheme,
   theme,
   paginationDisplayMode = 'default',
@@ -247,6 +257,7 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
     manualGrouping,
     manualPagination,
     manualSorting,
+    memoMode,
     theme: resolvedTheme,
     mrtTheme: resolvedTheme,
     paginationDisplayMode,

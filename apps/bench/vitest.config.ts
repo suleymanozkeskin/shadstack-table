@@ -17,7 +17,12 @@ export default defineConfig({
     environment: 'happy-dom',
     setupFiles: ['./bench-setup.ts'],
     css: false,
-    include: ['src/**/*.bench.{ts,tsx}'],
+    // `.test.{ts,tsx}` runs under `vitest run` (assertion-based — the
+    // commit-count probe). `.bench.{ts,tsx}` runs under `vitest bench` via
+    // the separate `benchmark.include` below. Keeping the two surfaces
+    // disjoint avoids `bench()` getting called outside benchmark mode, which
+    // throws.
+    include: ['src/**/*.test.{ts,tsx}'],
     benchmark: {
       include: ['src/**/*.bench.{ts,tsx}'],
       reporters: ['default'],

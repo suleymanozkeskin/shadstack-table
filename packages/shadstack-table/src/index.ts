@@ -22,6 +22,7 @@ export * from './utils/tanstack.helpers';
 export * from './utils/cell.utils';
 export * from './utils/column.utils';
 export * from './utils/displayColumn.utils';
+export * from './utils/experimental_getReusableCoreRowModel';
 export * from './utils/row.utils';
 
 //fns

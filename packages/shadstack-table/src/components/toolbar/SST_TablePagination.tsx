@@ -9,13 +9,22 @@ import { parseFromValuesOrFunc } from '../../utils/utils';
 
 const defaultRowsPerPage = [5, 10, 15, 20, 25, 30, 50, 100];
 
-function useDirection() {
-  const [dir, setDir] = React.useState<'ltr' | 'rtl'>('ltr');
-  React.useEffect(() => {
-    if (typeof document === 'undefined') return;
-    setDir(document.documentElement.dir === 'rtl' ? 'rtl' : 'ltr');
-  }, []);
-  return dir;
+// `useSyncExternalStore` with a fixed server snapshot ('ltr') keeps the SSR
+// output stable; the client snapshot reads `document.documentElement.dir`.
+// `dir` rarely changes at runtime, so the subscribe handler is a no-op —
+// React still reads getSnapshot on every render to detect changes, which is
+// the contract for store subscriptions.
+function useDirection(): 'ltr' | 'rtl' {
+  const subscribe = React.useCallback(() => () => {}, []);
+  const getSnapshot = React.useCallback(
+    () =>
+      typeof document !== 'undefined' && document.documentElement.dir === 'rtl'
+        ? ('rtl' as const)
+        : ('ltr' as const),
+    [],
+  );
+  const getServerSnapshot = () => 'ltr' as const;
+  return React.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 function getPageRange(currentPage: number, totalPages: number, siblings = 1) {
