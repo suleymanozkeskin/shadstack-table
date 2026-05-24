@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { AdvancedExample } from './AdvancedExample';
 import { BasicExample } from './BasicExample';
+import { TerminalOrderBookExample } from './TerminalOrderBookExample';
 import { applyTheme, clearTheme, themes } from './themes';
 
-type ExampleKey = 'basic' | 'advanced';
+type ExampleKey = 'basic' | 'advanced' | 'terminal-orderbook';
 
 const examples: Array<{ key: ExampleKey; label: string; description: string }> = [
   {
@@ -16,6 +17,12 @@ const examples: Array<{ key: ExampleKey; label: string; description: string }> =
     label: 'Advanced',
     description:
       '30 employees · grouped column headers · custom Cell + Header renderers · row pinning · row actions · detail panel · custom toolbar with selection-aware bulk actions. Modeled on MRT’s canonical advanced demo.',
+  },
+  {
+    key: 'terminal-orderbook',
+    label: 'Terminal Book',
+    description:
+      'Trading-terminal orderbook shape · split bid/ask ladder · depth bars · live immutable updates.',
   },
 ];
 
@@ -86,6 +93,16 @@ function readHostDark(): boolean {
   return document.documentElement.getAttribute('data-theme') === 'dark';
 }
 
+function isExampleKey(value: string | null): value is ExampleKey {
+  return value === 'basic' || value === 'advanced' || value === 'terminal-orderbook';
+}
+
+function readInitialExample(fallback: ExampleKey): ExampleKey {
+  if (typeof window === 'undefined') return fallback;
+  const fromUrl = new URL(window.location.href).searchParams.get('example');
+  return isExampleKey(fromUrl) ? fromUrl : fallback;
+}
+
 export function Playground({
   modeSource = 'self',
   defaultExample = 'advanced',
@@ -93,7 +110,7 @@ export function Playground({
   defaultDark = true,
 }: PlaygroundProps = {}) {
   const [dark, setDark] = useState(modeSource === 'host' ? readHostDark : defaultDark);
-  const [example, setExample] = useState<ExampleKey>(defaultExample);
+  const [example, setExample] = useState<ExampleKey>(() => readInitialExample(defaultExample));
   const [themeKey, setThemeKey] = useState<string>(defaultThemeKey);
   const current = examples.find((e) => e.key === example) ?? examples[0];
   const preset = themes.find((t) => t.key === themeKey) ?? themes[0];
@@ -148,7 +165,13 @@ export function Playground({
       </header>
 
       <section className="mx-auto max-w-7xl min-w-0 overflow-hidden">
-        {example === 'basic' ? <BasicExample /> : <AdvancedExample />}
+        {example === 'basic' ? (
+          <BasicExample />
+        ) : example === 'terminal-orderbook' ? (
+          <TerminalOrderBookExample />
+        ) : (
+          <AdvancedExample />
+        )}
       </section>
     </>
   );
