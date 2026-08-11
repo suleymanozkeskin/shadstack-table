@@ -4,6 +4,12 @@ All notable changes to `shadstack-table` are recorded here. The format is based 
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-08-11
+
+Declarative control over the internal surfaces a consumer previously had to take a render slot to change. Every entry in the column-actions menu except "filter by column" was already suppressible by the feature flag that produced it; that entry shared its gate with "clear filter", so it gets one of its own. Menu entries are addressable by stable id rather than array position. The filter-mode menu's dividers, the show/hide-search button, and the background of every library-rendered input each become a single option.
+
+Two behaviours change for existing configurations — the menu-entry keys and the show/hide-search button — both listed under Changed with their migration. Neither touches a documented contract, so this ships as a patch; code reaching into the undocumented shape of `internalColumnMenuItems` is the case to check on upgrade.
+
 ### Added
 
 - `SST_COLUMN_MENU_ITEM_IDS` — stable ids for the built-in column-actions menu entries, exported from the package root. Every entry passed to `renderColumnActionsMenuItems` as `internalColumnMenuItems` carries one as its React `key`, so an override can target a specific entry without depending on its position in the array.
@@ -18,8 +24,8 @@ All notable changes to `shadstack-table` are recorded here. The format is based 
 
 ### Changed
 
-- **Breaking:** the show/hide-search toolbar button is governed by `enableGlobalFilterToggle` rather than by `initialState.showGlobalFilter`. A table that starts with `initialState: { showGlobalFilter: true }` previously rendered no toggle — an initial state value decided whether a control existed for the table's lifetime. Such a table now shows the toggle; pass `enableGlobalFilterToggle: false` to keep the previous chrome.
-- **Breaking:** built-in column-actions menu entries are keyed by stable id (`'sst-filter-by-column'`, `'sst-sort-asc'`, …) instead of by array position (`0`–`12`). Code that filters `internalColumnMenuItems` by an ordinal key — `item.key !== '4'` — no longer matches any entry and silently stops filtering. Replace the ordinal with the id: `item.key !== SST_COLUMN_MENU_ITEM_IDS.filterByColumn`, or drop the override in favour of `enableFilterByColumnMenuItem` where it was suppressing the filter entry.
+- **Behaviour change:** the show/hide-search toolbar button is governed by `enableGlobalFilterToggle` rather than by `initialState.showGlobalFilter`. A table that starts with `initialState: { showGlobalFilter: true }` previously rendered no toggle — an initial state value decided whether a control existed for the table's lifetime. Such a table now shows the toggle; pass `enableGlobalFilterToggle: false` to keep the previous chrome.
+- **Behaviour change:** built-in column-actions menu entries are keyed by stable id (`'sst-filter-by-column'`, `'sst-sort-asc'`, …) instead of by array position (`0`–`12`). Code that filters `internalColumnMenuItems` by an ordinal key — `item.key !== '4'` — no longer matches any entry and silently stops filtering. Replace the ordinal with the id: `item.key !== SST_COLUMN_MENU_ITEM_IDS.filterByColumn`, or drop the override in favour of `enableFilterByColumnMenuItem` where it was suppressing the filter entry.
 - `internalColumnMenuItems` is typed `SST_InternalColumnMenuItem[]` rather than `ReactNode[]`, so `.key` is reachable without a cast and is narrowed to the id union.
 - The filter-mode submenu element is emitted only alongside the "filter by column" entry that anchors it. Under `columnFilterDisplayMode` other than `'subheader'` it was previously present in `internalColumnMenuItems` with nothing able to open it; it renders nothing either way, so this is visible only to code that inspects the array.
 
@@ -231,6 +237,7 @@ First public pre-release. The full `material-react-table` feature surface is por
 - Column drag-reorder.
 - `filterVariant: 'time' | 'datetime' | 'time-range' | 'datetime-range'` — native `<input>` is used until a shadcn time picker recipe lands.
 
+[0.2.1]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.6...v0.2.0
 [0.1.1]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/suleymanozkeskin/shadstack-table/releases/tag/v0.1.0
