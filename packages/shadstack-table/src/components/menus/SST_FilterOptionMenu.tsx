@@ -129,6 +129,7 @@ export const SST_FilterOptionMenu = <TData extends SST_RowData>({
     getState,
     options: {
       columnFilterModeOptions,
+      enableFilterModeMenuDividers,
       globalFilterModeOptions,
       localization,
       mrtTheme: { menuBackgroundColor },
@@ -157,13 +158,23 @@ export const SST_FilterOptionMenu = <TData extends SST_RowData>({
 
   const internalFilterOptions = useMemo(
     () =>
-      mrtFilterOptions(localization).filter((filterOption) =>
-        columnDef
-          ? allowedColumnFilterOptions === undefined ||
-            allowedColumnFilterOptions?.includes(filterOption.option)
-          : (!globalFilterModeOptions || globalFilterModeOptions.includes(filterOption.option)) &&
-            ['contains', 'fuzzy', 'startsWith'].includes(filterOption.option),
-      ),
+      mrtFilterOptions(localization)
+        .filter((filterOption) =>
+          columnDef
+            ? allowedColumnFilterOptions === undefined ||
+              allowedColumnFilterOptions?.includes(filterOption.option)
+            : (!globalFilterModeOptions || globalFilterModeOptions.includes(filterOption.option)) &&
+              ['contains', 'fuzzy', 'startsWith'].includes(filterOption.option),
+        )
+        // Suppress dividers here rather than at the render site so that a
+        // consumer's `renderColumnFilterModeMenuItems` sees the same options
+        // the built-in renderer would — otherwise honouring the setting would
+        // mean reading the option separately in every custom renderer.
+        .map((filterOption) =>
+          enableFilterModeMenuDividers === false
+            ? { ...filterOption, divider: false }
+            : filterOption,
+        ),
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional empty deps: localization, columnDef, globalFilterModeOptions, allowedColumnFilterOptions are all read once when the menu mounts; the menu is short-lived (closes on selection) so capturing them at mount is safe. FOLLOW-UP: stale-closure risk if filter mode options change while the menu is open.
     [],
   );

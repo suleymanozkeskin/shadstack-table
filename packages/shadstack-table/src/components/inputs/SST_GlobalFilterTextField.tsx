@@ -88,7 +88,20 @@ export const SST_GlobalFilterTextField = <TData extends SST_RowData>({
 
   return (
     <Collapsible open={showGlobalFilter}>
-      <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:slide-out-to-left-2 data-[state=open]:slide-in-from-left-2">
+      {/*
+        `overflow-hidden` is what makes the collapse animation clip, and it also
+        clips anything the input paints outside its border box — including the
+        3px `focus-visible` ring, which showed as cut-off corners on a focused
+        field. `p-1` reserves 4px inside the clip box for the ring to paint in;
+        `-m-1` takes the same 4px back off the outside, so the field lands in
+        exactly the position it did without either. Keep them as a pair — the
+        padding alone shifts the toolbar layout, the margin alone re-clips the
+        ring.
+      */}
+      <CollapsibleContent
+        data-slot="sst-global-filter"
+        className="-m-1 overflow-hidden p-1 data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:slide-out-to-left-2 data-[state=open]:slide-in-from-left-2"
+      >
         <div className="relative flex items-center w-full min-w-[200px]">
           {enableGlobalFilterModes ? (
             <span className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-1">

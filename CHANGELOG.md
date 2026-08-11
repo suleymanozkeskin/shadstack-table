@@ -4,6 +4,25 @@ All notable changes to `shadstack-table` are recorded here. The format is based 
 
 ## [Unreleased]
 
+### Added
+
+- `SST_COLUMN_MENU_ITEM_IDS` — stable ids for the built-in column-actions menu entries, exported from the package root. Every entry passed to `renderColumnActionsMenuItems` as `internalColumnMenuItems` carries one as its React `key`, so an override can target a specific entry without depending on its position in the array.
+- `enableFilterByColumnMenuItem` on `SST_TableOptions` and `SST_ColumnDef`, default `true`. Drops the "filter by column" entry from the column-actions menu while leaving the column filterable. Previously that entry shared its only gate (`enableColumnFilters && column.getCanFilter()`) with "clear filter", so suppressing one meant suppressing both or overriding the render slot. The column-level value wins where set, matching `enableColumnFilterModes`. Setting it `false` also drops the filter-mode submenu, whose only anchor is that entry.
+- `enableFilterModeMenuDividers` on `SST_TableOptions`, default `true`. Suppresses the separators that group operators in the filter-mode menu. Applied where `internalFilterOptions` is built, so `renderColumnFilterModeMenuItems` and `renderGlobalFilterModeMenuItems` receive every entry with `divider: false` and honour the setting without reading the option. Previously the dividers were fixed, and suppressing them meant reimplementing the whole render slot.
+- `enableGlobalFilterToggle` on `SST_TableOptions`, default `true`. Controls whether the show/hide-search toolbar button is rendered, independent of `showGlobalFilter`. It does not open the field: pair it with `initialState: { showGlobalFilter: true }` for an always-visible search, or drive `showGlobalFilter` from your own control.
+- `--sst-input-bg` CSS custom property, read by every input the library renders (global search, column filters, cell editors). Defaults to the shadcn values it replaces — transparent in light, `input/30` in dark — so appearance is unchanged. A host whose form controls paint a solid field colour sets the variable once instead of overriding `searchInput` and `filterInput` separately, per colour mode. The defaults are inline fallbacks, so this holds without importing `shadstack-table/style.css`.
+
+### Fixed
+
+- The global-search field no longer clips its own focus ring. The field sits inside a Collapsible whose `overflow-hidden` drives the collapse animation and also clipped the input's 3px `focus-visible` ring, so a focused field rendered with cut-off corners. The collapse container now reserves the ring's width inside the clip and gives the same amount back to the layout, leaving the field's position unchanged.
+
+### Changed
+
+- **Breaking:** the show/hide-search toolbar button is governed by `enableGlobalFilterToggle` rather than by `initialState.showGlobalFilter`. A table that starts with `initialState: { showGlobalFilter: true }` previously rendered no toggle — an initial state value decided whether a control existed for the table's lifetime. Such a table now shows the toggle; pass `enableGlobalFilterToggle: false` to keep the previous chrome.
+- **Breaking:** built-in column-actions menu entries are keyed by stable id (`'sst-filter-by-column'`, `'sst-sort-asc'`, …) instead of by array position (`0`–`12`). Code that filters `internalColumnMenuItems` by an ordinal key — `item.key !== '4'` — no longer matches any entry and silently stops filtering. Replace the ordinal with the id: `item.key !== SST_COLUMN_MENU_ITEM_IDS.filterByColumn`, or drop the override in favour of `enableFilterByColumnMenuItem` where it was suppressing the filter entry.
+- `internalColumnMenuItems` is typed `SST_InternalColumnMenuItem[]` rather than `ReactNode[]`, so `.key` is reachable without a cast and is narrowed to the id union.
+- The filter-mode submenu element is emitted only alongside the "filter by column" entry that anchors it. Under `columnFilterDisplayMode` other than `'subheader'` it was previously present in `internalColumnMenuItems` with nothing able to open it; it renders nothing either way, so this is visible only to code that inspects the array.
+
 ## [0.2.0] — 2026-05-22
 
 A maintenance release that locks in the audit-driven hardening work shipped during May 2026. No new features; the highlights are robustness fixes (clipboard reliability, full-screen unmount cleanup, debounced filter cancellation on unmount, immutable option derivation), a deeper test base (39 → 56 unit tests plus axe a11y smoke, pinning/virtualization/RTL coverage, render benchmarks, and Playwright smoke), CI gates wired to the `maintenance` branch with a size budget on the published build, and one breaking change in `highlightWords`. Internal: `types.ts` (1,215 lines) split into 15 ownership-scoped modules, lint suppressions audited and tightened, hook patterns redesigned. Full per-PR detail across `#35–#54` is on the repo.

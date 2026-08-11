@@ -44,22 +44,22 @@ Both are typed against the same `TData` generic, so `accessorKey` on a column is
 
 Every major feature has an `enable*` boolean. They default sensibly — start with what you need and turn things off as you scope down. Selected highlights:
 
-| Group          | Options                                                                                                                                                                                      |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Sorting        | `enableSorting`, `enableMultiSort`, `enableMultiRemove`, `enableSortingRemoval`                                                                                                              |
-| Filtering      | `enableColumnFilters`, `enableGlobalFilter`, `enableColumnFilterModes`, `enableGlobalFilterModes`, `enableGlobalFilterRankedResults`, `enableFacetedValues`, `enableFilterMatchHighlighting` |
-| Row selection  | `enableRowSelection`, `enableSelectAll`, `enableMultiRowSelection`, `enableBatchRowSelection`                                                                                                |
-| Pagination     | `enablePagination`                                                                                                                                                                           |
-| Expansion      | `enableExpanding`, `enableExpandAll`                                                                                                                                                         |
-| Editing        | `enableEditing`, `enableCellActions`                                                                                                                                                         |
-| Virtualization | `enableRowVirtualization`, `enableColumnVirtualization`                                                                                                                                      |
-| Pinning        | `enableColumnPinning`, `enableRowPinning`, `enablePinning`                                                                                                                                   |
-| Reorder & drag | `enableColumnDragging`, `enableRowDragging`, `enableColumnOrdering`, `enableRowOrdering`                                                                                                     |
-| Column resize  | `enableColumnResizing`                                                                                                                                                                       |
-| Visibility     | `enableHiding`, `enableColumnActions`                                                                                                                                                        |
-| Toolbars       | `enableTopToolbar`, `enableBottomToolbar`, `enableToolbarInternalActions`, `enableDensityToggle`, `enableFullScreenToggle`                                                                   |
-| Layout polish  | `enableTableHead`, `enableTableFooter`, `enableStickyHeader`, `enableStickyFooter`, `enableRowNumbers`                                                                                       |
-| Misc           | `enableClickToCopy`, `enableRowActions`, `enableKeyboardShortcuts`                                                                                                                           |
+| Group          | Options                                                                                                                                                                                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Sorting        | `enableSorting`, `enableMultiSort`, `enableMultiRemove`, `enableSortingRemoval`                                                                                                                                                                              |
+| Filtering      | `enableColumnFilters`, `enableGlobalFilter`, `enableColumnFilterModes`, `enableGlobalFilterModes`, `enableGlobalFilterRankedResults`, `enableFacetedValues`, `enableFilterMatchHighlighting`, `enableFilterByColumnMenuItem`, `enableFilterModeMenuDividers` |
+| Row selection  | `enableRowSelection`, `enableSelectAll`, `enableMultiRowSelection`, `enableBatchRowSelection`                                                                                                                                                                |
+| Pagination     | `enablePagination`                                                                                                                                                                                                                                           |
+| Expansion      | `enableExpanding`, `enableExpandAll`                                                                                                                                                                                                                         |
+| Editing        | `enableEditing`, `enableCellActions`                                                                                                                                                                                                                         |
+| Virtualization | `enableRowVirtualization`, `enableColumnVirtualization`                                                                                                                                                                                                      |
+| Pinning        | `enableColumnPinning`, `enableRowPinning`, `enablePinning`                                                                                                                                                                                                   |
+| Reorder & drag | `enableColumnDragging`, `enableRowDragging`, `enableColumnOrdering`, `enableRowOrdering`                                                                                                                                                                     |
+| Column resize  | `enableColumnResizing`                                                                                                                                                                                                                                       |
+| Visibility     | `enableHiding`, `enableColumnActions`                                                                                                                                                                                                                        |
+| Toolbars       | `enableTopToolbar`, `enableBottomToolbar`, `enableToolbarInternalActions`, `enableDensityToggle`, `enableFullScreenToggle`, `enableGlobalFilterToggle`                                                                                                       |
+| Layout polish  | `enableTableHead`, `enableTableFooter`, `enableStickyHeader`, `enableStickyFooter`, `enableRowNumbers`                                                                                                                                                       |
+| Misc           | `enableClickToCopy`, `enableRowActions`, `enableKeyboardShortcuts`                                                                                                                                                                                           |
 
 Most of these accept `boolean` or, for row-targeted features, `(row: SST_Row<TData>) => boolean` — handy for "selectable only when X" / "editable only when Y" rules.
 
@@ -100,6 +100,43 @@ useShadStackTable({
 
 Slots also accept callbacks of the form `(props) => className | object` when the override depends on the current row, column, or cell.
 
+### What `className` cannot reach
+
+Some slots receive an inline `style` from the library. Inline styles outrank any class, so a `className` setting one of these properties is accepted and silently loses:
+
+| Property          | Slots                                                                                   | Where it comes from                                                                                                              |
+| ----------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `backgroundColor` | `tablePaper`, `topToolbar`, `bottomToolbar`, `tableHeadRow`, `tableBodyRow`, footer row | `theme.baseBackgroundColor`; body rows also read `selectedRowBackgroundColor` and `pinnedRowBackgroundColor`                     |
+| `maxHeight`       | `tableContainer`                                                                        | `enableStickyHeader` — `clamp(350px, calc(100vh - <toolbar height>), 9999px)`. Full-screen uses `calc(100vh - <toolbar height>)` |
+
+Head and body cells inherit their row's background rather than setting one, so styling the row covers the cells.
+
+Every slot merges `slotProps.<slot>.style` **after** its own, so `style` on the same slot wins:
+
+```tsx
+slotProps: {
+  // Hand the surface back to CSS; the class can now paint it.
+  tablePaper: { style: { backgroundColor: 'transparent' }, className: 'glass rounded-lg' },
+  // Size by the parent instead of the viewport — for a table in a pane,
+  // a modal, or a split view rather than a full page.
+  tableContainer: { style: { maxHeight: 'none' }, className: 'min-h-0 flex-1' },
+}
+```
+
+For colour specifically, `theme` is usually the shorter route: it is merged over the library defaults, so a partial theme stays partial and one key reaches every surface that reads it.
+
+### Input backgrounds
+
+Inputs the library renders — global search, column filters, cell editors — take their background from `--sst-input-bg`, defaulting to shadcn's own (transparent in light, `input/30` in dark). A host whose form controls paint a solid field colour sets it once:
+
+```css
+:root {
+  --sst-input-bg: var(--your-field-color);
+}
+```
+
+That covers both colour modes and every input slot. Overriding `slotProps.searchInput` / `slotProps.filterInput` with a background class also works, but needs repeating per slot and per mode.
+
 ## Renderers
 
 For deep customization of a specific surface — toolbar layout, empty state, action menu, etc. — provide a `render*` callback in place of overriding via `slotProps`. The renderer is passed `{ table, ... }` and returns a `ReactNode`:
@@ -110,6 +147,27 @@ For deep customization of a specific surface — toolbar layout, empty state, ac
 - `renderCellActionMenuItems(props)`, `renderColumnActionsMenuItems(props)`
 - `renderDetailPanel(props)`
 - `renderColumnFilterModeMenuItems(props)`, `renderGlobalFilterModeMenuItems(props)`
+
+### Addressing built-in menu entries
+
+`renderColumnActionsMenuItems` receives the built-in entries as
+`internalColumnMenuItems`. Each carries a stable id from
+`SST_COLUMN_MENU_ITEM_IDS` as its React `key`, so an override can target one
+entry without depending on its position:
+
+```tsx
+import { SST_COLUMN_MENU_ITEM_IDS } from 'shadstack-table';
+
+renderColumnActionsMenuItems: ({ internalColumnMenuItems }) =>
+  internalColumnMenuItems.filter((item) => item.key !== SST_COLUMN_MENU_ITEM_IDS.filterByColumn);
+```
+
+Reach for this when you're overriding the slot anyway — to reorder entries,
+relabel one, or splice your own in. To only hide an entry, use the option that
+produces it (`enableSorting`, `enableGrouping`, `enableColumnPinning`,
+`enableColumnResizing`, `enableHiding`, `enableFilterByColumnMenuItem`); an
+override taken to hide something also freezes the entries you kept at their
+current behaviour.
 
 ## Other options worth knowing
 
