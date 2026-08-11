@@ -4,7 +4,13 @@ import { Popover, PopoverAnchor, PopoverContent } from '../../_ui/popover';
 import { SST_ActionMenuItem } from './SST_ActionMenuItem';
 import { SST_FilterOptionMenu } from './SST_FilterOptionMenu';
 import { cn } from '../../lib/utils';
-import { type SST_Header, type SST_RowData, type SST_TableInstance } from '../../types';
+import { SST_COLUMN_MENU_ITEM_IDS } from '../../constants';
+import {
+  type SST_Header,
+  type SST_InternalColumnMenuItem,
+  type SST_RowData,
+  type SST_TableInstance,
+} from '../../types';
 
 export interface SST_ColumnActionMenuProps<TData extends SST_RowData> extends React.ComponentProps<
   typeof PopoverContent
@@ -33,6 +39,7 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
       enableColumnFilters,
       enableColumnPinning,
       enableColumnResizing,
+      enableFilterByColumnMenuItem,
       enableGrouping,
       enableHiding,
       enableSorting,
@@ -146,6 +153,17 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
     !isSelectFilter &&
     (allowedColumnFilterOptions === undefined || !!allowedColumnFilterOptions?.length);
 
+  // "Filter by column" has no gate of its own upstream — it shares
+  // `enableColumnFilters && column.getCanFilter()` with "clear filter" — so
+  // this is the only way to drop one entry without the other. The filter-mode
+  // submenu below is gated on the same value: this entry is its only anchor
+  // (the per-column filter input mounts its own), and a submenu with no anchor
+  // is an element nothing can open.
+  const showFilterByColumnMenuItem =
+    enableFilterByColumnMenuItem !== false &&
+    columnDef.enableFilterByColumnMenuItem !== false &&
+    columnFilterDisplayMode === 'subheader';
+
   const internalColumnMenuItems = [
     ...(enableSorting && column.getCanSort()
       ? [
@@ -153,7 +171,7 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
             <SST_ActionMenuItem
               disabled={column.getIsSorted() === false}
               icon={<ClearAllIcon />}
-              key={0}
+              key={SST_COLUMN_MENU_ITEM_IDS.clearSort}
               label={localization.clearSort}
               onClick={handleClearSort}
               table={table}
@@ -162,7 +180,7 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
           <SST_ActionMenuItem
             disabled={column.getIsSorted() === 'asc'}
             icon={<SortIcon style={{ transform: 'rotate(180deg) scaleX(-1)' }} />}
-            key={1}
+            key={SST_COLUMN_MENU_ITEM_IDS.sortAsc}
             label={localization.sortByColumnAsc?.replace('{column}', String(columnDef.header))}
             onClick={handleSortAsc}
             table={table}
@@ -171,7 +189,7 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
             disabled={column.getIsSorted() === 'desc'}
             divider={enableColumnFilters || enableGrouping || enableHiding}
             icon={<SortIcon />}
-            key={2}
+            key={SST_COLUMN_MENU_ITEM_IDS.sortDesc}
             label={localization.sortByColumnDesc?.replace('{column}', String(columnDef.header))}
             onClick={handleSortDesc}
             table={table}
@@ -187,28 +205,28 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
                 !columnFilterValue.filter((value) => value).length)
             }
             icon={<FilterListOffIcon />}
-            key={3}
+            key={SST_COLUMN_MENU_ITEM_IDS.clearFilter}
             label={localization.clearFilter}
             onClick={handleClearFilter}
             table={table}
           />,
-          columnFilterDisplayMode === 'subheader' && (
+          showFilterByColumnMenuItem && (
             <SST_ActionMenuItem
               disabled={showColumnFilters && !enableColumnFilterModes}
               divider={enableGrouping || enableHiding}
               icon={<FilterListIcon />}
-              key={4}
+              key={SST_COLUMN_MENU_ITEM_IDS.filterByColumn}
               label={localization.filterByColumn?.replace('{column}', String(columnDef.header))}
               onClick={showColumnFilters ? handleOpenFilterModeMenu : handleFilterByColumn}
               onOpenSubMenu={showFilterModeSubMenu ? handleOpenFilterModeMenu : undefined}
               table={table}
             />
           ),
-          showFilterModeSubMenu && (
+          showFilterByColumnMenuItem && showFilterModeSubMenu && (
             <SST_FilterOptionMenu
               anchorEl={filterMenuAnchorEl}
               header={header}
-              key={5}
+              key={SST_COLUMN_MENU_ITEM_IDS.filterModeSubMenu}
               onSelect={handleFilterByColumn}
               setAnchorEl={setFilterMenuAnchorEl}
               table={table}
@@ -221,7 +239,7 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
           <SST_ActionMenuItem
             divider={enableColumnPinning}
             icon={<DynamicFeedIcon />}
-            key={6}
+            key={SST_COLUMN_MENU_ITEM_IDS.groupByColumn}
             label={localization[
               column.getIsGrouped() ? 'ungroupByColumn' : 'groupByColumn'
             ]?.replace('{column}', String(columnDef.header))}
@@ -235,7 +253,7 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
           <SST_ActionMenuItem
             disabled={column.getIsPinned() === 'left' || !column.getCanPin()}
             icon={<PushPinIcon style={{ transform: 'rotate(90deg)' }} />}
-            key={7}
+            key={SST_COLUMN_MENU_ITEM_IDS.pinToLeft}
             label={localization.pinToLeft}
             onClick={() => handlePinColumn('left')}
             table={table}
@@ -243,7 +261,7 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
           <SST_ActionMenuItem
             disabled={column.getIsPinned() === 'right' || !column.getCanPin()}
             icon={<PushPinIcon style={{ transform: 'rotate(-90deg)' }} />}
-            key={8}
+            key={SST_COLUMN_MENU_ITEM_IDS.pinToRight}
             label={localization.pinToRight}
             onClick={() => handlePinColumn('right')}
             table={table}
@@ -252,7 +270,7 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
             disabled={!column.getIsPinned()}
             divider={enableHiding}
             icon={<PushPinIcon />}
-            key={9}
+            key={SST_COLUMN_MENU_ITEM_IDS.unpin}
             label={localization.unpin}
             onClick={() => handlePinColumn(false)}
             table={table}
@@ -264,7 +282,7 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
           <SST_ActionMenuItem
             disabled={columnSizing[column.id] === undefined}
             icon={<RestartAltIcon />}
-            key={10}
+            key={SST_COLUMN_MENU_ITEM_IDS.resetColumnSize}
             label={localization.resetColumnSize}
             onClick={handleResetColumnSize}
             table={table}
@@ -276,7 +294,7 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
           <SST_ActionMenuItem
             disabled={!column.getCanHide()}
             icon={<VisibilityOffIcon />}
-            key={11}
+            key={SST_COLUMN_MENU_ITEM_IDS.hideColumn}
             label={localization.hideColumn?.replace('{column}', String(columnDef.header))}
             onClick={handleHideColumn}
             table={table}
@@ -284,14 +302,14 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
           <SST_ActionMenuItem
             disabled={!Object.values(columnVisibility).filter((visible) => !visible).length}
             icon={<ViewColumnIcon />}
-            key={12}
+            key={SST_COLUMN_MENU_ITEM_IDS.showAllColumns}
             label={localization.showAllColumns?.replace('{column}', String(columnDef.header))}
             onClick={handleShowAllColumns}
             table={table}
           />,
         ]
       : []),
-  ].filter(Boolean);
+  ].filter(Boolean) as SST_InternalColumnMenuItem[];
 
   return (
     <Popover

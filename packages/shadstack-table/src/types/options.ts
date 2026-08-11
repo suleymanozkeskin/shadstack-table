@@ -7,6 +7,7 @@ import {
   type SST_ColumnDef,
   type SST_DisplayColumnDef,
   type SST_DisplayColumnIds,
+  type SST_InternalColumnMenuItem,
 } from './column';
 import { type SST_FilterOption, type SST_InternalFilterOption } from './fns';
 import { type SST_Icons } from './icons';
@@ -135,9 +136,47 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
   enableEditing?: ((row: SST_Row<TData>) => boolean) | boolean;
   enableExpandAll?: boolean;
   enableFacetedValues?: boolean;
+  /**
+   * Show the "filter by column" entry in every column's actions menu — the one
+   * that reveals the filter row, or opens the filter-mode submenu when the
+   * filter row is already showing.
+   *
+   * Set `false` to drop the entry table-wide while keeping columns filterable;
+   * override per column with the column def option of the same name.
+   *
+   * @default true
+   */
+  enableFilterByColumnMenuItem?: boolean;
   enableFilterMatchHighlighting?: boolean;
+  /**
+   * Draw the separators that group related operators in the filter-mode menu
+   * (between "ends with" and "equals", and so on).
+   *
+   * Set `false` for a design system that doesn't use dividers in menus. The
+   * value reaches `renderColumnFilterModeMenuItems` and
+   * `renderGlobalFilterModeMenuItems` too — every `internalFilterOptions` entry
+   * arrives with `divider: false` — so a custom renderer honours it without
+   * reading this option.
+   *
+   * @default true
+   */
+  enableFilterModeMenuDividers?: boolean;
   enableFullScreenToggle?: boolean;
   enableGlobalFilterModes?: boolean;
+  /**
+   * Render the toolbar button that shows and hides the global-search field.
+   *
+   * Independent of `showGlobalFilter`: the button controls the field, this
+   * controls whether the button exists.
+   *
+   * Setting `false` does not open the field — pair it with
+   * `initialState: { showGlobalFilter: true }` for an always-visible search, or
+   * drive `showGlobalFilter` from your own control. On its own it leaves the
+   * field closed with nothing to open it.
+   *
+   * @default true
+   */
+  enableGlobalFilterToggle?: boolean;
   enableGlobalFilterRankedResults?: boolean;
   enableKeyboardShortcuts?: boolean;
   enablePagination?: boolean;
@@ -266,7 +305,7 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
   renderColumnActionsMenuItems?: (props: {
     closeMenu: () => void;
     column: SST_Column<TData>;
-    internalColumnMenuItems: ReactNode[];
+    internalColumnMenuItems: SST_InternalColumnMenuItem[];
     table: SST_TableInstance<TData>;
   }) => ReactNode[];
   renderColumnFilterModeMenuItems?: (props: {
