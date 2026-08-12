@@ -10,6 +10,12 @@ Persisted table state needs migrating on read: `columnPinning` changed shape and
 
 ### Changed
 
+- **Breaking:** every shadstack state slice (`density`, `isFullScreen`, `editingRow`, `hoveredColumn`, …) is now real table state, owned by the table's TanStack Store atoms instead of React state inside the hook. Consequences for consumers:
+  - `table.options.state` now contains only the controlled state the consumer supplied — the v9 contract. Read current state through `table.getState()` (unchanged signature) or the new typed `table.atoms.<slice>` / `table.baseAtoms.<slice>` maps. Code that read merged state off `table.options.state` must switch to `getState()`.
+  - `table.reset()` now resets shadstack slices along with TanStack's, back to `initialState`. Consumer-controlled slices (supplied via `state`) are unaffected, matching v9 semantics. Previously the shadstack slices survived a reset.
+  - Uncontrolled setter writes are synchronous: `table.getState()` read immediately after `table.setDensity(...)` in the same event handler returns the new value. Previously the value appeared on the next render.
+  - Every slice — including `isLoading`, `isSaving`, `showLoadingOverlay`, `showProgressBars`, `showSkeletons` — is present in `getState()` with a seeded default (`undefined` for the three tri-state display flags, whose "auto" mode is preserved). Previously unset slices were absent from the snapshot.
+  - An `on*Change` option key explicitly set to `undefined` is stripped rather than silently freezing its slice.
 - **Breaking:** the `sortingFns` table option is now `sortFns`, and the `sortingFn` column option is now `sortFn`. No alias — a column def still passing `sortingFn` type-errors, and the value is ignored.
 - **Breaking:** `columnPinning` state is `{ start, end }` instead of `{ left, right }`. Pinning is expressed in logical regions, so `start` is the left edge in LTR and the right edge in RTL. `column.pin()` takes `'start' | 'end' | false`. Persisted `{ left, right }` state restores as an empty pinning set rather than erroring, so migrate stored values on read.
 - **Breaking:** the `columnSizingInfo` state slice is now `columnResizing`, `setColumnSizingInfo` is `setColumnResizing`, and `onColumnSizingInfoChange` is `onColumnResizingChange`. `SST_ColumnSizingInfoState` remains as a deprecated alias of the new `SST_ColumnResizingState`.

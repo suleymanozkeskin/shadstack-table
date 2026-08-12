@@ -1,23 +1,13 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef } from 'react';
 import { useTable } from '@tanstack/react-table';
+import { SST_STATE_DEFAULTS } from '../features';
 import {
-  type SST_Cell,
-  type SST_Column,
   type SST_ColumnDef,
-  type SST_ColumnFilterFnsState,
-  type SST_ColumnOrderState,
-  type SST_ColumnResizingState,
   type SST_DefinedTableOptions,
-  type SST_DensityState,
-  type SST_FilterOption,
-  type SST_GroupingState,
-  type SST_PaginationState,
-  type SST_Row,
   type SST_RowData,
   type SST_StatefulTableOptions,
   type SST_TableInstance,
   type SST_TableState,
-  type SST_Updater,
 } from '../types';
 import {
   createPrepareColumnsCache,
@@ -37,7 +27,6 @@ import {
   showRowSelectionColumn,
   showRowSpacerColumn,
 } from '../utils/displayColumn.utils';
-import { createRow } from '../utils/tanstack.helpers';
 import { getSST_RowActionsColumnDef } from './display-columns/getSST_RowActionsColumnDef';
 import { getSST_RowDragColumnDef } from './display-columns/getSST_RowDragColumnDef';
 import { getSST_RowExpandColumnDef } from './display-columns/getSST_RowExpandColumnDef';
@@ -49,6 +38,14 @@ import { useSST_Effects } from './useSST_Effects';
 
 /**
  * The MRT hook that wraps the TanStack useTable hook and adds additional functionality
+ *
+ * Every state slice — TanStack's and shadstack's — is owned by the table's
+ * atoms (`shadstackCoreFeature` registers the shadstack slices as real table
+ * state). This hook holds no React state of its own: setters write atoms,
+ * atom changes notify the root store subscription, and the host re-renders.
+ * With no `useTable` selector the render semantics match the previous
+ * useState-based implementation exactly; narrowing happens in a later stage.
+ *
  * @param definedTableOptions - table options with proper defaults set
  * @returns the MRT table instance
  */
@@ -71,7 +68,9 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
   //transform initial state with proper column order — derived immutably
   //from the consumer-provided options. We only need to derive this once
   //per mount (it's the *initial* state); the empty dep array is the
-  //correct shape here.
+  //correct shape here. Every key placed here becomes a table atom, so the
+  //defaults that used to live in useState initializers ride in through
+  //this object instead.
   const initialState: Partial<SST_TableState<TData>> = useMemo(() => {
     const initState: Partial<SST_TableState<TData>> = {
       ...(definedTableOptions.initialState ?? {}),
@@ -86,112 +85,51 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
         },
       } as SST_StatefulTableOptions<TData>);
     initState.globalFilterFn = definedTableOptions.globalFilterFn ?? 'fuzzy';
-    return initState;
-    // initialState is intentionally captured once at mount — re-deriving
-    // it on every render would defeat the "initial state" contract.
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const [actionCell, setActionCell] = useState<SST_Cell<TData> | null>(
-    initialState.actionCell ?? null,
-  );
-  const [creatingRow, _setCreatingRow] = useState<SST_Row<TData> | null>(
-    initialState.creatingRow ?? null,
-  );
-  const [columnFilterFns, setColumnFilterFns] = useState<SST_ColumnFilterFnsState>(() =>
-    Object.assign(
+    //seed the per-column filter-fn map from the column defs (previously the
+    //useState initializer's job)
+    initState.columnFilterFns = Object.assign(
       {},
       ...getAllLeafColumnDefs(definedTableOptions.columns as SST_ColumnDef<TData>[]).map((col) => ({
         [getColumnId(col)]:
           col.filterFn instanceof Function
             ? (col.filterFn.name ?? 'custom')
             : (col.filterFn ??
-              initialState?.columnFilterFns?.[getColumnId(col)] ??
+              initState.columnFilterFns?.[getColumnId(col)] ??
               getDefaultColumnFilterFn(col)),
       })),
-    ),
-  );
-  const [columnOrder, onColumnOrderChange] = useState<SST_ColumnOrderState>(
-    initialState.columnOrder ?? [],
-  );
-  const [columnResizing, onColumnResizingChange] = useState<SST_ColumnResizingState>(
-    initialState.columnResizing ?? ({} as SST_ColumnResizingState),
-  );
-  const [density, setDensity] = useState<SST_DensityState>(initialState?.density ?? 'comfortable');
-  const [draggingColumn, setDraggingColumn] = useState<SST_Column<TData> | null>(
-    initialState.draggingColumn ?? null,
-  );
-  const [draggingRow, setDraggingRow] = useState<SST_Row<TData> | null>(
-    initialState.draggingRow ?? null,
-  );
-  const [editingCell, setEditingCell] = useState<SST_Cell<TData> | null>(
-    initialState.editingCell ?? null,
-  );
-  const [editingRow, setEditingRow] = useState<SST_Row<TData> | null>(
-    initialState.editingRow ?? null,
-  );
-  const [globalFilterFn, setGlobalFilterFn] = useState<SST_FilterOption>(
-    initialState.globalFilterFn ?? 'fuzzy',
-  );
-  const [grouping, onGroupingChange] = useState<SST_GroupingState>(initialState.grouping ?? []);
-  const [hoveredColumn, setHoveredColumn] = useState<Partial<SST_Column<TData>> | null>(
-    initialState.hoveredColumn ?? null,
-  );
-  const [hoveredRow, setHoveredRow] = useState<Partial<SST_Row<TData>> | null>(
-    initialState.hoveredRow ?? null,
-  );
-  const [isFullScreen, setIsFullScreen] = useState<boolean>(initialState?.isFullScreen ?? false);
-  const [pagination, onPaginationChange] = useState<SST_PaginationState>(
-    initialState?.pagination ?? { pageIndex: 0, pageSize: 10 },
-  );
-  const [showAlertBanner, setShowAlertBanner] = useState<boolean>(
-    initialState?.showAlertBanner ?? false,
-  );
-  const [showColumnFilters, setShowColumnFilters] = useState<boolean>(
-    initialState?.showColumnFilters ?? false,
-  );
-  const [showGlobalFilter, setShowGlobalFilter] = useState<boolean>(
-    initialState?.showGlobalFilter ?? false,
-  );
-  const [showToolbarDropZone, setShowToolbarDropZone] = useState<boolean>(
-    initialState?.showToolbarDropZone ?? false,
-  );
+    );
+    return initState;
+    // initialState is intentionally captured once at mount — re-deriving
+    // it on every render would defeat the "initial state" contract.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  //Derive a fresh stateful options bag (spread + override) rather than
-  //mutating the consumer-owned `definedTableOptions` in place. State
-  //provided directly on `definedTableOptions` still wins via the spread
-  //order — same precedence as before.
-  const mergedState = {
-    actionCell,
-    columnFilterFns,
-    columnOrder,
-    columnResizing,
-    creatingRow,
-    density,
-    draggingColumn,
-    draggingRow,
-    editingCell,
-    editingRow,
-    globalFilterFn,
-    grouping,
-    hoveredColumn,
-    hoveredRow,
-    isFullScreen,
-    pagination,
-    showAlertBanner,
-    showColumnFilters,
-    showGlobalFilter,
-    showToolbarDropZone,
-    ...definedTableOptions.state,
-  };
+  //The previous render's table instance. Render-body computations below need
+  //current state BEFORE useTable runs; `getState()` reads the live store, so
+  //a render triggered by a state write sees the value that caused it — the
+  //same freshness the deleted useState calls provided. On the first render
+  //no table exists yet, so fall back to the seeded initial state.
+  const tableRef = useRef<SST_TableInstance<TData> | null>(null);
+  const currentState: SST_TableState<TData> = tableRef.current
+    ? tableRef.current.getState()
+    : ({
+        ...SST_STATE_DEFAULTS,
+        columnResizing: {},
+        grouping: [],
+        pagination: { pageIndex: 0, pageSize: 10 },
+        ...initialState,
+        ...definedTableOptions.state,
+      } as unknown as SST_TableState<TData>);
 
-  //The table options now include all state needed to help determine
-  //column visibility and order logic. We treat this as a new object so
-  //downstream code never sees the consumer's options mutated.
+  //The stateful view of the options: `state` is the full current snapshot.
+  //This object feeds the display-column factories, `prepareColumns`, and the
+  //skeleton-data derivation — it is NOT what `useTable` receives as `state`
+  //(see below). Derived fresh so downstream code never sees the consumer's
+  //options mutated.
   let statefulTableOptions: SST_StatefulTableOptions<TData> = {
     ...definedTableOptions,
     initialState,
-    state: mergedState,
+    state: currentState,
   } as SST_StatefulTableOptions<TData>;
 
   //don't recompute columnDefs while resizing column or dragging column/row
@@ -261,30 +199,41 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
     data: preparedData,
   };
 
+  //`state` passed to useTable carries ONLY consumer-supplied controlled
+  //state. The table's atoms own everything else; passing the full snapshot
+  //here would mark every slice controlled, and controlled slices only
+  //re-publish to subscribers after a host commit — the table would freeze.
   const table = useTable({
-    onColumnOrderChange,
-    onColumnResizingChange,
-    onGroupingChange,
-    onPaginationChange,
     ...statefulTableOptions,
-    globalFilterFn: statefulTableOptions.filterFns?.[globalFilterFn ?? 'fuzzy'],
-  } as any) as SST_TableInstance<TData>;
+    state: definedTableOptions.state,
+    globalFilterFn: statefulTableOptions.filterFns?.[currentState.globalFilterFn ?? 'fuzzy'],
+  } as any) as unknown as SST_TableInstance<TData>;
+  const isFirstConstruction = tableRef.current === null;
+  tableRef.current = table;
 
-  //v9 removed `table.getState()` in favour of `table.state`. shadstack keeps
-  //`getState()` as its own API: it is the single read surface every component
-  //uses, and it also carries the shadstack-owned slices that TanStack knows
-  //nothing about. With no selector passed to `useTable`, `table.state` is the
-  //complete TanStack state, so this is a faithful replacement.
-  //
-  //The merge is built once per render, not per call. `getState()` is read from
-  //~57 sites, several of them per-cell, and v8's `getState()` was a stored
-  //object read rather than an allocation. Nothing mutates the result between
-  //calls within a render, so hoisting is equivalent.
-  const state = {
-    ...(table as unknown as { state: Record<string, unknown> }).state,
-    ...mergedState,
-  } as SST_TableState<TData>;
-  table.getState = () => state;
+  //getState() remains shadstack's single read surface; it reads the live
+  //store snapshot, which applies the derived atoms' controlled-state
+  //precedence, so all slices — consumer-controlled ones included — appear in
+  //it. The raw facade read rebuilds the snapshot object per call (one getter
+  //per slice), and getState() is called several times per cell, so the
+  //result is cached and the cache is invalidated on the two occasions the
+  //snapshot can change: any store write (covers reads after writes inside
+  //one event handler) and the start of a render pass (covers new controlled
+  //state arriving through options before its post-commit publication).
+  const store = (
+    table as unknown as {
+      store: { get: () => unknown; subscribe: (fn: () => void) => { unsubscribe: () => void } };
+    }
+  ).store;
+  const snapshotCacheRef = useRef<SST_TableState<TData> | null>(null);
+  snapshotCacheRef.current = null;
+  if (isFirstConstruction) {
+    //store and table die together with the component, so no explicit cleanup
+    store.subscribe(() => {
+      snapshotCacheRef.current = null;
+    });
+  }
+  table.getState = () => (snapshotCacheRef.current ??= store.get() as SST_TableState<TData>);
 
   table.refs = {
     actionCellRef,
@@ -301,33 +250,10 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
     topToolbarRef,
   };
 
-  table.setActionCell = statefulTableOptions.onActionCellChange ?? setActionCell;
-  table.setCreatingRow = (row: SST_Updater<SST_Row<TData> | null | true>) => {
-    // oxlint-disable-next-line no-underscore-dangle
-    let _row = row;
-    if (row === true) {
-      _row = createRow(table);
-    }
-    // oxlint-disable-next-line no-unused-expressions -- nullish-fallback handler chain (upstream pattern)
-    statefulTableOptions?.onCreatingRowChange?.(_row as SST_Row<TData> | null) ??
-      _setCreatingRow(_row as SST_Row<TData> | null);
-  };
-  table.setColumnFilterFns = statefulTableOptions.onColumnFilterFnsChange ?? setColumnFilterFns;
-  table.setDensity = statefulTableOptions.onDensityChange ?? setDensity;
-  table.setDraggingColumn = statefulTableOptions.onDraggingColumnChange ?? setDraggingColumn;
-  table.setDraggingRow = statefulTableOptions.onDraggingRowChange ?? setDraggingRow;
-  table.setEditingCell = statefulTableOptions.onEditingCellChange ?? setEditingCell;
-  table.setEditingRow = statefulTableOptions.onEditingRowChange ?? setEditingRow;
-  table.setGlobalFilterFn = statefulTableOptions.onGlobalFilterFnChange ?? setGlobalFilterFn;
-  table.setHoveredColumn = statefulTableOptions.onHoveredColumnChange ?? setHoveredColumn;
-  table.setHoveredRow = statefulTableOptions.onHoveredRowChange ?? setHoveredRow;
-  table.setIsFullScreen = statefulTableOptions.onIsFullScreenChange ?? setIsFullScreen;
-  table.setShowAlertBanner = statefulTableOptions.onShowAlertBannerChange ?? setShowAlertBanner;
-  table.setShowColumnFilters =
-    statefulTableOptions.onShowColumnFiltersChange ?? setShowColumnFilters;
-  table.setShowGlobalFilter = statefulTableOptions.onShowGlobalFilterChange ?? setShowGlobalFilter;
-  table.setShowToolbarDropZone =
-    statefulTableOptions.onShowToolbarDropZoneChange ?? setShowToolbarDropZone;
+  //The public setters (setDensity, setEditingRow, …) are attached by
+  //`shadstackCoreFeature.constructTableAPIs` and read the live options, so
+  //the per-render `options.onXChange ?? setState` wiring that used to live
+  //here is gone.
 
   useSST_Effects(table);
 

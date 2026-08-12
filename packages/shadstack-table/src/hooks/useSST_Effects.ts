@@ -56,7 +56,13 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
     .map(getColumnId)
     .join('|');
   useEffect(() => {
-    table.setColumnOrder(getDefaultColumnOrderIds(table.options));
+    //`options.state` holds only consumer-controlled state, so build the
+    //stateful view the column-order derivation expects from the live state
+    table.setColumnOrder(
+      getDefaultColumnOrderIds({ ...table.options, state: table.getState() } as Parameters<
+        typeof getDefaultColumnOrderIds<TData>
+      >[0]),
+    );
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: only re-fire when the column-id signature changes; `table` is a stable instance and depending on it would cause this to fire on every state change.
   }, [sourceColumnSignature]);
 

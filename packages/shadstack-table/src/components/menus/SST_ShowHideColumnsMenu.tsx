@@ -134,7 +134,19 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => table.setColumnOrder(getDefaultColumnOrderIds(table.options, true))}
+              onClick={() =>
+                //`options.state` is consumer-controlled state only; the
+                //order derivation needs the live state for its display-column
+                //predicates
+                table.setColumnOrder(
+                  getDefaultColumnOrderIds(
+                    { ...table.options, state: table.getState() } as Parameters<
+                      typeof getDefaultColumnOrderIds<TData>
+                    >[0],
+                    true,
+                  ),
+                )
+              }
               disabled={!hasColumnOrderChanged}
             >
               {localization.resetOrder}
