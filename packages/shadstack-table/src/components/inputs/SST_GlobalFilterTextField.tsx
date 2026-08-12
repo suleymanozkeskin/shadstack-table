@@ -32,7 +32,10 @@ export const SST_GlobalFilterTextField = <TData extends SST_RowData>({
     refs: { searchInputRef },
     setGlobalFilter,
   } = table;
-  const { globalFilter, showGlobalFilter } = useSST_TableState(table);
+  const { globalFilter, showGlobalFilter } = useSST_TableState(table, (s) => ({
+    globalFilter: s.globalFilter,
+    showGlobalFilter: s.showGlobalFilter,
+  }));
 
   const inputProps = {
     ...parseFromValuesOrFunc(slotProps?.searchInput, {

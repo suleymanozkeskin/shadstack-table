@@ -54,9 +54,14 @@ export const SST_TablePagination = <TData extends SST_RowData>({
       slotProps,
     },
   } = table;
+  //re-render on pagination itself and whenever the displayed totals change
+  //(filtering shrinks the row count without touching `pagination`)
   const {
     pagination: { pageIndex = 0, pageSize = 10 },
-  } = useSST_TableState(table);
+  } = useSST_TableState(table, (s) => ({
+    pagination: s.pagination,
+    totalRowCount: table.getRowCount(),
+  }));
 
   const paginationProps = {
     ...parseFromValuesOrFunc(slotProps?.pagination, {

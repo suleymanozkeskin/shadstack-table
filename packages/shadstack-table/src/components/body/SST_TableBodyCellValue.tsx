@@ -28,8 +28,14 @@ export const SST_TableBodyCellValue = <TData extends SST_RowData>({
   } = table;
   const { column, row } = cell;
   const { columnDef } = column;
-  const { globalFilter, globalFilterFn } = useSST_TableState(table);
-  const filterValue = column.getFilterValue();
+  //highlighting depends on this column's filter value, the global filter,
+  //and the resolved filter fn; the projection covers exactly those, so a
+  //filter change on ANOTHER column does not re-render this cell value
+  const { globalFilter, globalFilterFn, filterValue } = useSST_TableState(table, (s) => ({
+    globalFilter: s.globalFilter,
+    globalFilterFn: s.globalFilterFn,
+    filterValue: cell.column.getFilterValue(),
+  }));
 
   let renderedCellValue =
     cell.getIsAggregated() && columnDef.AggregatedCell

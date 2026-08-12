@@ -23,7 +23,11 @@ export const SST_Table = <TData extends SST_RowData>({
     getFlatHeaders,
     options: { columns, enableTableFooter, enableTableHead, layoutMode, renderCaption, slotProps },
   } = table;
-  const { columnSizing, columnResizing, columnVisibility } = useSST_TableState(table);
+  const { columnSizing, columnResizing, columnVisibility } = useSST_TableState(table, (s) => ({
+    columnSizing: s.columnSizing,
+    columnResizing: s.columnResizing,
+    columnVisibility: s.columnVisibility,
+  }));
 
   const tableProps = {
     ...parseFromValuesOrFunc(slotProps?.table, { table }),

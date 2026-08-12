@@ -139,7 +139,11 @@ export const SST_FilterOptionMenu = <TData extends SST_RowData>({
     setColumnFilterFns,
     setGlobalFilterFn,
   } = table;
-  const { density, globalFilterFn } = useSST_TableState(table);
+  const { density, globalFilterFn } = useSST_TableState(table, (s) => ({
+    density: s.density,
+    globalFilterFn: s.globalFilterFn,
+    columnFilterFns: s.columnFilterFns,
+  }));
   const { column } = header ?? {};
   const { columnDef } = column ?? {};
   const currentFilterValue = column?.getFilterValue();

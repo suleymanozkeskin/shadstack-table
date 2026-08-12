@@ -21,7 +21,7 @@ export const SST_ToggleDensePaddingButton = <TData extends SST_RowData>({
     },
     setDensity,
   } = table;
-  const { density } = useSST_TableState(table);
+  const { density } = useSST_TableState(table, (s) => ({ density: s.density }));
 
   const handleToggleDensePadding = () => {
     const nextDensity =

@@ -23,7 +23,10 @@ export const SST_ToggleGlobalFilterButton = <TData extends SST_RowData>({
     refs: { searchInputRef },
     setShowGlobalFilter,
   } = table;
-  const { globalFilter, showGlobalFilter } = useSST_TableState(table);
+  const { globalFilter, showGlobalFilter } = useSST_TableState(table, (s) => ({
+    globalFilter: s.globalFilter,
+    showGlobalFilter: s.showGlobalFilter,
+  }));
 
   const handleToggleSearch = () => {
     setShowGlobalFilter(!showGlobalFilter);

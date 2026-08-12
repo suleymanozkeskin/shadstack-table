@@ -30,7 +30,11 @@ export const SST_TableHeadCellGrabHandle = <TData extends SST_RowData>({
     setHoveredColumn,
   } = table;
   const { columnDef } = column;
-  const { columnOrder, draggingColumn, hoveredColumn } = useSST_TableState(table);
+  const { columnOrder, draggingColumn, hoveredColumn } = useSST_TableState(table, (s) => ({
+    columnOrder: s.columnOrder,
+    draggingColumn: s.draggingColumn,
+    hoveredColumn: s.hoveredColumn,
+  }));
 
   const iconButtonProps = {
     ...parseFromValuesOrFunc(slotProps?.columnDragHandle, { column, table }),

@@ -28,7 +28,12 @@ export const SST_ExpandAllButton = <TData extends SST_RowData>({
     },
     toggleAllRowsExpanded,
   } = table;
-  const { density, isLoading } = useSST_TableState(table);
+  const { density, isLoading } = useSST_TableState(table, (s) => ({
+    density: s.density,
+    isLoading: s.isLoading,
+    //aggregate expansion state drives the icon and disabled rule
+    isAllRowsExpanded: table.getIsAllRowsExpanded(),
+  }));
 
   const iconButtonProps = {
     ...parseFromValuesOrFunc(slotProps?.expandAllButton, {

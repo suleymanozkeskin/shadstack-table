@@ -25,7 +25,13 @@ export const SST_TableFooterCell = <TData extends SST_RowData>({
   const {
     options: { enableColumnPinning, enableKeyboardShortcuts, slotProps },
   } = table;
-  const { density } = useSST_TableState(table);
+  const { density } = useSST_TableState(table, (s) => ({
+    density: s.density,
+    //getCommonMRTCellStyles reads these for this column's styling
+    isDraggingThisColumn: s.draggingColumn?.id === footer.column.id,
+    isHoveredThisColumn: s.hoveredColumn?.id === footer.column.id,
+    isColumnPinned: footer.column.getIsPinned(),
+  }));
   const { column } = footer;
   const { columnDef } = column;
   const { columnDefType } = columnDef;

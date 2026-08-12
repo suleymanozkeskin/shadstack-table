@@ -42,7 +42,11 @@ export const SST_ShowHideColumnsMenuItems = <TData extends SST_RowData>({
     setColumnOrder,
     setColumnPinning,
   } = table;
-  const { columnOrder } = useSST_TableState(table);
+  const { columnOrder } = useSST_TableState(table, (s) => ({
+    columnOrder: s.columnOrder,
+    columnPinning: s.columnPinning,
+    columnVisibility: s.columnVisibility,
+  }));
   const { columnDef } = column;
   const { columnDefType } = columnDef;
 

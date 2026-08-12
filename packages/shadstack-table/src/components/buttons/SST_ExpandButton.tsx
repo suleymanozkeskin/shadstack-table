@@ -30,7 +30,11 @@ export const SST_ExpandButton = <TData extends SST_RowData>({
       slotProps,
     },
   } = table;
-  const { density } = useSST_TableState(table);
+  const { density } = useSST_TableState(table, (s) => ({
+    density: s.density,
+    //this row's expansion drives the chevron direction
+    isRowExpanded: row.getIsExpanded(),
+  }));
 
   const iconButtonProps = parseFromValuesOrFunc(slotProps?.expandButton, {
     row,

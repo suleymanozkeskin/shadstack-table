@@ -23,7 +23,12 @@ export const SST_TableHeadCellFilterContainer = <TData extends SST_RowData>({
   const {
     options: { columnFilterDisplayMode },
   } = table;
-  const { showColumnFilters } = useSST_TableState(table);
+  const { showColumnFilters } = useSST_TableState(table, (s) => ({
+    showColumnFilters: s.showColumnFilters,
+    //the rendered filter input reflects this column's value and fn
+    filterValue: header.column.getFilterValue(),
+    filterFn: s.columnFilterFns[header.column.id],
+  }));
   const { column } = header;
   const { columnDef } = column;
   const { isRangeFilter } = getColumnFilterInfo({ header, table });

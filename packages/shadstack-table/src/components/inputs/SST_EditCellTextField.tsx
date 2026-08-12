@@ -30,7 +30,10 @@ export const SST_EditCellTextField = <TData extends SST_RowData>({
   } = table;
   const { column, row } = cell;
   const { columnDef } = column;
-  const { creatingRow, editingRow } = useSST_TableState(table);
+  const { creatingRow, editingRow } = useSST_TableState(table, (s) => ({
+    creatingRow: s.creatingRow,
+    editingRow: s.editingRow,
+  }));
   const { editSelectOptions, editVariant } = columnDef;
 
   const isCreating = creatingRow?.id === row.id;

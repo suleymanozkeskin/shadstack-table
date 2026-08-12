@@ -42,10 +42,10 @@ export const SST_ToggleRowActionMenuButton = <TData extends SST_RowData>({
     setEditingRow,
   } = table;
 
-  const { creatingRow, editingRow } = useSST_TableState(table);
-
-  const isCreating = creatingRow?.id === row.id;
-  const isEditing = editingRow?.id === row.id;
+  const { isCreating, isEditing } = useSST_TableState(table, (s) => ({
+    isCreating: s.creatingRow?.id === row.id,
+    isEditing: s.editingRow?.id === row.id,
+  }));
 
   const showEditActionButtons =
     (isCreating && createDisplayMode === 'row') || (isEditing && editDisplayMode === 'row');

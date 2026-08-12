@@ -38,7 +38,10 @@ export const SST_EditRowModal = <TData extends SST_RowData>({
     setCreatingRow,
     setEditingRow,
   } = table;
-  const { creatingRow, editingRow } = useSST_TableState(table);
+  const { creatingRow, editingRow } = useSST_TableState(table, (s) => ({
+    creatingRow: s.creatingRow,
+    editingRow: s.editingRow,
+  }));
   const row = (creatingRow ?? editingRow) as SST_Row<TData>;
 
   // slotProps.editRowDialog / slotProps.createRowDialog flow onto DialogContent,

@@ -21,7 +21,15 @@ export const SST_ToolbarDropZone = <TData extends SST_RowData>({
     setShowToolbarDropZone,
   } = table;
 
-  const { draggingColumn, grouping, hoveredColumn, showToolbarDropZone } = useSST_TableState(table);
+  const { draggingColumn, grouping, hoveredColumn, showToolbarDropZone } = useSST_TableState(
+    table,
+    (s) => ({
+      draggingColumn: s.draggingColumn,
+      grouping: s.grouping,
+      hoveredColumn: s.hoveredColumn,
+      showToolbarDropZone: s.showToolbarDropZone,
+    }),
+  );
 
   const handleDragEnter = (_event: DragEvent<HTMLDivElement>) => {
     setHoveredColumn({ id: 'drop-zone' });

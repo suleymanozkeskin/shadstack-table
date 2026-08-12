@@ -38,7 +38,7 @@ export const SST_RowActionMenu = <TData extends SST_RowData>({
       renderRowActionMenuItems,
     },
   } = table;
-  const { density } = useSST_TableState(table);
+  const { density } = useSST_TableState(table, (s) => ({ density: s.density }));
   const virtualRef = useMemo<React.RefObject<HTMLElement | null> | undefined>(
     () => (anchorEl ? { current: anchorEl } : undefined),
     [anchorEl],

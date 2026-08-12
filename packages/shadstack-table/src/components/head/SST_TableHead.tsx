@@ -23,7 +23,17 @@ export const SST_TableHead = <TData extends SST_RowData>({
     options: { enableStickyHeader, layoutMode, positionToolbarAlertBanner, slotProps },
     refs: { tableHeadRef },
   } = table;
-  const { isFullScreen, showAlertBanner } = useSST_TableState(table);
+  //getHeaderGroups() derives from column order/pinning/visibility/grouping;
+  //nothing above the head subscribes to columnOrder or columnPinning, so the
+  //head owns them
+  const { isFullScreen, showAlertBanner } = useSST_TableState(table, (s) => ({
+    columnOrder: s.columnOrder,
+    columnPinning: s.columnPinning,
+    columnVisibility: s.columnVisibility,
+    grouping: s.grouping,
+    isFullScreen: s.isFullScreen,
+    showAlertBanner: s.showAlertBanner,
+  }));
 
   const tableHeadProps = {
     ...parseFromValuesOrFunc(slotProps?.tableHead, { table }),

@@ -22,7 +22,7 @@ export const SST_ToggleFullScreenButton = <TData extends SST_RowData>({
     },
     setIsFullScreen,
   } = table;
-  const { isFullScreen } = useSST_TableState(table);
+  const { isFullScreen } = useSST_TableState(table, (s) => ({ isFullScreen: s.isFullScreen }));
 
   const [tooltipOpened, setTooltipOpened] = useState(false);
 

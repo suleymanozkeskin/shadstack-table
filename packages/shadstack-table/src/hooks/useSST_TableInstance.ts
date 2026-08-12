@@ -203,11 +203,40 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
   //state. The table's atoms own everything else; passing the full snapshot
   //here would mark every slice controlled, and controlled slices only
   //re-publish to subscribers after a host commit — the table would freeze.
-  const wrapper = useTable({
-    ...statefulTableOptions,
-    state: definedTableOptions.state,
-    globalFilterFn: statefulTableOptions.filterFns?.[currentState.globalFilterFn ?? 'fuzzy'],
-  } as any) as unknown as SST_TableInstance<TData>;
+  //
+  //The selector is the ceiling on the whole tree: every slice it selects
+  //re-renders the host and therefore everything below it. It covers exactly
+  //what this hook's render body consumes — the frozen-columnDefs guard
+  //(three booleans), the display-column predicates and factories
+  //(grouping, creatingRow), column enrichment (columnFilterFns), skeleton
+  //data (loading flags + pageSize while loading), and the resolved global
+  //filter fn. The selected values themselves are not read — the body reads
+  //the live snapshot — so the selector's only job is deciding WHEN the host
+  //re-renders. Hover, selection, editing, sorting, pagination, per-mousemove
+  //resize deltas: none of them re-render the host; components consume them
+  //through their own narrowed subscriptions.
+  const wrapper = useTable(
+    {
+      ...statefulTableOptions,
+      state: definedTableOptions.state,
+      globalFilterFn: statefulTableOptions.filterFns?.[currentState.globalFilterFn ?? 'fuzzy'],
+    } as any,
+    (rawState: unknown) => {
+      const s = rawState as SST_TableState<TData>;
+      const showSkeletonData = !!(s.isLoading || s.showSkeletons);
+      return {
+        columnFilterFns: s.columnFilterFns,
+        creatingRow: s.creatingRow,
+        globalFilterFn: s.globalFilterFn,
+        grouping: s.grouping,
+        isDraggingColumn: !!s.draggingColumn,
+        isDraggingRow: !!s.draggingRow,
+        isResizingColumn: !!s.columnResizing.isResizingColumn,
+        showSkeletonData,
+        skeletonPageSize: showSkeletonData ? s.pagination.pageSize : 0,
+      };
+    },
+  ) as unknown as SST_TableInstance<TData>;
 
   //The public instance is referentially STABLE: created once, refreshed with
   //the latest useTable result every render. useTable itself returns a new

@@ -27,14 +27,18 @@ describe('stable table identity and context', () => {
   it('the hook returns the same instance across state-driven re-renders', () => {
     identities.length = 0;
     render(<Harness />);
+    //globalFilterFn and grouping are in the host selector, so these writes
+    //re-render the hook host (density alone would not — by design)
+    act(() => capturedTable.setGlobalFilterFn('contains'));
+    act(() => capturedTable.setGrouping(['firstName']));
     act(() => capturedTable.setDensity('compact'));
-    act(() => capturedTable.setShowGlobalFilter(true));
 
     expect(identities.length).toBeGreaterThan(1);
     for (const identity of identities) {
       expect(identity).toBe(identities[0]);
     }
-    //and the stable instance exposes the freshest state
+    //and the stable instance exposes the freshest state — including slices
+    //whose writes never re-rendered the host
     expect(identities[0]!.getState().density).toBe('compact');
   });
 

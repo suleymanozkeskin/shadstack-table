@@ -42,7 +42,11 @@ export const SST_TableDetailPanel = <TData extends SST_RowData>({
       slotProps,
     },
   } = table;
-  const { isLoading } = useSST_TableState(table);
+  const { isLoading } = useSST_TableState(table, (s) => ({
+    isLoading: s.isLoading,
+    //re-render when this row expands/collapses
+    isRowExpanded: row.getIsExpanded(),
+  }));
 
   const tableRowProps = parseFromValuesOrFunc(slotProps?.tableBodyRow, {
     isDetailPanel: true,

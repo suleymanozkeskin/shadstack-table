@@ -48,7 +48,13 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
       mrtTheme: { menuBackgroundColor },
     },
   } = table;
-  const { columnOrder, density } = useSST_TableState(table);
+  const { columnOrder, density } = useSST_TableState(table, (s) => ({
+    columnOrder: s.columnOrder,
+    density: s.density,
+    //hide/show/pin buttons render from these
+    columnPinning: s.columnPinning,
+    columnVisibility: s.columnVisibility,
+  }));
   const virtualRef = useMemo<React.RefObject<HTMLElement | null> | undefined>(
     () => (anchorEl ? { current: anchorEl } : undefined),
     [anchorEl],

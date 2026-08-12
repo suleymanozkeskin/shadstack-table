@@ -67,7 +67,20 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
   } = table;
   const { column } = header;
   const { columnDef } = column;
-  const { columnSizing, columnVisibility, density, showColumnFilters } = useSST_TableState(table);
+  const { columnSizing, columnVisibility, density, showColumnFilters } = useSST_TableState(
+    table,
+    (s) => ({
+      columnSizing: s.columnSizing,
+      columnVisibility: s.columnVisibility,
+      density: s.density,
+      showColumnFilters: s.showColumnFilters,
+      //menu entries render this column's sort/group/pin/filter state
+      columnFilters: s.columnFilters,
+      columnPinning: s.columnPinning,
+      grouping: s.grouping,
+      sorting: s.sorting,
+    }),
+  );
   const columnFilterValue = column.getFilterValue();
   const virtualRef = React.useMemo<React.RefObject<HTMLElement | null> | undefined>(
     () => (anchorEl ? { current: anchorEl } : undefined),

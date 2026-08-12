@@ -22,7 +22,14 @@ export const SST_TableFooter = <TData extends SST_RowData>({
     options: { enableStickyFooter, layoutMode, slotProps },
     refs: { tableFooterRef },
   } = table;
-  const { isFullScreen } = useSST_TableState(table);
+  //getFooterGroups() derives from column order/pinning/visibility/grouping
+  const { isFullScreen } = useSST_TableState(table, (s) => ({
+    columnOrder: s.columnOrder,
+    columnPinning: s.columnPinning,
+    columnVisibility: s.columnVisibility,
+    grouping: s.grouping,
+    isFullScreen: s.isFullScreen,
+  }));
 
   const tableFooterProps = {
     ...parseFromValuesOrFunc(slotProps?.tableFooter, {

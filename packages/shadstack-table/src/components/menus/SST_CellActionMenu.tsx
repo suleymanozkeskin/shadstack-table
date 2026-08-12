@@ -31,7 +31,10 @@ export const SST_CellActionMenu = <TData extends SST_RowData>({
     },
     refs: { actionCellRef },
   } = table;
-  const { actionCell, density } = useSST_TableState(table);
+  const { actionCell, density } = useSST_TableState(table, (s) => ({
+    actionCell: s.actionCell,
+    density: s.density,
+  }));
   const cell = actionCell!;
   // Invariant: actionCellRef is already a stable RefObject from useSST_TableInstance;
   // Radix's PopoverAnchor reads `.current` lazily during positioning, so we can hand

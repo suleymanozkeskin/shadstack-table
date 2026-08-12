@@ -45,7 +45,10 @@ export const SST_TopToolbar = <TData extends SST_RowData>({
     refs: { topToolbarRef },
   } = table;
 
-  const { isFullScreen, showGlobalFilter } = useSST_TableState(table);
+  const { isFullScreen, showGlobalFilter } = useSST_TableState(table, (s) => ({
+    isFullScreen: s.isFullScreen,
+    showGlobalFilter: s.showGlobalFilter,
+  }));
 
   const isMobile = useMediaQuery('(max-width:720px)');
   const isTablet = useMediaQuery('(max-width:1024px)');

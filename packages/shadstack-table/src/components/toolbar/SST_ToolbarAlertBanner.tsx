@@ -39,7 +39,12 @@ export const SST_ToolbarAlertBanner = <TData extends SST_RowData>({
     },
     refs: { tablePaperRef },
   } = table;
-  const { density, grouping, rowSelection, showAlertBanner } = useSST_TableState(table);
+  const { density, grouping, rowSelection, showAlertBanner } = useSST_TableState(table, (s) => ({
+    density: s.density,
+    grouping: s.grouping,
+    rowSelection: s.rowSelection,
+    showAlertBanner: s.showAlertBanner,
+  }));
 
   const alertProps = {
     ...parseFromValuesOrFunc(slotProps?.toolbarAlertBanner, {

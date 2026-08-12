@@ -28,7 +28,11 @@ export const useSST_RowVirtualizer = <
     },
     refs: { tableContainerRef },
   } = table;
-  const { density, draggingRow, expanded } = useSST_TableState(table);
+  const { density, draggingRow, expanded } = useSST_TableState(table, (s) => ({
+    density: s.density,
+    draggingRow: s.draggingRow,
+    expanded: s.expanded,
+  }));
 
   if (!enableRowVirtualization) return undefined;
 

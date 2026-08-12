@@ -23,7 +23,7 @@ export const SST_FilterCheckbox = <TData extends SST_RowData>({
   const {
     options: { localization, slotProps },
   } = table;
-  const { density } = useSST_TableState(table);
+  const { density } = useSST_TableState(table, (s) => ({ density: s.density }));
   const { columnDef } = column;
 
   const checkboxProps = {

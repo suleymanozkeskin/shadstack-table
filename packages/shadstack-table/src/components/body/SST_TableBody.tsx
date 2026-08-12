@@ -45,7 +45,21 @@ export const SST_TableBody = <TData extends SST_RowData>({
     },
     refs: { tableFooterRef, tableHeadRef, tablePaperRef },
   } = table;
-  const { columnFilters, globalFilter, isFullScreen, rowPinning } = useSST_TableState(table);
+  //the body owns the row list: every slice the row models derive from (or
+  //that changes which/how rows render) must be here, plus columnOrder and
+  //columnPinning so per-row visible-cell order and pinned styling refresh —
+  //neither the host nor SST_Table subscribes to those
+  const { columnFilters, globalFilter, isFullScreen, rowPinning } = useSST_TableState(
+    table,
+    (s) => ({
+      columnFilters: s.columnFilters,
+      columnOrder: s.columnOrder,
+      columnPinning: s.columnPinning,
+      globalFilter: s.globalFilter,
+      isFullScreen: s.isFullScreen,
+      rowPinning: s.rowPinning,
+    }),
+  );
 
   const tableBodyProps = {
     ...parseFromValuesOrFunc(slotProps?.tableBody, { table }),

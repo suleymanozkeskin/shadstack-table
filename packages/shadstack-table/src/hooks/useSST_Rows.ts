@@ -11,7 +11,14 @@ export const useSST_Rows = <TData extends SST_RowData>(
     options: { data, enableGlobalFilterRankedResults, positionCreatingRow },
   } = table;
   const { creatingRow, expanded, globalFilter, pagination, rowPinning, sorting } =
-    useSST_TableState(table);
+    useSST_TableState(table, (s) => ({
+      creatingRow: s.creatingRow,
+      expanded: s.expanded,
+      globalFilter: s.globalFilter,
+      pagination: s.pagination,
+      rowPinning: s.rowPinning,
+      sorting: s.sorting,
+    }));
 
   const rows = useMemo(
     () => getSST_Rows(table),

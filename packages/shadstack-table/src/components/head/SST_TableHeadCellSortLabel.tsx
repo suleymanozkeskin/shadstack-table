@@ -25,7 +25,11 @@ export const SST_TableHeadCellSortLabel = <TData extends SST_RowData>({
   } = table;
   const { column } = header;
   const { columnDef } = column;
-  const { isLoading, showSkeletons, sorting } = useSST_TableState(table);
+  const { isLoading, showSkeletons, sorting } = useSST_TableState(table, (s) => ({
+    isLoading: s.isLoading,
+    showSkeletons: s.showSkeletons,
+    sorting: s.sorting,
+  }));
 
   const isSorted = !!column.getIsSorted();
 

@@ -20,7 +20,15 @@ export const SST_TableHeadCellResizeHandle = <TData extends SST_RowData>({
     options: { columnResizeDirection, columnResizeMode },
     setColumnResizing,
   } = table;
-  const { columnResizing, density } = useSST_TableState(table);
+  const { deltaOffset, density } = useSST_TableState(table, (s) => ({
+    //per-mousemove delta subscribed ONLY while this column resizes — other
+    //columns' resize ticks do not re-render this handle
+    deltaOffset:
+      s.columnResizing.isResizingColumn === header.column.id
+        ? (s.columnResizing.deltaOffset ?? 0)
+        : 0,
+    density: s.density,
+  }));
   const { column } = header;
 
   const handler = header.getResizeHandler();
@@ -53,7 +61,7 @@ export const SST_TableHeadCellResizeHandle = <TData extends SST_RowData>({
       style={{
         transform:
           column.getIsResizing() && columnResizeMode === 'onEnd'
-            ? `translateX(${(isRtl ? -1 : 1) * (columnResizing.deltaOffset ?? 0)}px)`
+            ? `translateX(${(isRtl ? -1 : 1) * deltaOffset}px)`
             : undefined,
         left: isRtl ? lr : undefined,
         right: !isRtl ? lr : undefined,

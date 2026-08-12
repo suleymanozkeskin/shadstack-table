@@ -30,7 +30,20 @@ export const SST_SelectCheckbox = <TData extends SST_RowData>({
   const {
     options: { enableMultiRowSelection, localization, selectAllMode, slotProps },
   } = table;
-  const { density, isLoading } = useSST_TableState(table);
+  const { density, isLoading } = useSST_TableState(table, (s) => ({
+    density: s.density,
+    isLoading: s.isLoading,
+    //selection projections: only checkboxes whose checked/indeterminate
+    //state can change re-render on a selection write
+    selectionSnapshot: row
+      ? [row.getIsSelected(), row.getIsSomeSelected(), row.getIsAllSubRowsSelected()].join()
+      : [
+          table.getIsAllRowsSelected(),
+          table.getIsAllPageRowsSelected(),
+          table.getIsSomeRowsSelected(),
+          table.getIsSomePageRowsSelected(),
+        ].join(),
+  }));
 
   const selectAll = !row;
 

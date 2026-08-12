@@ -10,6 +10,13 @@ Persisted table state needs migrating on read: `columnPinning` changed shape and
 
 ### Added
 
+- **Granular render subscriptions.** Every internal component now subscribes to exactly the state it renders, with per-row/per-cell projections in the hot paths, and the hook host's `useTable` selector covers only what table construction itself consumes. What this means in practice (all verified by render-count tests and interaction benchmarks against the parity port, 10k–50k rows, virtualized):
+  - hovering a row during a drag re-renders that row alone (a drag-hover move: ~3.7ms → ~0.2ms, ~18x);
+  - entering/leaving cell editing re-renders that cell alone (~7.9ms → ~0.4ms, ~20x);
+  - toggling one row's selection re-renders the affected checkboxes/rows, not the table (~10.2ms → ~2.5ms);
+  - a page flip leaves every header cell un-rendered (~7.4ms → ~3.1ms);
+  - interaction cost is independent of table size — the 50k-row numbers match the 10k-row numbers.
+    Mount and sort-after-mount times are unchanged (50k virtualized sort: 153ms parity vs 154ms). `memoMode` is retained: its remaining job is blunting the one legitimate full-subtree cascade, per-tick column resizing, which re-renders through the table-level CSS-variable styles; moving those to imperative style writes is a possible future refinement.
 - `useSST_TableState(table, selector?)` — subscribe to table state during render. With no selector it returns the full state snapshot and re-renders on any change; with a selector the selected value is shallow-compared, so a component re-renders only when what it selected changes. This is the render-phase counterpart to `getState()`, which remains the right call inside event handlers and effects.
 - `useSST_TableContext()` and `SST_TableContext` — read the table instance from context anywhere below `SST_TablePaper`, e.g. inside custom `Cell`/`Header` renderers and toolbar slots, without threading the `table` prop.
 - `@tanstack/react-store` is a declared (externalized) dependency; it resolves to the same copy `@tanstack/react-table` already ships.
@@ -17,6 +24,8 @@ Persisted table state needs migrating on read: `columnPinning` changed shape and
 ### Changed
 
 - The table instance returned by `useShadStackTable` (and used internally by `ShadStackTable`) is referentially stable across renders; its contents are refreshed each render. Consumer effects keyed on `[table]` now run once instead of on every render. Internal components read state through `useSST_TableState`, so the read is the subscription.
+- Internal event handlers that can fire without their component having re-rendered (drag-enter on cells and head cells) read `table.getState()` live instead of render-captured values.
+- Table-level side effects (fullscreen body styles, ranked-filter sort save/restore, page-bounds clamping, pinned-row restyle on density change) run as store/atom subscriptions rather than render-phase effects. Their observable behaviour is unchanged; the page-bounds clamp still fires only when row count or loading flags change.
 - **Breaking:** every shadstack state slice (`density`, `isFullScreen`, `editingRow`, `hoveredColumn`, …) is now real table state, owned by the table's TanStack Store atoms instead of React state inside the hook. Consequences for consumers:
   - `table.options.state` now contains only the controlled state the consumer supplied — the v9 contract. Read current state through `table.getState()` (unchanged signature) or the new typed `table.atoms.<slice>` / `table.baseAtoms.<slice>` maps. Code that read merged state off `table.options.state` must switch to `getState()`.
   - `table.reset()` now resets shadstack slices along with TanStack's, back to `initialState`. Consumer-controlled slices (supplied via `state`) are unaffected, matching v9 semantics. Previously the shadstack slices survived a reset.

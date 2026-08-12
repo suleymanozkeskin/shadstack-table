@@ -43,7 +43,7 @@ export const SST_BottomToolbar = <TData extends SST_RowData>({
     },
     refs: { bottomToolbarRef },
   } = table;
-  const { isFullScreen } = useSST_TableState(table);
+  const { isFullScreen } = useSST_TableState(table, (s) => ({ isFullScreen: s.isFullScreen }));
 
   const isMobile = useMediaQuery('(max-width:720px)');
 

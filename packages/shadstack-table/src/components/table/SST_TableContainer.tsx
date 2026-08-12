@@ -33,7 +33,14 @@ export const SST_TableContainer = <TData extends SST_RowData>({
     refs: { bottomToolbarRef, tableContainerRef, topToolbarRef },
   } = table;
   const { actionCell, creatingRow, editingRow, isFullScreen, isLoading, showLoadingOverlay } =
-    useSST_TableState(table);
+    useSST_TableState(table, (s) => ({
+      actionCell: s.actionCell,
+      creatingRow: s.creatingRow,
+      editingRow: s.editingRow,
+      isFullScreen: s.isFullScreen,
+      isLoading: s.isLoading,
+      showLoadingOverlay: s.showLoadingOverlay,
+    }));
 
   const loading = showLoadingOverlay !== false && (isLoading || showLoadingOverlay);
 

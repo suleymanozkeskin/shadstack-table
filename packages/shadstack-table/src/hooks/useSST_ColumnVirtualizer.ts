@@ -21,7 +21,12 @@ export const useSST_ColumnVirtualizer = <
     },
     refs: { tableContainerRef },
   } = table;
-  const { columnPinning, columnVisibility, draggingColumn } = useSST_TableState(table);
+  const { columnPinning, columnVisibility, draggingColumn } = useSST_TableState(table, (s) => ({
+    columnOrder: s.columnOrder,
+    columnPinning: s.columnPinning,
+    columnVisibility: s.columnVisibility,
+    draggingColumn: s.draggingColumn,
+  }));
 
   if (!enableColumnVirtualization) return undefined;
 

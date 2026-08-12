@@ -30,7 +30,7 @@ export const SST_TablePaper = <TData extends SST_RowData>({
     },
     refs: { tablePaperRef },
   } = table;
-  const { isFullScreen } = useSST_TableState(table);
+  const { isFullScreen } = useSST_TableState(table, (s) => ({ isFullScreen: s.isFullScreen }));
 
   const paperProps = {
     ...parseFromValuesOrFunc(slotProps?.tablePaper, { table }),

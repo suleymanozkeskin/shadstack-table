@@ -34,7 +34,11 @@ export const SST_EditActionButtons = <TData extends SST_RowData>({
     setCreatingRow,
     setEditingRow,
   } = table;
-  const { creatingRow, editingRow, isSaving } = useSST_TableState(table);
+  const { creatingRow, editingRow, isSaving } = useSST_TableState(table, (s) => ({
+    creatingRow: s.creatingRow,
+    editingRow: s.editingRow,
+    isSaving: s.isSaving,
+  }));
 
   const isCreating = creatingRow?.id === row.id;
   const isEditing = editingRow?.id === row.id;
