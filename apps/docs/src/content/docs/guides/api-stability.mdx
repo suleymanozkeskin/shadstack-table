@@ -15,13 +15,17 @@ The surface we intend to keep working through 1.x.
 - **Components:** `ShadStackTable`
 - **Hooks:** `useShadStackTable`
 - **Helpers:** `createSSTColumnHelper`, `flexRender`, `createRow`
+- **Constants:** `SST_COLUMN_MENU_ITEM_IDS` — the ids exist so consumer code
+  can address built-in column-menu entries across versions; entries may be
+  added, but an existing id keeps naming the same entry
 - **Types:** `SST_ColumnDef`, `SST_TableOptions`, `SST_TableInstance`,
   `SST_Row`, `SST_RowData`, `SST_Header`, `SST_Column`, `SST_Localization`,
   `SST_Theme`, `SST_RowSelectionState`, `SST_SortingState`,
   `SST_ColumnFiltersState`, `SST_PaginationState`, `SST_ColumnPinningState`,
   `SST_RowPinningState`, `SST_ExpandedState`, `SST_VisibilityState`,
   `SST_GroupingState`, `SST_ColumnOrderState`, `SST_ColumnSizingState`,
-  `SST_ColumnSizingInfoState`
+  `SST_ColumnSizingInfoState`, `SST_ColumnMenuItemIds`,
+  `SST_InternalColumnMenuItem`
 - **Options:** every documented field on `SST_TableOptions` (toggles,
   callbacks, `theme`, `localization`, `slotProps`, …)
 - **Localization subpaths:** `shadstack-table/locales/<code>` — see

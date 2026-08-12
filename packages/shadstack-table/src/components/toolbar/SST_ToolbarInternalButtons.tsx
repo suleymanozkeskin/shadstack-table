@@ -28,8 +28,8 @@ export const SST_ToolbarInternalButtons = <TData extends SST_RowData>({
       enableFilters,
       enableFullScreenToggle,
       enableGlobalFilter,
+      enableGlobalFilterToggle,
       enableHiding,
-      initialState,
       renderToolbarInternalActions,
     },
   } = table;
@@ -40,7 +40,7 @@ export const SST_ToolbarInternalButtons = <TData extends SST_RowData>({
         table,
       }) ?? (
         <>
-          {enableFilters && enableGlobalFilter && !initialState?.showGlobalFilter && (
+          {enableFilters && enableGlobalFilter && enableGlobalFilterToggle && (
             <SST_ToggleGlobalFilterButton table={table} />
           )}
           {enableFilters && enableColumnFilters && columnFilterDisplayMode !== 'popover' && (

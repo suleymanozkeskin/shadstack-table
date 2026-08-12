@@ -17,6 +17,9 @@ import './_ui/styles.css';
 
 export * from './types';
 
+//constants
+export * from './constants';
+
 //helpers
 export * from './utils/tanstack.helpers';
 export * from './utils/cell.utils';

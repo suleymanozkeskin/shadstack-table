@@ -1,4 +1,4 @@
-import { type ReactNode, type RefObject } from 'react';
+import { type ReactElement, type ReactNode, type RefObject } from 'react';
 import {
   type AccessorFn,
   type Column,
@@ -8,6 +8,7 @@ import {
   type Header,
   type HeaderGroup,
 } from '@tanstack/react-table';
+import { type SST_ColumnMenuItemIds } from '../constants';
 import { type SST_Cell } from './cell';
 import {
   type SST_AggregationFn,
@@ -20,6 +21,16 @@ import { type DropdownOption, type LiteralUnion } from './primitives';
 import { type SST_Row, type SST_RowData } from './row';
 import { type SST_ColumnSlotProps } from './slots';
 import { type SST_TableInstance } from './instance';
+
+/**
+ * One built-in entry of the column-actions menu, as handed to
+ * `renderColumnActionsMenuItems`. `key` is a stable id from
+ * {@link SST_COLUMN_MENU_ITEM_IDS} — never a positional value — so overrides
+ * can address a specific entry across versions.
+ */
+export type SST_InternalColumnMenuItem = ReactElement & {
+  key: SST_ColumnMenuItemIds | null;
+};
 
 export type SST_DisplayColumnIds =
   | 'sst-row-actions'
@@ -129,6 +140,19 @@ export interface SST_ColumnDef<TData extends SST_RowData, TValue = unknown> exte
   enableColumnFilterModes?: boolean;
   enableColumnOrdering?: boolean;
   enableEditing?: ((row: SST_Row<TData>) => boolean) | boolean;
+  /**
+   * Show the "filter by column" entry in this column's actions menu — the one
+   * that reveals the filter row, or opens the filter-mode submenu when the
+   * filter row is already showing.
+   *
+   * Set `false` to drop the entry while keeping the column filterable. Turning
+   * the column's filter off entirely (`enableColumnFilter: false`) also removes
+   * the "clear filter" entry, which is usually not what you want.
+   *
+   * Defaults to `true`. The table-level option of the same name sets the
+   * default for every column.
+   */
+  enableFilterByColumnMenuItem?: boolean;
   enableFilterMatchHighlighting?: boolean;
   Filter?: (props: {
     column: SST_Column<TData, TValue>;
@@ -216,7 +240,7 @@ export interface SST_ColumnDef<TData extends SST_RowData, TValue = unknown> exte
   renderColumnActionsMenuItems?: (props: {
     closeMenu: () => void;
     column: SST_Column<TData>;
-    internalColumnMenuItems: ReactNode[];
+    internalColumnMenuItems: SST_InternalColumnMenuItem[];
     table: SST_TableInstance<TData>;
   }) => ReactNode[];
   renderColumnFilterModeMenuItems?: (props: {
