@@ -4,6 +4,12 @@ All notable changes to `shadstack-table` are recorded here. The format is based 
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-08-12
+
+### Fixed
+
+- Dark-mode tokens now activate under the `data-theme='dark'` attribute convention as well as the `.dark` class: the shipped `style.css` dark block is scoped `:where(.dark, [data-theme='dark'])`. Hosts that flip dark mode via `data-theme` (Starlight, DaisyUI-style theming) previously kept the library on its light palette unless they also managed a `.dark` class. Both selectors stay inside `:where()`, so specificity is unchanged and host token overrides keep winning.
+
 ## [0.3.0] — 2026-08-12
 
 Moves the table engine from TanStack Table v8 to v9 (pinned to `9.1.2`) and makes v9’s render granularity the default: every state slice lives in the table’s TanStack Store atoms, every internal component subscribes to exactly the state it renders, and a state write re-renders only its subscribers. v9 makes the feature set explicit and adds a `TFeatures` type parameter to nearly every TanStack type; shadstack registers the full feature set once internally, so the public `SST_*` types keep their existing generics — `SST_Row<TData>`, `SST_TableInstance<TData>`, `SST_ColumnDef<TData, TValue>` are unchanged. The renames below are the surface that does move, and every one of them is a rename of a TanStack concept rather than a shadstack decision.
@@ -281,6 +287,7 @@ First public pre-release. The full `material-react-table` feature surface is por
 - Column drag-reorder.
 - `filterVariant: 'time' | 'datetime' | 'time-range' | 'datetime-range'` — native `<input>` is used until a shadcn time picker recipe lands.
 
+[0.3.1]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.6...v0.2.0

@@ -10,11 +10,15 @@
  * won the cascade).
  *
  * What this file DOES contain:
- *   - shadcn token defaults (`:where(:root)` / `:where(.dark)`) at 0,0,0
- *     specificity so any host theme tokens win automatically.
- *   - Library-specific component CSS — scrollbar, keyboard-focus ring, and
- *     pinned-cell ::before overlay — keyed off the `data-slot` /
- *     `data-pinned` / `data-pin-shadow` attributes the React components emit.
+ *   - shadcn token defaults — light at `:where(:root)`, dark at
+ *     `:where(.dark, [data-theme='dark'])` — at 0,0,0 specificity so any
+ *     host theme tokens win automatically. Dark mode activates on either
+ *     convention: the Tailwind/shadcn `.dark` class or a
+ *     `data-theme='dark'` attribute.
+ *   - Library-specific component CSS — scrollbar and keyboard-focus ring —
+ *     keyed off the `data-slot` attributes the React components emit.
+ *     (Cells also emit `data-pinned` for consumers who want to style pinned
+ *     columns; this file no longer ships rules for it.)
  *
  * Consumer setup (Tailwind v4):
  *   @import 'tailwindcss';
@@ -49,7 +53,13 @@
   --chart-5: oklch(0.769 0.188 70.08);
 }
 
-:where(.dark) {
+/*
+ * Dark tokens activate on either dark-mode convention: the Tailwind/shadcn
+ * `.dark` class, or a `data-theme='dark'` attribute (Starlight, DaisyUI-style
+ * hosts). Both selectors stay inside :where() so specificity remains 0,0,0
+ * and host overrides keep winning.
+ */
+:where(.dark, [data-theme='dark']) {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
