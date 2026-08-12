@@ -38,8 +38,10 @@ export * from './hooks/useSST_ColumnVirtualizer';
 export * from './hooks/useSST_Effects';
 export * from './hooks/useSST_RowVirtualizer';
 export * from './hooks/useSST_Rows';
+export * from './hooks/useSST_TableContext';
 export * from './hooks/useSST_TableInstance';
 export * from './hooks/useSST_TableOptions';
+export * from './hooks/useSST_TableState';
 
 //components
 export * from './components/ShadStackTable';

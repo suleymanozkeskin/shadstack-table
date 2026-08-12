@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { memo, useMemo } from 'react';
 import { type VirtualItem } from '@tanstack/react-virtual';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { SST_TableBodyRow, Memo_SST_TableBodyRow } from './SST_TableBodyRow';
 import { useSST_RowVirtualizer } from '../../hooks/useSST_RowVirtualizer';
 import { useSST_Rows } from '../../hooks/useSST_Rows';
@@ -30,7 +31,6 @@ export const SST_TableBody = <TData extends SST_RowData>({
     getBottomRows,
     getIsSomeRowsPinned,
     getRowModel,
-    getState,
     getTopRows,
     options: {
       enableStickyFooter,
@@ -45,7 +45,21 @@ export const SST_TableBody = <TData extends SST_RowData>({
     },
     refs: { tableFooterRef, tableHeadRef, tablePaperRef },
   } = table;
-  const { columnFilters, globalFilter, isFullScreen, rowPinning } = getState();
+  //the body owns the row list: every slice the row models derive from (or
+  //that changes which/how rows render) must be here, plus columnOrder and
+  //columnPinning so per-row visible-cell order and pinned styling refresh —
+  //neither the host nor SST_Table subscribes to those
+  const { columnFilters, globalFilter, isFullScreen, rowPinning } = useSST_TableState(
+    table,
+    (s) => ({
+      columnFilters: s.columnFilters,
+      columnOrder: s.columnOrder,
+      columnPinning: s.columnPinning,
+      globalFilter: s.globalFilter,
+      isFullScreen: s.isFullScreen,
+      rowPinning: s.rowPinning,
+    }),
+  );
 
   const tableBodyProps = {
     ...parseFromValuesOrFunc(slotProps?.tableBody, { table }),
@@ -206,5 +220,5 @@ export const SST_TableBody = <TData extends SST_RowData>({
 // flows through unimpeded.
 export const Memo_SST_TableBody = memo(
   SST_TableBody,
-  (_prev, next) => !!next.table.getState().columnSizingInfo.isResizingColumn,
+  (_prev, next) => !!next.table.getState().columnResizing.isResizingColumn,
 ) as typeof SST_TableBody;

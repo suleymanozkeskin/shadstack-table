@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useMemo } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { useSST_ColumnVirtualizer } from '../../hooks/useSST_ColumnVirtualizer';
 import { cn } from '../../lib/utils';
 import { type SST_RowData, type SST_TableInstance } from '../../types';
@@ -20,10 +21,13 @@ export const SST_Table = <TData extends SST_RowData>({
 }: SST_TableProps<TData>) => {
   const {
     getFlatHeaders,
-    getState,
     options: { columns, enableTableFooter, enableTableHead, layoutMode, renderCaption, slotProps },
   } = table;
-  const { columnSizing, columnSizingInfo, columnVisibility } = getState();
+  const { columnSizing, columnResizing, columnVisibility } = useSST_TableState(table, (s) => ({
+    columnSizing: s.columnSizing,
+    columnResizing: s.columnResizing,
+    columnVisibility: s.columnVisibility,
+  }));
 
   const tableProps = {
     ...parseFromValuesOrFunc(slotProps?.table, { table }),
@@ -40,7 +44,7 @@ export const SST_Table = <TData extends SST_RowData>({
   //   - columns          -> getFlatHeaders() header set (add/remove)
   //   - columnVisibility -> getFlatHeaders() header set (filtered)
   //   - columnSizing     -> header.getSize() values (persisted sizes)
-  //   - columnSizingInfo -> header.getSize() values during live resize
+  //   - columnResizing -> header.getSize() values during live resize
   const columnSizeVars = useMemo(() => {
     const headers = getFlatHeaders();
     const colSizes: { [key: string]: number } = {};
@@ -52,7 +56,7 @@ export const SST_Table = <TData extends SST_RowData>({
     }
     return colSizes;
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- deps are accessor-driven invalidation keys; see comment above for the accessor each slice triggers.
-  }, [columns, columnSizing, columnSizingInfo, columnVisibility]);
+  }, [columns, columnSizing, columnResizing, columnVisibility]);
 
   const columnVirtualizer = useSST_ColumnVirtualizer(table);
 
@@ -76,7 +80,7 @@ export const SST_Table = <TData extends SST_RowData>({
     >
       {!!Caption && <caption>{Caption}</caption>}
       {enableTableHead && <SST_TableHead {...commonTableGroupProps} />}
-      {columnSizingInfo.isResizingColumn ? (
+      {columnResizing.isResizingColumn ? (
         <Memo_SST_TableBody {...commonTableGroupProps} />
       ) : (
         <SST_TableBody {...commonTableGroupProps} />

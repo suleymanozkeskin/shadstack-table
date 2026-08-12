@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Button } from '../../_ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
 import { type SST_RowData, type SST_TableInstance } from '../../types';
@@ -14,7 +15,6 @@ export const SST_ToggleGlobalFilterButton = <TData extends SST_RowData>({
   ...rest
 }: SST_ToggleGlobalFilterButtonProps<TData>) => {
   const {
-    getState,
     options: {
       icons: { SearchIcon, SearchOffIcon },
 
@@ -23,7 +23,10 @@ export const SST_ToggleGlobalFilterButton = <TData extends SST_RowData>({
     refs: { searchInputRef },
     setShowGlobalFilter,
   } = table;
-  const { globalFilter, showGlobalFilter } = getState();
+  const { globalFilter, showGlobalFilter } = useSST_TableState(table, (s) => ({
+    globalFilter: s.globalFilter,
+    showGlobalFilter: s.showGlobalFilter,
+  }));
 
   const handleToggleSearch = () => {
     setShowGlobalFilter(!showGlobalFilter);

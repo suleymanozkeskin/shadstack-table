@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { type Range, useVirtualizer } from '@tanstack/react-virtual';
+import { useSST_TableState } from './useSST_TableState';
 import { type SST_ColumnVirtualizer, type SST_RowData, type SST_TableInstance } from '../types';
 import { parseFromValuesOrFunc } from '../utils/utils';
 import { extraIndexRangeExtractor } from '../utils/virtualization.utils';
@@ -12,7 +13,6 @@ export const useSST_ColumnVirtualizer = <
   table: SST_TableInstance<TData>,
 ): SST_ColumnVirtualizer | undefined => {
   const {
-    getState,
     options: {
       columnVirtualizerInstanceRef,
       columnVirtualizerOptions,
@@ -21,7 +21,12 @@ export const useSST_ColumnVirtualizer = <
     },
     refs: { tableContainerRef },
   } = table;
-  const { columnPinning, columnVisibility, draggingColumn } = getState();
+  const { columnPinning, columnVisibility, draggingColumn } = useSST_TableState(table, (s) => ({
+    columnOrder: s.columnOrder,
+    columnPinning: s.columnPinning,
+    columnVisibility: s.columnVisibility,
+    draggingColumn: s.draggingColumn,
+  }));
 
   if (!enableColumnVirtualization) return undefined;
 
@@ -35,9 +40,9 @@ export const useSST_ColumnVirtualizer = <
     () =>
       enableColumnPinning
         ? [
-            table.getLeftVisibleLeafColumns().map((c) => c.getPinnedIndex()),
+            table.getStartVisibleLeafColumns().map((c) => c.getPinnedIndex()),
             table
-              .getRightVisibleLeafColumns()
+              .getEndVisibleLeafColumns()
               .map((column) => visibleColumns.length - column.getPinnedIndex() - 1)
               .sort((a, b) => a - b),
           ]

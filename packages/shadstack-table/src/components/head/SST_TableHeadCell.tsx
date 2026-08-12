@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { type DragEvent, useMemo, useCallback } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { SST_TableHeadCellColumnActionsButton } from './SST_TableHeadCellColumnActionsButton';
 import { SST_TableHeadCellFilterContainer } from './SST_TableHeadCellFilterContainer';
 import { SST_TableHeadCellFilterLabel } from './SST_TableHeadCellFilterLabel';
@@ -36,7 +37,6 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
 }: SST_TableHeadCellProps<TData>) => {
   const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
   const {
-    getState,
     options: {
       columnFilterDisplayMode,
       columnResizeDirection,
@@ -55,8 +55,26 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
     refs: { tableHeadCellRefs },
     setHoveredColumn,
   } = table;
-  const { columnSizingInfo, density, draggingColumn, grouping, hoveredColumn, showColumnFilters } =
-    getState();
+  //Per-column projections: this head cell re-renders only for changes that
+  //affect THIS column. Drag/hover handlers read table.getState() live, since
+  //they can fire while none of these projections have changed.
+  const {
+    density,
+    isDraggingThisColumn,
+    isGroupedThisColumn,
+    isHoveredThisColumn,
+    isResizingThisColumn,
+    showColumnFilters,
+  } = useSST_TableState(table, (s) => ({
+    density: s.density,
+    isDraggingThisColumn: s.draggingColumn?.id === header.column.id,
+    isGroupedThisColumn: s.grouping.includes(header.column.id),
+    isHoveredThisColumn: s.hoveredColumn?.id === header.column.id,
+    isResizingThisColumn: s.columnResizing.isResizingColumn === header.column.id,
+    showColumnFilters: s.showColumnFilters,
+    //aria-sort and the sort tooltip render from this column's sort state
+    sortDirectionThisColumn: header.column.getIsSorted(),
+  }));
   const { column } = header;
   const { columnDef } = column;
   const { columnDefType } = columnDef;
@@ -82,7 +100,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
     columnDef.enableColumnDragging !== false &&
     (enableColumnDragging ||
       (enableColumnOrdering && columnDef.enableColumnOrdering !== false) ||
-      (enableGrouping && columnDef.enableGrouping !== false && !grouping.includes(column.id)));
+      (enableGrouping && columnDef.enableGrouping !== false && !isGroupedThisColumn));
 
   const headerPL = useMemo(() => {
     let pl = 0;
@@ -95,15 +113,13 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
 
   const draggingBorders = useMemo(() => {
     const showResizeBorder =
-      columnSizingInfo.isResizingColumn === column.id &&
-      columnResizeMode === 'onChange' &&
-      !header.subHeaders.length;
+      isResizingThisColumn && columnResizeMode === 'onChange' && !header.subHeaders.length;
 
     const borderStyle = showResizeBorder
       ? `2px solid ${draggingBorderColor}`
-      : draggingColumn?.id === column.id
+      : isDraggingThisColumn
         ? `1px dashed color-mix(in oklch, var(--foreground) 50%, transparent)`
-        : hoveredColumn?.id === column.id
+        : isHoveredThisColumn
           ? `2px dashed ${draggingBorderColor}`
           : undefined;
 
@@ -120,9 +136,12 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
         }
       : undefined;
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional narrow deps; resize-border state must only react to drag/hover/resize transitions. column.id / columnResizeMode / columnResizeDirection / draggingBorderColor / header.subHeaders.length are effectively per-instance constants over the cell lifetime, and including them would cause unnecessary recomputes during column-resize streams. FOLLOW-UP: verify all listed deps are truly stable.
-  }, [draggingColumn, hoveredColumn, columnSizingInfo.isResizingColumn]);
+  }, [isDraggingThisColumn, isHoveredThisColumn, isResizingThisColumn]);
 
   const handleDragEnter = (_e: DragEvent) => {
+    //live reads: a drag can pass over this cell without any of its
+    //subscribed projections having changed since its last render
+    const { draggingColumn, hoveredColumn } = table.getState();
     if (enableGrouping && hoveredColumn?.id === 'drop-zone') {
       setHoveredColumn(null);
     }

@@ -1,24 +1,27 @@
-import { type RankingInfo, rankItem, rankings } from '@tanstack/match-sorter-utils';
-import { type Row, filterFns } from '@tanstack/react-table';
+import { rankItem, rankings } from '@tanstack/match-sorter-utils';
+import { type ExtractFilterMeta, type Row, filterFns } from '@tanstack/react-table';
 import { type SST_RowData } from '../types';
 
 const fuzzy = <TData extends SST_RowData>(
-  row: Row<TData>,
+  row: Row<any, TData>,
   columnId: string,
   filterValue: number | string,
-  addMeta: (item: RankingInfo) => void,
+  // TanStack v9 declares `addMeta` as optional on `FilterFn` and types the
+  // payload from the feature set's `filterMeta` slot. Both are required for
+  // this function to be assignable to the `filterFns` registry.
+  addMeta?: (item: ExtractFilterMeta<any>) => void,
 ): boolean => {
   const itemRank = rankItem(row.getValue<string | number | null>(columnId), filterValue as string, {
     threshold: rankings.MATCHES,
   });
-  addMeta(itemRank);
+  addMeta?.(itemRank);
   return itemRank.passed;
 };
 
 fuzzy.autoRemove = (val: any) => !val;
 
 const contains = <TData extends SST_RowData>(
-  row: Row<TData>,
+  row: Row<any, TData>,
   id: string,
   filterValue: number | string,
 ): boolean =>
@@ -32,7 +35,7 @@ const contains = <TData extends SST_RowData>(
 contains.autoRemove = (val: any) => !val;
 
 const startsWith = <TData extends SST_RowData>(
-  row: Row<TData>,
+  row: Row<any, TData>,
   id: string,
   filterValue: number | string,
 ): boolean =>
@@ -46,7 +49,7 @@ const startsWith = <TData extends SST_RowData>(
 startsWith.autoRemove = (val: any) => !val;
 
 const endsWith = <TData extends SST_RowData>(
-  row: Row<TData>,
+  row: Row<any, TData>,
   id: string,
   filterValue: number | string,
 ): boolean =>
@@ -60,7 +63,7 @@ const endsWith = <TData extends SST_RowData>(
 endsWith.autoRemove = (val: any) => !val;
 
 const equals = <TData extends SST_RowData>(
-  row: Row<TData>,
+  row: Row<any, TData>,
   id: string,
   filterValue: number | string,
 ): boolean =>
@@ -70,7 +73,7 @@ const equals = <TData extends SST_RowData>(
 equals.autoRemove = (val: any) => !val;
 
 const notEquals = <TData extends SST_RowData>(
-  row: Row<TData>,
+  row: Row<any, TData>,
   id: string,
   filterValue: number | string,
 ): boolean =>
@@ -80,7 +83,7 @@ const notEquals = <TData extends SST_RowData>(
 notEquals.autoRemove = (val: any) => !val;
 
 const greaterThan = <TData extends SST_RowData>(
-  row: Row<TData>,
+  row: Row<any, TData>,
   id: string,
   filterValue: number | string,
 ): boolean =>
@@ -92,7 +95,7 @@ const greaterThan = <TData extends SST_RowData>(
 greaterThan.autoRemove = (val: any) => !val;
 
 const greaterThanOrEqualTo = <TData extends SST_RowData>(
-  row: Row<TData>,
+  row: Row<any, TData>,
   id: string,
   filterValue: number | string,
 ): boolean => equals(row, id, filterValue) || greaterThan(row, id, filterValue);
@@ -100,7 +103,7 @@ const greaterThanOrEqualTo = <TData extends SST_RowData>(
 greaterThanOrEqualTo.autoRemove = (val: any) => !val;
 
 const lessThan = <TData extends SST_RowData>(
-  row: Row<TData>,
+  row: Row<any, TData>,
   id: string,
   filterValue: number | string,
 ): boolean =>
@@ -112,7 +115,7 @@ const lessThan = <TData extends SST_RowData>(
 lessThan.autoRemove = (val: any) => !val;
 
 const lessThanOrEqualTo = <TData extends SST_RowData>(
-  row: Row<TData>,
+  row: Row<any, TData>,
   id: string,
   filterValue: number | string,
 ): boolean => equals(row, id, filterValue) || lessThan(row, id, filterValue);
@@ -120,7 +123,7 @@ const lessThanOrEqualTo = <TData extends SST_RowData>(
 lessThanOrEqualTo.autoRemove = (val: any) => !val;
 
 const between = <TData extends SST_RowData>(
-  row: Row<TData>,
+  row: Row<any, TData>,
   id: string,
   filterValues: [number | string, number | string],
 ): boolean =>
@@ -132,7 +135,7 @@ const between = <TData extends SST_RowData>(
 between.autoRemove = (val: any) => !val;
 
 const betweenInclusive = <TData extends SST_RowData>(
-  row: Row<TData>,
+  row: Row<any, TData>,
   id: string,
   filterValues: [number | string, number | string],
 ): boolean =>
@@ -145,7 +148,7 @@ const betweenInclusive = <TData extends SST_RowData>(
 betweenInclusive.autoRemove = (val: any) => !val;
 
 const empty = <TData extends SST_RowData>(
-  row: Row<TData>,
+  row: Row<any, TData>,
   id: string,
   _filterValue: number | string,
 ): boolean => !row.getValue<number | string | null>(id)?.toString().trim();
@@ -153,15 +156,43 @@ const empty = <TData extends SST_RowData>(
 empty.autoRemove = (val: any) => !val;
 
 const notEmpty = <TData extends SST_RowData>(
-  row: Row<TData>,
+  row: Row<any, TData>,
   id: string,
   _filterValue: number | string,
 ): boolean => !!row.getValue<number | string | null>(id)?.toString().trim();
 
 notEmpty.autoRemove = (val: any) => !val;
 
+/**
+ * Multi-select matching: a row passes when its value is one of the selected
+ * options, or — for array-valued columns — shares any member with them.
+ *
+ * This shadows TanStack's built-in of the same name, which in v9 returns
+ * `false` outright unless the row value is an array. shadstack applies this fn
+ * to scalar columns too — `getDefaultColumnFilterFn` maps `multi-select` to it
+ * — so the built-in alone would filter every row away.
+ *
+ * Scalar columns match on equality. The v8 implementation delegated to the row
+ * value's own `.includes`, which on a string is a substring test, so selecting
+ * `'Engineer'` also matched `'Engineering Manager'`. Options come from a fixed
+ * list, so equality is what selecting one of them means.
+ */
+const arrIncludesSome = <TData extends SST_RowData>(
+  row: Row<any, TData>,
+  id: string,
+  filterValues: unknown[],
+): boolean => {
+  const value = row.getValue(id);
+  return Array.isArray(value)
+    ? filterValues.some((filterValue) => value.includes(filterValue))
+    : filterValues.some((filterValue) => filterValue === value);
+};
+
+arrIncludesSome.autoRemove = (val: any) => !val || !val.length;
+
 export const SST_FilterFns = {
   ...filterFns,
+  arrIncludesSome,
   between,
   betweenInclusive,
   contains,

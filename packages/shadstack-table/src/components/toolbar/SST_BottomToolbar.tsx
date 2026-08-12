@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { SST_LinearProgressBar } from './SST_LinearProgressBar';
 import { SST_TablePagination } from './SST_TablePagination';
 import { SST_ToolbarAlertBanner } from './SST_ToolbarAlertBanner';
@@ -32,7 +33,6 @@ export const SST_BottomToolbar = <TData extends SST_RowData>({
   ...rest
 }: SST_BottomToolbarProps<TData>) => {
   const {
-    getState,
     options: {
       enablePagination,
       positionPagination,
@@ -43,7 +43,7 @@ export const SST_BottomToolbar = <TData extends SST_RowData>({
     },
     refs: { bottomToolbarRef },
   } = table;
-  const { isFullScreen } = getState();
+  const { isFullScreen } = useSST_TableState(table, (s) => ({ isFullScreen: s.isFullScreen }));
 
   const isMobile = useMediaQuery('(max-width:720px)');
 

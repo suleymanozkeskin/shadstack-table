@@ -10,7 +10,7 @@ describe('ShadStackTable — column pinning', () => {
         columns={personColumnsWithAge}
         data={people}
         enableColumnPinning
-        state={{ columnPinning: { left: ['firstName'], right: [] } }}
+        state={{ columnPinning: { start: ['firstName'], end: [] } }}
       />,
     );
 
@@ -22,8 +22,10 @@ describe('ShadStackTable — column pinning', () => {
     expect(firstNameHeader.tagName).toBe('TH');
     expect(firstNameHeader).toHaveAttribute('data-pinned');
     expect(firstNameHeader.style.position).toBe('sticky');
-    // Left-pinned columns receive an inline `left` offset (start) — should be a px value, not blank
-    expect(firstNameHeader.style.left).not.toBe('');
+    // Start-pinned columns receive an inline logical inset offset — a px value,
+    // not blank. The offset is logical (`inset-inline-start`) rather than
+    // physical `left` so it stays correct under `dir="rtl"`.
+    expect(firstNameHeader.style.insetInlineStart).not.toBe('');
 
     // The unpinned column header should NOT be pinned
     const lastNameHeader = screen.getByRole('columnheader', { name: /last name/i });
@@ -37,15 +39,15 @@ describe('ShadStackTable — column pinning', () => {
         columns={personColumnsWithAge}
         data={people}
         enableColumnPinning
-        state={{ columnPinning: { left: [], right: ['age'] } }}
+        state={{ columnPinning: { start: [], end: ['age'] } }}
       />,
     );
 
     const ageHeader = screen.getByRole('columnheader', { name: /age/i });
     expect(ageHeader).toHaveAttribute('data-pinned');
     expect(ageHeader.style.position).toBe('sticky');
-    // Right-pinned columns receive an inline `right` offset, not `left`
-    expect(ageHeader.style.right).not.toBe('');
-    expect(ageHeader.style.left).toBe('');
+    // End-pinned columns receive an inline-end offset, not an inline-start one
+    expect(ageHeader.style.insetInlineEnd).not.toBe('');
+    expect(ageHeader.style.insetInlineStart).toBe('');
   });
 });

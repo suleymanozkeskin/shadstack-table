@@ -24,8 +24,15 @@ The surface we intend to keep working through 1.x.
   `SST_ColumnFiltersState`, `SST_PaginationState`, `SST_ColumnPinningState`,
   `SST_RowPinningState`, `SST_ExpandedState`, `SST_VisibilityState`,
   `SST_GroupingState`, `SST_ColumnOrderState`, `SST_ColumnSizingState`,
-  `SST_ColumnSizingInfoState`, `SST_ColumnMenuItemIds`,
+  `SST_ColumnResizingState`, `SST_ColumnMenuItemIds`,
   `SST_InternalColumnMenuItem`
+
+  Stable names the underlying TanStack Table v9 shapes changed:
+  `SST_ColumnPinningState` is now `{ start, end }` rather than
+  `{ left, right }`. The name is unchanged, so persisted state written by an
+  earlier version restores as an empty pinning set instead of erroring —
+  migrate stored values on read.
+
 - **Options:** every documented field on `SST_TableOptions` (toggles,
   callbacks, `theme`, `localization`, `slotProps`, …)
 - **Localization subpaths:** `shadstack-table/locales/<code>` — see
@@ -37,11 +44,12 @@ The surface we intend to keep working through 1.x.
 Still exported and working; emit JSDoc deprecation warnings in your editor
 and will be removed in a future major.
 
-| Deprecated              | Use instead             |
-| ----------------------- | ----------------------- |
-| `createMRTColumnHelper` | `createSSTColumnHelper` |
-| `mrtTheme` option       | `theme`                 |
-| `getMRTTheme`           | `getSST_Theme`          |
+| Deprecated                  | Use instead               |
+| --------------------------- | ------------------------- |
+| `createMRTColumnHelper`     | `createSSTColumnHelper`   |
+| `mrtTheme` option           | `theme`                   |
+| `getMRTTheme`               | `getSST_Theme`            |
+| `SST_ColumnSizingInfoState` | `SST_ColumnResizingState` |
 
 ## Internal / unstable
 

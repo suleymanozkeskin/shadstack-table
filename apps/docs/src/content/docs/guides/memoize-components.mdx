@@ -1,45 +1,43 @@
 ---
 title: Memoize components
-description: For large datasets, opt into cell / row / table-body memoization to skip unnecessary re-renders.
+description: What re-renders by default, and when the memoMode option still earns its place.
 ---
 
-By default `shadstack-table` re-renders cells whenever the table state changes — which is fine for small tables but expensive when you're rendering thousands of rows. The `memoMode` option lets you opt into one of three memoization strategies for those cases.
+`shadstack-table` subscribes each internal component to exactly the state it renders. A state write re-renders only its subscribers: hovering a row during a drag re-renders that row alone, entering cell editing re-renders that cell alone, a page flip re-renders the body but not a single header cell, and interaction cost does not grow with table size. You do not need to configure anything to get this — it is the default rendering model.
+
+`memoMode` remains for the cases granular subscriptions cannot help with: renders that legitimately cascade from the top of the table. The main one is live column resizing — every resize tick updates the table-level column-size CSS variables, which re-renders the `<table>` element and, without memoization, everything inside it. (The body is additionally frozen automatically while a resize drag is in flight, regardless of `memoMode`.)
 
 ```tsx
 useShadStackTable({
   columns,
   data,
-  memoMode: 'cells', // 'cells' | 'rows' | 'table-body'
+  memoMode: 'cells', // 'cells' | 'rows'
 });
 ```
 
 ## When to reach for it
 
-| Symptom                                                                                   | Try                      |
-| ----------------------------------------------------------------------------------------- | ------------------------ |
-| Sorting / filtering a 1k+ row table feels slow.                                           | `memoMode: 'rows'`       |
-| Editing one cell shouldn't repaint thousands of unrelated cells.                          | `memoMode: 'cells'`      |
-| Almost the entire body is static and you only mutate one row's selection state at a time. | `memoMode: 'table-body'` |
-| Table is under ~200 rows and feels fine.                                                  | Don't set `memoMode`.    |
+| Symptom                                                            | Try                                                                                     |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| Live column resizing feels slow on a wide or dense table.          | `memoMode: 'cells'`                                                                     |
+| Frequent `data` or option identity changes repaint the whole body. | `memoMode: 'rows'`                                                                      |
+| Hover / selection / editing / pagination feels slow.               | Neither — these are already granular by default. If they feel slow, add virtualization. |
 
 ## What each mode skips
 
-- **`'cells'`** — wraps each cell in `React.memo`. A cell re-renders only when its column/row state changes (the cell's value, its selection state, its expanded state, etc.). Other cells in the same row are untouched. Most useful when individual cell state mutates often (cell editing, click-to-copy).
-- **`'rows'`** — wraps each row in `React.memo`. A row re-renders only when something inside that row changes. Best for very wide tables where you don't want column-state changes to ripple across every row.
-- **`'table-body'`** — memoizes the entire `<tbody>`. Almost no re-renders inside the body once it's painted. Use sparingly — most state changes you actually care about (selection, expansion, edit, density) will then need explicit invalidation.
+- **`'cells'`** — wraps each data cell in `React.memo`, keyed on cell identity. A memoized cell skips parent-driven re-renders but still updates through its own state subscription.
+- **`'rows'`** — wraps each row in `React.memo`, keyed on row identity. Same principle at row granularity.
 
 ## Tradeoffs
 
-Memoization isn't free. The comparison runs on every render; for cheap rows it can cost more than the re-render itself. Measure before reaching for `'table-body'` — the more aggressive the mode, the more likely you'll find a state mutation that should update the DOM but doesn't, because the memo says "nothing changed".
+A memoized component skips parent-driven renders, so anything it derives from _options_ (not state) can go stale until its identity key changes — the classic example is a changed cell renderer that doesn't repaint until the row model rebuilds. State-driven updates are unaffected, because they arrive through subscriptions rather than through the parent.
 
 The general progression:
 
 1. Start with no `memoMode`.
 2. If you have a perf problem, add virtualization first (`enableRowVirtualization`, `enableColumnVirtualization`).
-3. If you still have a perf problem, then add `memoMode: 'cells'`.
-4. Only escalate to `'rows'` / `'table-body'` after measuring.
+3. If live column resizing is the remaining hot spot, add `memoMode: 'cells'`.
 
 ## See also
 
 - [Table options](../../api/props/) — `memoMode`, `enableRowVirtualization`, `enableColumnVirtualization`
-- [TanStack Table reactivity model](https://tanstack.com/table/v8/docs/guide/data) (the underlying engine)

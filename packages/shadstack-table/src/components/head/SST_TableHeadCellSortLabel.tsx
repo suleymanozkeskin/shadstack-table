@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
 import { cn } from '../../lib/utils';
 import { type SST_Header, type SST_RowData, type SST_TableInstance } from '../../types';
@@ -17,7 +18,6 @@ export const SST_TableHeadCellSortLabel = <TData extends SST_RowData>({
   ...rest
 }: SST_TableHeadCellSortLabelProps<TData>) => {
   const {
-    getState,
     options: {
       icons: { ArrowDownwardIcon, SortIcon },
       localization,
@@ -25,7 +25,11 @@ export const SST_TableHeadCellSortLabel = <TData extends SST_RowData>({
   } = table;
   const { column } = header;
   const { columnDef } = column;
-  const { isLoading, showSkeletons, sorting } = getState();
+  const { isLoading, showSkeletons, sorting } = useSST_TableState(table, (s) => ({
+    isLoading: s.isLoading,
+    showSkeletons: s.showSkeletons,
+    sorting: s.sorting,
+  }));
 
   const isSorted = !!column.getIsSorted();
 

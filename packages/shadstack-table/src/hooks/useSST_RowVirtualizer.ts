@@ -6,6 +6,7 @@ import {
   type SST_RowVirtualizer,
   type SST_TableInstance,
 } from '../types';
+import { useSST_TableState } from './useSST_TableState';
 import { parseFromValuesOrFunc } from '../utils/utils';
 import { extraIndexRangeExtractor } from '../utils/virtualization.utils';
 
@@ -19,7 +20,6 @@ export const useSST_RowVirtualizer = <
 ): SST_RowVirtualizer<TScrollElement, TItemElement> | undefined => {
   const {
     getRowModel,
-    getState,
     options: {
       enableRowVirtualization,
       renderDetailPanel,
@@ -28,7 +28,11 @@ export const useSST_RowVirtualizer = <
     },
     refs: { tableContainerRef },
   } = table;
-  const { density, draggingRow, expanded } = getState();
+  const { density, draggingRow, expanded } = useSST_TableState(table, (s) => ({
+    density: s.density,
+    draggingRow: s.draggingRow,
+    expanded: s.expanded,
+  }));
 
   if (!enableRowVirtualization) return undefined;
 

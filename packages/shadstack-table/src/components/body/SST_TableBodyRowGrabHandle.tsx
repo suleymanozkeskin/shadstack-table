@@ -2,6 +2,7 @@ import * as React from 'react';
 import { type DragEvent, type RefObject } from 'react';
 import { type Button } from '../../_ui/button';
 import { type SST_Row, type SST_RowData, type SST_TableInstance } from '../../types';
+import { batchTableStateUpdates } from '../../utils/tanstack.helpers';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 import { SST_GrabHandleButton } from '../buttons/SST_GrabHandleButton';
 
@@ -43,8 +44,11 @@ export const SST_TableBodyRowGrabHandle = <TData extends SST_RowData>({
 
   const handleDragEnd = (event: DragEvent<HTMLButtonElement>) => {
     iconButtonProps?.onDragEnd?.(event);
-    table.setDraggingRow(null);
-    table.setHoveredRow(null);
+    //both slices clear as one atomic update for subscribers
+    batchTableStateUpdates(table, () => {
+      table.setDraggingRow(null);
+      table.setHoveredRow(null);
+    });
   };
 
   return (

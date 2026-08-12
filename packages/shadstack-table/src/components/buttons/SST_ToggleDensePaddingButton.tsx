@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Button } from '../../_ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
 import { type SST_RowData, type SST_TableInstance } from '../../types';
@@ -14,14 +15,13 @@ export const SST_ToggleDensePaddingButton = <TData extends SST_RowData>({
   ...rest
 }: SST_ToggleDensePaddingButtonProps<TData>) => {
   const {
-    getState,
     options: {
       icons: { DensityLargeIcon, DensityMediumIcon, DensitySmallIcon },
       localization,
     },
     setDensity,
   } = table;
-  const { density } = getState();
+  const { density } = useSST_TableState(table, (s) => ({ density: s.density }));
 
   const handleToggleDensePadding = () => {
     const nextDensity =

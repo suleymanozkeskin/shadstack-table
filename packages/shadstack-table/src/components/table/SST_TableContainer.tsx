@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { SST_Table } from './SST_Table';
 import { SST_TableLoadingOverlay } from './SST_TableLoadingOverlay';
 import { cn } from '../../lib/utils';
@@ -20,7 +21,6 @@ export const SST_TableContainer = <TData extends SST_RowData>({
   ...rest
 }: SST_TableContainerProps<TData>) => {
   const {
-    getState,
     options: {
       createDisplayMode,
       editDisplayMode,
@@ -33,7 +33,14 @@ export const SST_TableContainer = <TData extends SST_RowData>({
     refs: { bottomToolbarRef, tableContainerRef, topToolbarRef },
   } = table;
   const { actionCell, creatingRow, editingRow, isFullScreen, isLoading, showLoadingOverlay } =
-    getState();
+    useSST_TableState(table, (s) => ({
+      actionCell: s.actionCell,
+      creatingRow: s.creatingRow,
+      editingRow: s.editingRow,
+      isFullScreen: s.isFullScreen,
+      isLoading: s.isLoading,
+      showLoadingOverlay: s.showLoadingOverlay,
+    }));
 
   const loading = showLoadingOverlay !== false && (isLoading || showLoadingOverlay);
 

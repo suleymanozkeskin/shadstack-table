@@ -1,6 +1,6 @@
 import { type ReactNode, type JSX } from 'react';
 import {
-  createRow as _createRow,
+  constructRow as _createRow,
   flexRender as _flexRender,
   type Renderable,
 } from '@tanstack/react-table';
@@ -66,3 +66,20 @@ export const createRow = <TData extends SST_RowData>(
     subRows as any,
     parentId,
   ) as SST_Row<TData>;
+
+/**
+ * Runs `fn` inside the table's reactivity batch, so multiple state-slice
+ * writes produce a single store notification and no subscriber can observe a
+ * half-applied combination. React already coalesces the re-renders; this
+ * protects non-render subscribers (`table.Subscribe`, direct
+ * `store.subscribe`) and skips redundant derived-atom recomputation.
+ */
+export const batchTableStateUpdates = <TData extends SST_RowData>(
+  table: SST_TableInstance<TData>,
+  fn: () => void,
+): void => {
+  const reactivity = (table as unknown as { _reactivity?: { batch?: (fn: () => void) => void } })
+    // oxlint-disable-next-line no-underscore-dangle -- `_reactivity` is the table-core reactivity-bindings slot; there is no public accessor for `batch`
+    ._reactivity;
+  (reactivity?.batch ?? ((run: () => void) => run()))(fn);
+};

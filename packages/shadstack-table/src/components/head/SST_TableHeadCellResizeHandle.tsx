@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { cn } from '../../lib/utils';
 import { type SST_Header, type SST_RowData, type SST_TableInstance } from '../../types';
 
@@ -16,11 +17,18 @@ export const SST_TableHeadCellResizeHandle = <TData extends SST_RowData>({
   ...rest
 }: SST_TableHeadCellResizeHandleProps<TData>) => {
   const {
-    getState,
     options: { columnResizeDirection, columnResizeMode },
-    setColumnSizingInfo,
+    setColumnResizing,
   } = table;
-  const { density } = getState();
+  const { deltaOffset, density } = useSST_TableState(table, (s) => ({
+    //per-mousemove delta subscribed ONLY while this column resizes — other
+    //columns' resize ticks do not re-render this handle
+    deltaOffset:
+      s.columnResizing.isResizingColumn === header.column.id
+        ? (s.columnResizing.deltaOffset ?? 0)
+        : 0,
+    density: s.density,
+  }));
   const { column } = header;
 
   const handler = header.getResizeHandler();
@@ -42,7 +50,7 @@ export const SST_TableHeadCellResizeHandle = <TData extends SST_RowData>({
         className,
       )}
       onDoubleClick={() => {
-        setColumnSizingInfo((old) => ({
+        setColumnResizing((old) => ({
           ...old,
           isResizingColumn: false,
         }));
@@ -53,7 +61,7 @@ export const SST_TableHeadCellResizeHandle = <TData extends SST_RowData>({
       style={{
         transform:
           column.getIsResizing() && columnResizeMode === 'onEnd'
-            ? `translateX(${(isRtl ? -1 : 1) * (getState().columnSizingInfo.deltaOffset ?? 0)}px)`
+            ? `translateX(${(isRtl ? -1 : 1) * deltaOffset}px)`
             : undefined,
         left: isRtl ? lr : undefined,
         right: !isRtl ? lr : undefined,

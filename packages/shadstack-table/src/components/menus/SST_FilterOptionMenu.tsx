@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useMemo } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Popover, PopoverAnchor, PopoverContent } from '../../_ui/popover';
 import { SST_ActionMenuItem } from './SST_ActionMenuItem';
 import { cn } from '../../lib/utils';
@@ -126,7 +127,6 @@ export const SST_FilterOptionMenu = <TData extends SST_RowData>({
   ...rest
 }: SST_FilterOptionMenuProps<TData>) => {
   const {
-    getState,
     options: {
       columnFilterModeOptions,
       enableFilterModeMenuDividers,
@@ -139,7 +139,11 @@ export const SST_FilterOptionMenu = <TData extends SST_RowData>({
     setColumnFilterFns,
     setGlobalFilterFn,
   } = table;
-  const { density, globalFilterFn } = getState();
+  const { density, globalFilterFn } = useSST_TableState(table, (s) => ({
+    density: s.density,
+    globalFilterFn: s.globalFilterFn,
+    columnFilterFns: s.columnFilterFns,
+  }));
   const { column } = header ?? {};
   const { columnDef } = column ?? {};
   const currentFilterValue = column?.getFilterValue();
