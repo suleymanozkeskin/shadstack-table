@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Skeleton } from '../../_ui/skeleton';
 import { SST_TableBodyCellValue } from './SST_TableBodyCellValue';
 import { cn } from '../../lib/utils';
@@ -42,7 +43,6 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
 }: SST_TableBodyCellProps<TData>) => {
   const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
   const {
-    getState,
     options: {
       columnResizeDirection,
       columnResizeMode,
@@ -73,7 +73,7 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
     hoveredRow,
     isLoading,
     showSkeletons,
-  } = getState();
+  } = useSST_TableState(table);
   const { column, row } = cell;
   const { columnDef } = column;
   const { columnDefType } = columnDef;

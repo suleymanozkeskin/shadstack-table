@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../../_ui/dialog';
 import { cn } from '../../lib/utils';
 import { type SST_Row, type SST_RowData, type SST_TableInstance } from '../../types';
@@ -26,7 +27,6 @@ export const SST_EditRowModal = <TData extends SST_RowData>({
   ...rest
 }: SST_EditRowModalProps<TData>) => {
   const {
-    getState,
     options: {
       localization,
       onCreatingRowCancel,
@@ -38,7 +38,7 @@ export const SST_EditRowModal = <TData extends SST_RowData>({
     setCreatingRow,
     setEditingRow,
   } = table;
-  const { creatingRow, editingRow } = getState();
+  const { creatingRow, editingRow } = useSST_TableState(table);
   const row = (creatingRow ?? editingRow) as SST_Row<TData>;
 
   // slotProps.editRowDialog / slotProps.createRowDialog flow onto DialogContent,

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { type DragEvent, memo, useMemo, useRef } from 'react';
 import { type VirtualItem } from '@tanstack/react-virtual';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { SST_TableBodyCell, Memo_SST_TableBodyCell } from './SST_TableBodyCell';
 import { SST_TableDetailPanel } from './SST_TableDetailPanel';
 import { cn } from '../../lib/utils';
@@ -42,7 +43,6 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
   ...rest
 }: SST_TableBodyRowProps<TData>) => {
   const {
-    getState,
     options: {
       enableRowOrdering,
       enableRowPinning,
@@ -66,7 +66,7 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
     editingRow,
     hoveredRow,
     isFullScreen,
-  } = getState();
+  } = useSST_TableState(table);
 
   const visibleCells = row.getVisibleCells();
 

@@ -1,4 +1,5 @@
 import { type ReactNode, type RefObject } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { highlightWords } from '../../utils/highlightWords';
 import { type SST_Cell, type SST_RowData, type SST_TableInstance } from '../../types';
 
@@ -20,7 +21,6 @@ export const SST_TableBodyCellValue = <TData extends SST_RowData>({
   table,
 }: SST_TableBodyCellValueProps<TData>) => {
   const {
-    getState,
     options: {
       enableFilterMatchHighlighting,
       mrtTheme: { matchHighlightColor },
@@ -28,7 +28,7 @@ export const SST_TableBodyCellValue = <TData extends SST_RowData>({
   } = table;
   const { column, row } = cell;
   const { columnDef } = column;
-  const { globalFilter, globalFilterFn } = getState();
+  const { globalFilter, globalFilterFn } = useSST_TableState(table);
   const filterValue = column.getFilterValue();
 
   let renderedCellValue =

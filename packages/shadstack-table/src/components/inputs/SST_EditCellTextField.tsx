@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { type ChangeEvent, type FocusEvent, type KeyboardEvent, useRef, useState } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Input } from '../../_ui/input';
 import { Label } from '../../_ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../_ui/select';
@@ -21,7 +22,6 @@ export const SST_EditCellTextField = <TData extends SST_RowData>({
   ...rest
 }: SST_EditCellTextFieldProps<TData>) => {
   const {
-    getState,
     options: { createDisplayMode, editDisplayMode, slotProps },
     refs: { editInputRefs },
     setCreatingRow,
@@ -30,7 +30,7 @@ export const SST_EditCellTextField = <TData extends SST_RowData>({
   } = table;
   const { column, row } = cell;
   const { columnDef } = column;
-  const { creatingRow, editingRow } = getState();
+  const { creatingRow, editingRow } = useSST_TableState(table);
   const { editSelectOptions, editVariant } = columnDef;
 
   const isCreating = creatingRow?.id === row.id;

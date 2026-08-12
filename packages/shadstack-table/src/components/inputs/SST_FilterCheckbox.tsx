@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Checkbox } from '../../_ui/checkbox';
 import { Label } from '../../_ui/label';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
@@ -20,10 +21,9 @@ export const SST_FilterCheckbox = <TData extends SST_RowData>({
   ...rest
 }: SST_FilterCheckboxProps<TData>) => {
   const {
-    getState,
     options: { localization, slotProps },
   } = table;
-  const { density } = getState();
+  const { density } = useSST_TableState(table);
   const { columnDef } = column;
 
   const checkboxProps = {

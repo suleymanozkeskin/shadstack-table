@@ -8,8 +8,15 @@ Moves the table engine from TanStack Table v8 to v9 (pinned to `9.1.2`), with be
 
 Persisted table state needs migrating on read: `columnPinning` changed shape and `columnSizingInfo` changed name. Both are listed under Changed.
 
+### Added
+
+- `useSST_TableState(table, selector?)` — subscribe to table state during render. With no selector it returns the full state snapshot and re-renders on any change; with a selector the selected value is shallow-compared, so a component re-renders only when what it selected changes. This is the render-phase counterpart to `getState()`, which remains the right call inside event handlers and effects.
+- `useSST_TableContext()` and `SST_TableContext` — read the table instance from context anywhere below `SST_TablePaper`, e.g. inside custom `Cell`/`Header` renderers and toolbar slots, without threading the `table` prop.
+- `@tanstack/react-store` is a declared (externalized) dependency; it resolves to the same copy `@tanstack/react-table` already ships.
+
 ### Changed
 
+- The table instance returned by `useShadStackTable` (and used internally by `ShadStackTable`) is referentially stable across renders; its contents are refreshed each render. Consumer effects keyed on `[table]` now run once instead of on every render. Internal components read state through `useSST_TableState`, so the read is the subscription.
 - **Breaking:** every shadstack state slice (`density`, `isFullScreen`, `editingRow`, `hoveredColumn`, …) is now real table state, owned by the table's TanStack Store atoms instead of React state inside the hook. Consequences for consumers:
   - `table.options.state` now contains only the controlled state the consumer supplied — the v9 contract. Read current state through `table.getState()` (unchanged signature) or the new typed `table.atoms.<slice>` / `table.baseAtoms.<slice>` maps. Code that read merged state off `table.options.state` must switch to `getState()`.
   - `table.reset()` now resets shadstack slices along with TanStack's, back to `initialState`. Consumer-controlled slices (supplied via `state`) are unaffected, matching v9 semantics. Previously the shadstack slices survived a reset.

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { type ReactNode, useMemo, type MouseEvent } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Popover, PopoverAnchor, PopoverContent } from '../../_ui/popover';
 import { SST_ActionMenuItem } from './SST_ActionMenuItem';
 import { cn } from '../../lib/utils';
@@ -28,7 +29,6 @@ export const SST_RowActionMenu = <TData extends SST_RowData>({
   ...rest
 }: SST_RowActionMenuProps<TData>) => {
   const {
-    getState,
     options: {
       editDisplayMode,
       enableEditing,
@@ -38,7 +38,7 @@ export const SST_RowActionMenu = <TData extends SST_RowData>({
       renderRowActionMenuItems,
     },
   } = table;
-  const { density } = getState();
+  const { density } = useSST_TableState(table);
   const virtualRef = useMemo<React.RefObject<HTMLElement | null> | undefined>(
     () => (anchorEl ? { current: anchorEl } : undefined),
     [anchorEl],

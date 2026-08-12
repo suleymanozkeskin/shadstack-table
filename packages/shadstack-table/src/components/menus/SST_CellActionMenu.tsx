@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Popover, PopoverAnchor, PopoverContent } from '../../_ui/popover';
 import { SST_ActionMenuItem } from './SST_ActionMenuItem';
 import { cn } from '../../lib/utils';
@@ -19,7 +20,6 @@ export const SST_CellActionMenu = <TData extends SST_RowData>({
   ...rest
 }: SST_CellActionMenuProps<TData>) => {
   const {
-    getState,
     options: {
       editDisplayMode,
       enableClickToCopy,
@@ -31,7 +31,7 @@ export const SST_CellActionMenu = <TData extends SST_RowData>({
     },
     refs: { actionCellRef },
   } = table;
-  const { actionCell, density } = getState();
+  const { actionCell, density } = useSST_TableState(table);
   const cell = actionCell!;
   // Invariant: actionCellRef is already a stable RefObject from useSST_TableInstance;
   // Radix's PopoverAnchor reads `.current` lazily during positioning, so we can hand

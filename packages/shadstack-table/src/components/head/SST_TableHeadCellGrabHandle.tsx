@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { type DragEvent, type RefObject } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { type Button } from '../../_ui/button';
 import { type SST_Column, type SST_RowData, type SST_TableInstance } from '../../types';
 import { reorderColumn } from '../../utils/column.utils';
@@ -22,7 +23,6 @@ export const SST_TableHeadCellGrabHandle = <TData extends SST_RowData>({
   ...rest
 }: SST_TableHeadCellGrabHandleProps<TData>) => {
   const {
-    getState,
     options: { enableColumnOrdering, slotProps },
     setColumnOrder,
     setColumnPinning,
@@ -30,7 +30,7 @@ export const SST_TableHeadCellGrabHandle = <TData extends SST_RowData>({
     setHoveredColumn,
   } = table;
   const { columnDef } = column;
-  const { columnOrder, draggingColumn, hoveredColumn } = getState();
+  const { columnOrder, draggingColumn, hoveredColumn } = useSST_TableState(table);
 
   const iconButtonProps = {
     ...parseFromValuesOrFunc(slotProps?.columnDragHandle, { column, table }),

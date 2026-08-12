@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Button } from '../../_ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
 import { type SST_RowData, type SST_TableInstance } from '../../types';
@@ -14,14 +15,13 @@ export const SST_ToggleFiltersButton = <TData extends SST_RowData>({
   ...rest
 }: SST_ToggleFiltersButtonProps<TData>) => {
   const {
-    getState,
     options: {
       icons: { FilterListIcon, FilterListOffIcon },
       localization,
     },
     setShowColumnFilters,
   } = table;
-  const { showColumnFilters } = getState();
+  const { showColumnFilters } = useSST_TableState(table);
 
   const handleToggleShowFilters = () => {
     setShowColumnFilters(!showColumnFilters);

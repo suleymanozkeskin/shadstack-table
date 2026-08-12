@@ -22,6 +22,7 @@ const external = [
   'react-dom',
   'react/jsx-runtime',
   '@tanstack/react-table',
+  '@tanstack/react-store',
   '@tanstack/react-virtual',
   '@tanstack/match-sorter-utils',
   /^@radix-ui\//,

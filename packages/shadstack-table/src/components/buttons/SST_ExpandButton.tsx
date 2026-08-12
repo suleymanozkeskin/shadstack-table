@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { type MouseEvent } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Button } from '../../_ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
 import { cn } from '../../lib/utils';
@@ -21,7 +22,6 @@ export const SST_ExpandButton = <TData extends SST_RowData>({
 }: SST_ExpandButtonProps<TData>) => {
   const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
   const {
-    getState,
     options: {
       icons: { ExpandMoreIcon },
       localization,
@@ -30,7 +30,7 @@ export const SST_ExpandButton = <TData extends SST_RowData>({
       slotProps,
     },
   } = table;
-  const { density } = getState();
+  const { density } = useSST_TableState(table);
 
   const iconButtonProps = parseFromValuesOrFunc(slotProps?.expandButton, {
     row,

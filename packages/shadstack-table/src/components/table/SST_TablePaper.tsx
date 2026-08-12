@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { SST_TableContainer } from './SST_TableContainer';
+import { SST_TableContext } from '../../hooks/useSST_TableContext';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { cn } from '../../lib/utils';
 import { type SST_RowData, type SST_TableInstance } from '../../types';
 import { parseFromValuesOrFunc } from '../../utils/utils';
@@ -18,7 +20,6 @@ export const SST_TablePaper = <TData extends SST_RowData>({
   ...rest
 }: SST_TablePaperProps<TData>) => {
   const {
-    getState,
     options: {
       enableBottomToolbar,
       enableTopToolbar,
@@ -29,7 +30,7 @@ export const SST_TablePaper = <TData extends SST_RowData>({
     },
     refs: { tablePaperRef },
   } = table;
-  const { isFullScreen } = getState();
+  const { isFullScreen } = useSST_TableState(table);
 
   const paperProps = {
     ...parseFromValuesOrFunc(slotProps?.tablePaper, { table }),
@@ -37,47 +38,51 @@ export const SST_TablePaper = <TData extends SST_RowData>({
   };
 
   return (
-    // oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- the wrapper <div> is a layout container; the onKeyDown is a global Escape handler for fullscreen exit. Adding a role would mis-announce the wrapper to AT.
-    <div
-      onKeyDown={(e) => e.key === 'Escape' && table.setIsFullScreen(false)}
-      {...paperProps}
-      ref={(ref: HTMLDivElement | null) => {
-        tablePaperRef.current = ref!;
-        if (typeof paperProps?.ref === 'function') paperProps.ref(ref!);
-      }}
-      style={{
-        backgroundColor: baseBackgroundColor,
-        ...(isFullScreen
-          ? {
-              bottom: 0,
-              height: '100dvh',
-              left: 0,
-              margin: 0,
-              maxHeight: '100dvh',
-              maxWidth: '100dvw',
-              padding: 0,
-              position: 'fixed',
-              right: 0,
-              top: 0,
-              width: '100dvw',
-              zIndex: 50,
-            }
-          : {}),
-        ...paperProps?.style,
-      }}
-      className={cn(
-        'w-full max-w-full min-w-0 rounded-md border shadow-sm bg-card overflow-hidden transition-all duration-100 ease-in-out',
-        className,
-        paperProps?.className,
-      )}
-    >
-      {enableTopToolbar &&
-        (parseFromValuesOrFunc(renderTopToolbar, { table }) ?? <SST_TopToolbar table={table} />)}
-      <SST_TableContainer table={table} />
-      {enableBottomToolbar &&
-        (parseFromValuesOrFunc(renderBottomToolbar, { table }) ?? (
-          <SST_BottomToolbar table={table} />
-        ))}
-    </div>
+    // The provider value is the referentially stable instance, so this never
+    // re-renders consumers by itself.
+    <SST_TableContext.Provider value={table as unknown as SST_TableInstance<SST_RowData>}>
+      {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- the wrapper <div> is a layout container; the onKeyDown is a global Escape handler for fullscreen exit. Adding a role would mis-announce the wrapper to AT. */}
+      <div
+        onKeyDown={(e) => e.key === 'Escape' && table.setIsFullScreen(false)}
+        {...paperProps}
+        ref={(ref: HTMLDivElement | null) => {
+          tablePaperRef.current = ref!;
+          if (typeof paperProps?.ref === 'function') paperProps.ref(ref!);
+        }}
+        style={{
+          backgroundColor: baseBackgroundColor,
+          ...(isFullScreen
+            ? {
+                bottom: 0,
+                height: '100dvh',
+                left: 0,
+                margin: 0,
+                maxHeight: '100dvh',
+                maxWidth: '100dvw',
+                padding: 0,
+                position: 'fixed',
+                right: 0,
+                top: 0,
+                width: '100dvw',
+                zIndex: 50,
+              }
+            : {}),
+          ...paperProps?.style,
+        }}
+        className={cn(
+          'w-full max-w-full min-w-0 rounded-md border shadow-sm bg-card overflow-hidden transition-all duration-100 ease-in-out',
+          className,
+          paperProps?.className,
+        )}
+      >
+        {enableTopToolbar &&
+          (parseFromValuesOrFunc(renderTopToolbar, { table }) ?? <SST_TopToolbar table={table} />)}
+        <SST_TableContainer table={table} />
+        {enableBottomToolbar &&
+          (parseFromValuesOrFunc(renderBottomToolbar, { table }) ?? (
+            <SST_BottomToolbar table={table} />
+          ))}
+      </div>
+    </SST_TableContext.Provider>
   );
 };

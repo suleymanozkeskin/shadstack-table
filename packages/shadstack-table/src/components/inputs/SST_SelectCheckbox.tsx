@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Checkbox } from '../../_ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '../../_ui/radio-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
@@ -27,10 +28,9 @@ export const SST_SelectCheckbox = <TData extends SST_RowData>({
   ...rest
 }: SST_SelectCheckboxProps<TData>) => {
   const {
-    getState,
     options: { enableMultiRowSelection, localization, selectAllMode, slotProps },
   } = table;
-  const { density, isLoading } = getState();
+  const { density, isLoading } = useSST_TableState(table);
 
   const selectAll = !row;
 

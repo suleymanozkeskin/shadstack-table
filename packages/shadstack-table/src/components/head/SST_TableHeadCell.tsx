@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { type DragEvent, useMemo, useCallback } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { SST_TableHeadCellColumnActionsButton } from './SST_TableHeadCellColumnActionsButton';
 import { SST_TableHeadCellFilterContainer } from './SST_TableHeadCellFilterContainer';
 import { SST_TableHeadCellFilterLabel } from './SST_TableHeadCellFilterLabel';
@@ -36,7 +37,6 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
 }: SST_TableHeadCellProps<TData>) => {
   const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
   const {
-    getState,
     options: {
       columnFilterDisplayMode,
       columnResizeDirection,
@@ -56,7 +56,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
     setHoveredColumn,
   } = table;
   const { columnResizing, density, draggingColumn, grouping, hoveredColumn, showColumnFilters } =
-    getState();
+    useSST_TableState(table);
   const { column } = header;
   const { columnDef } = column;
   const { columnDefType } = columnDef;

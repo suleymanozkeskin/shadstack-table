@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { type DragEvent, useEffect } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { cn } from '../../lib/utils';
 import { type SST_RowData, type SST_TableInstance } from '../../types';
 
@@ -15,13 +16,12 @@ export const SST_ToolbarDropZone = <TData extends SST_RowData>({
   ...rest
 }: SST_ToolbarDropZoneProps<TData>) => {
   const {
-    getState,
     options: { enableGrouping, localization },
     setHoveredColumn,
     setShowToolbarDropZone,
   } = table;
 
-  const { draggingColumn, grouping, hoveredColumn, showToolbarDropZone } = getState();
+  const { draggingColumn, grouping, hoveredColumn, showToolbarDropZone } = useSST_TableState(table);
 
   const handleDragEnter = (_event: DragEvent<HTMLDivElement>) => {
     setHoveredColumn({ id: 'drop-zone' });

@@ -203,13 +203,27 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
   //state. The table's atoms own everything else; passing the full snapshot
   //here would mark every slice controlled, and controlled slices only
   //re-publish to subscribers after a host commit — the table would freeze.
-  const table = useTable({
+  const wrapper = useTable({
     ...statefulTableOptions,
     state: definedTableOptions.state,
     globalFilterFn: statefulTableOptions.filterFns?.[currentState.globalFilterFn ?? 'fuzzy'],
   } as any) as unknown as SST_TableInstance<TData>;
+
+  //The public instance is referentially STABLE: created once, refreshed with
+  //the latest useTable result every render. useTable itself returns a new
+  //object per render (its options change identity), but a component woken by
+  //a state subscription while its parents skipped rendering must be able to
+  //read live `options`/`state` off whatever `table` reference it holds — a
+  //per-render wrapper would hand it stale values. Copying onto one stable
+  //object gives every holder the newest contents. Side effect, recorded in
+  //the changelog: consumer effects keyed on `[table]` now fire once instead
+  //of every render.
   const isFirstConstruction = tableRef.current === null;
-  tableRef.current = table;
+  if (isFirstConstruction) {
+    tableRef.current = {} as SST_TableInstance<TData>;
+  }
+  const table = tableRef.current!;
+  Object.assign(table, wrapper);
 
   //getState() remains shadstack's single read surface; it reads the live
   //store snapshot, which applies the derived atoms' controlled-state

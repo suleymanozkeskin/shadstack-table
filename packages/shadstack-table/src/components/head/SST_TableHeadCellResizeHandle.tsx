@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { cn } from '../../lib/utils';
 import { type SST_Header, type SST_RowData, type SST_TableInstance } from '../../types';
 
@@ -16,11 +17,10 @@ export const SST_TableHeadCellResizeHandle = <TData extends SST_RowData>({
   ...rest
 }: SST_TableHeadCellResizeHandleProps<TData>) => {
   const {
-    getState,
     options: { columnResizeDirection, columnResizeMode },
     setColumnResizing,
   } = table;
-  const { density } = getState();
+  const { columnResizing, density } = useSST_TableState(table);
   const { column } = header;
 
   const handler = header.getResizeHandler();
@@ -53,7 +53,7 @@ export const SST_TableHeadCellResizeHandle = <TData extends SST_RowData>({
       style={{
         transform:
           column.getIsResizing() && columnResizeMode === 'onEnd'
-            ? `translateX(${(isRtl ? -1 : 1) * (getState().columnResizing.deltaOffset ?? 0)}px)`
+            ? `translateX(${(isRtl ? -1 : 1) * (columnResizing.deltaOffset ?? 0)}px)`
             : undefined,
         left: isRtl ? lr : undefined,
         right: !isRtl ? lr : undefined,

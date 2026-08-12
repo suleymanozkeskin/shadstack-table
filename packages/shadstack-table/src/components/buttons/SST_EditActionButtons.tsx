@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Button } from '../../_ui/button';
 import { Spinner } from '../../_ui/spinner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
@@ -21,7 +22,6 @@ export const SST_EditActionButtons = <TData extends SST_RowData>({
   ...rest
 }: SST_EditActionButtonsProps<TData>) => {
   const {
-    getState,
     options: {
       icons: { CancelIcon, SaveIcon },
       localization,
@@ -34,7 +34,7 @@ export const SST_EditActionButtons = <TData extends SST_RowData>({
     setCreatingRow,
     setEditingRow,
   } = table;
-  const { creatingRow, editingRow, isSaving } = getState();
+  const { creatingRow, editingRow, isSaving } = useSST_TableState(table);
 
   const isCreating = creatingRow?.id === row.id;
   const isEditing = editingRow?.id === row.id;

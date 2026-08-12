@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useMemo, useState } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Button } from '../../_ui/button';
 import { Popover, PopoverAnchor, PopoverContent } from '../../_ui/popover';
 import { Separator } from '../../_ui/separator';
@@ -38,7 +39,6 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
     getIsSomeColumnsVisible,
     getStartLeafColumns,
     getEndLeafColumns,
-    getState,
     initialState,
     options: {
       enableColumnOrdering,
@@ -48,7 +48,7 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
       mrtTheme: { menuBackgroundColor },
     },
   } = table;
-  const { columnOrder, density } = getState();
+  const { columnOrder, density } = useSST_TableState(table);
   const virtualRef = useMemo<React.RefObject<HTMLElement | null> | undefined>(
     () => (anchorEl ? { current: anchorEl } : undefined),
     [anchorEl],

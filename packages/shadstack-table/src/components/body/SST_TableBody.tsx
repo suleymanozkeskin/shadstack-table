@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { memo, useMemo } from 'react';
 import { type VirtualItem } from '@tanstack/react-virtual';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { SST_TableBodyRow, Memo_SST_TableBodyRow } from './SST_TableBodyRow';
 import { useSST_RowVirtualizer } from '../../hooks/useSST_RowVirtualizer';
 import { useSST_Rows } from '../../hooks/useSST_Rows';
@@ -30,7 +31,6 @@ export const SST_TableBody = <TData extends SST_RowData>({
     getBottomRows,
     getIsSomeRowsPinned,
     getRowModel,
-    getState,
     getTopRows,
     options: {
       enableStickyFooter,
@@ -45,7 +45,7 @@ export const SST_TableBody = <TData extends SST_RowData>({
     },
     refs: { tableFooterRef, tableHeadRef, tablePaperRef },
   } = table;
-  const { columnFilters, globalFilter, isFullScreen, rowPinning } = getState();
+  const { columnFilters, globalFilter, isFullScreen, rowPinning } = useSST_TableState(table);
 
   const tableBodyProps = {
     ...parseFromValuesOrFunc(slotProps?.tableBody, { table }),

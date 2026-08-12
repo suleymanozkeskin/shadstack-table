@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { type RefObject } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Collapsible, CollapsibleContent } from '../../_ui/collapsible';
 import { cn } from '../../lib/utils';
 import {
@@ -33,7 +34,6 @@ export const SST_TableDetailPanel = <TData extends SST_RowData>({
   ...rest
 }: SST_TableDetailPanelProps<TData>) => {
   const {
-    getState,
     getVisibleLeafColumns,
     options: {
       layoutMode,
@@ -42,7 +42,7 @@ export const SST_TableDetailPanel = <TData extends SST_RowData>({
       slotProps,
     },
   } = table;
-  const { isLoading } = getState();
+  const { isLoading } = useSST_TableState(table);
 
   const tableRowProps = parseFromValuesOrFunc(slotProps?.tableBodyRow, {
     isDetailPanel: true,

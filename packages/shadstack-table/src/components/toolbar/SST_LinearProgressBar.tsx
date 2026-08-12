@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Collapsible, CollapsibleContent } from '../../_ui/collapsible';
 import { Progress } from '../../_ui/progress';
 import { cn } from '../../lib/utils';
@@ -19,10 +20,9 @@ export const SST_LinearProgressBar = <TData extends SST_RowData>({
   ...rest
 }: SST_LinearProgressBarProps<TData>) => {
   const {
-    getState,
     options: { slotProps },
   } = table;
-  const { isSaving, showProgressBars } = getState();
+  const { isSaving, showProgressBars } = useSST_TableState(table);
 
   const linearProgressProps = {
     ...parseFromValuesOrFunc(slotProps?.linearProgress, {

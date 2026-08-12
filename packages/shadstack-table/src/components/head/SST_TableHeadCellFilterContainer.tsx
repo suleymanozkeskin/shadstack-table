@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Collapsible, CollapsibleContent } from '../../_ui/collapsible';
 import { type SST_Header, type SST_RowData, type SST_TableInstance } from '../../types';
 import { getColumnFilterInfo } from '../../utils/column.utils';
@@ -20,10 +21,9 @@ export const SST_TableHeadCellFilterContainer = <TData extends SST_RowData>({
   ...rest
 }: SST_TableHeadCellFilterContainerProps<TData>) => {
   const {
-    getState,
     options: { columnFilterDisplayMode },
   } = table;
-  const { showColumnFilters } = getState();
+  const { showColumnFilters } = useSST_TableState(table);
   const { column } = header;
   const { columnDef } = column;
   const { isRangeFilter } = getColumnFilterInfo({ header, table });

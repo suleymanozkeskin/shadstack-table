@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useMemo } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { useSST_ColumnVirtualizer } from '../../hooks/useSST_ColumnVirtualizer';
 import { cn } from '../../lib/utils';
 import { type SST_RowData, type SST_TableInstance } from '../../types';
@@ -20,10 +21,9 @@ export const SST_Table = <TData extends SST_RowData>({
 }: SST_TableProps<TData>) => {
   const {
     getFlatHeaders,
-    getState,
     options: { columns, enableTableFooter, enableTableHead, layoutMode, renderCaption, slotProps },
   } = table;
-  const { columnSizing, columnResizing, columnVisibility } = getState();
+  const { columnSizing, columnResizing, columnVisibility } = useSST_TableState(table);
 
   const tableProps = {
     ...parseFromValuesOrFunc(slotProps?.table, { table }),

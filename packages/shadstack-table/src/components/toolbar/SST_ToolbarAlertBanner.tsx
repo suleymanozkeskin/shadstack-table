@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Fragment, useMemo } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Alert, AlertTitle } from '../../_ui/alert';
 import { Badge } from '../../_ui/badge';
 import { Button } from '../../_ui/button';
@@ -26,7 +27,6 @@ export const SST_ToolbarAlertBanner = <TData extends SST_RowData>({
   const {
     getFilteredSelectedRowModel,
     getCoreRowModel,
-    getState,
     options: {
       enableRowSelection,
       enableSelectAll,
@@ -39,7 +39,7 @@ export const SST_ToolbarAlertBanner = <TData extends SST_RowData>({
     },
     refs: { tablePaperRef },
   } = table;
-  const { density, grouping, rowSelection, showAlertBanner } = getState();
+  const { density, grouping, rowSelection, showAlertBanner } = useSST_TableState(table);
 
   const alertProps = {
     ...parseFromValuesOrFunc(slotProps?.toolbarAlertBanner, {

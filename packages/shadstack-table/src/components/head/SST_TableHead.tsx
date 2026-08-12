@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { SST_TableHeadRow } from './SST_TableHeadRow';
 import { cn } from '../../lib/utils';
 import { type SST_ColumnVirtualizer, type SST_RowData, type SST_TableInstance } from '../../types';
@@ -19,11 +20,10 @@ export const SST_TableHead = <TData extends SST_RowData>({
   ...rest
 }: SST_TableHeadProps<TData>) => {
   const {
-    getState,
     options: { enableStickyHeader, layoutMode, positionToolbarAlertBanner, slotProps },
     refs: { tableHeadRef },
   } = table;
-  const { isFullScreen, showAlertBanner } = getState();
+  const { isFullScreen, showAlertBanner } = useSST_TableState(table);
 
   const tableHeadProps = {
     ...parseFromValuesOrFunc(slotProps?.tableHead, { table }),

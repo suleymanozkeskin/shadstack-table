@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Button } from '../../_ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
 import { cn } from '../../lib/utils';
@@ -19,7 +20,6 @@ export const SST_ExpandAllButton = <TData extends SST_RowData>({
     getCanSomeRowsExpand,
     getIsAllRowsExpanded,
     getIsSomeRowsExpanded,
-    getState,
     options: {
       icons: { KeyboardDoubleArrowDownIcon },
       localization,
@@ -28,7 +28,7 @@ export const SST_ExpandAllButton = <TData extends SST_RowData>({
     },
     toggleAllRowsExpanded,
   } = table;
-  const { density, isLoading } = getState();
+  const { density, isLoading } = useSST_TableState(table);
 
   const iconButtonProps = {
     ...parseFromValuesOrFunc(slotProps?.expandAllButton, {
