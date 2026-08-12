@@ -270,8 +270,18 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
   ).store;
   const snapshotCacheRef = useRef<SST_TableState<TData> | null>(null);
   snapshotCacheRef.current = null;
-  if (isFirstConstruction) {
-    //store and table die together with the component, so no explicit cleanup
+  //The invalidator is registered during render, keyed on STORE identity —
+  //not on "first construction". Under StrictMode's double-invoked mount
+  //render a first-construction gate would subscribe to the discarded
+  //useTable instance's store and leave the kept one without an invalidator;
+  //keying on the store means whichever instance survives has its
+  //subscription (the discarded one is garbage-collected with its store). An
+  //effect would be purer but opens a mount-only window where a child effect
+  //writes before the parent's effect has registered the invalidator. The
+  //store dies with the component, so no cleanup.
+  const cacheInvalidatorStoreRef = useRef<unknown>(null);
+  if (cacheInvalidatorStoreRef.current !== store) {
+    cacheInvalidatorStoreRef.current = store;
     store.subscribe(() => {
       snapshotCacheRef.current = null;
     });

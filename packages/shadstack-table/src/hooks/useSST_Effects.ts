@@ -48,16 +48,21 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
   //only when its inputs (row count, loading flags) actually change — the
   //original effect's dependency contract — so a consumer intentionally
   //setting an out-of-range pageIndex is still left alone.
-  const lastBoundsInputs = useRef<null | { count: number; loading: boolean }>(null);
+  const lastBoundsInputs = useRef<null | { count: number; enabled: boolean; loading: boolean }>(
+    null,
+  );
   const checkPageBounds = () => {
     const { enablePagination, rowCount } = table.options;
     const { isLoading, pagination, showSkeletons } = table.getState();
+    const enabled = !!enablePagination;
     const loading = !!isLoading || !!showSkeletons;
     const count = rowCount ?? table.getPrePaginatedRowModel().rows.length;
     const prev = lastBoundsInputs.current;
-    lastBoundsInputs.current = { count, loading };
-    if (prev && prev.count === count && prev.loading === loading) return;
-    if (!enablePagination || loading) return;
+    lastBoundsInputs.current = { count, enabled, loading };
+    if (prev && prev.count === count && prev.enabled === enabled && prev.loading === loading) {
+      return;
+    }
+    if (!enabled || loading) return;
 
     const { pageIndex, pageSize } = pagination;
     const totalPages: number = count > 0 ? Math.ceil(count / pageSize) : 1;

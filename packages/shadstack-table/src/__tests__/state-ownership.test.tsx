@@ -1,3 +1,4 @@
+import { StrictMode } from 'react';
 import { act, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { type TableState } from '@tanstack/react-table';
@@ -215,6 +216,29 @@ describe('state ownership — every slice is atom-backed', () => {
       observed = table.getState().density;
     });
     expect(observed).toBe('compact');
+  });
+
+  it('read-after-write stays correct under StrictMode double-invoked mounts', () => {
+    //StrictMode discards the first useTable instance from the doubled mount
+    //render; the getState() cache invalidator must end up subscribed to the
+    //KEPT instance's store, or post-write reads return stale snapshots.
+    render(
+      <StrictMode>
+        <Harness />
+      </StrictMode>,
+    );
+    const table = capturedTable;
+    //populate the cache, then write, then read again inside the same handler
+    let before: unknown;
+    let after: unknown;
+    act(() => {
+      before = table.getState().density;
+      table.setDensity('spacious');
+      after = table.getState().density;
+    });
+    expect(before).toBe('comfortable');
+    expect(after).toBe('spacious');
+    expect(table.getState().density).toBe('spacious');
   });
 
   it('TanStack-owned slices still flow end to end (pagination via public API)', async () => {

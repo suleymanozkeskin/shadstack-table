@@ -203,8 +203,12 @@ const distRoot = fileURLToPath(import.meta.resolve('shadstack-table')).replace(
 
 const gzipLen = (path) => gzipSync(readFileSync(path)).length;
 
-const ESM_GZIP_BUDGET = 60_000;
-const CJS_GZIP_BUDGET = 62_000;
+// Raised 60k -> 61k with the granular-subscription work: per-component
+// selectors and per-row/cell projections are real shipped code (~1.5k gzip
+// across 46 components). The headroom above the current ~60.0k is kept
+// deliberately tight so accidental bloat still trips the gate.
+const ESM_GZIP_BUDGET = 61_000;
+const CJS_GZIP_BUDGET = 63_000;
 const CSS_GZIP_BUDGET = 3_000;
 const LOCALE_GZIP_BUDGET = 3_000;
 const LOCALE_DIR_RAW_BUDGET = 220_000;

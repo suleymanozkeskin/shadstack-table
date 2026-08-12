@@ -33,6 +33,8 @@ export const SST_TableHead = <TData extends SST_RowData>({
     grouping: s.grouping,
     isFullScreen: s.isFullScreen,
     showAlertBanner: s.showAlertBanner,
+    //the in-head alert banner also shows whenever any row is selected
+    hasSelectedRows: table.getSelectedRowModel().rows.length > 0,
   }));
 
   const tableHeadProps = {

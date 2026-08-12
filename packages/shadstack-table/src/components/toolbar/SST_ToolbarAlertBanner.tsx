@@ -44,6 +44,11 @@ export const SST_ToolbarAlertBanner = <TData extends SST_RowData>({
     grouping: s.grouping,
     rowSelection: s.rowSelection,
     showAlertBanner: s.showAlertBanner,
+    //the banner renders selected-of-total counts, which also depend on
+    //filtering — project the displayed numbers so any change that alters
+    //them re-renders the banner
+    filteredSelectedCount: table.getFilteredSelectedRowModel().rows.length,
+    totalRowCount: table.options.rowCount ?? table.getCoreRowModel().rows.length,
   }));
 
   const alertProps = {
