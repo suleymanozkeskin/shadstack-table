@@ -4,7 +4,9 @@ All notable changes to `shadstack-table` are recorded here. The format is based 
 
 ## [Unreleased]
 
-Moves the table engine from TanStack Table v8 to v9 (pinned to `9.1.2`), with behaviour preserved. v9 makes the feature set explicit and adds a `TFeatures` type parameter to nearly every TanStack type; shadstack registers the full feature set once internally, so the public `SST_*` types keep their existing generics — `SST_Row<TData>`, `SST_TableInstance<TData>`, `SST_ColumnDef<TData, TValue>` are unchanged. The renames below are the surface that does move, and every one of them is a rename of a TanStack concept rather than a shadstack decision.
+## [0.3.0] — 2026-08-12
+
+Moves the table engine from TanStack Table v8 to v9 (pinned to `9.1.2`) and makes v9’s render granularity the default: every state slice lives in the table’s TanStack Store atoms, every internal component subscribes to exactly the state it renders, and a state write re-renders only its subscribers. v9 makes the feature set explicit and adds a `TFeatures` type parameter to nearly every TanStack type; shadstack registers the full feature set once internally, so the public `SST_*` types keep their existing generics — `SST_Row<TData>`, `SST_TableInstance<TData>`, `SST_ColumnDef<TData, TValue>` are unchanged. The renames below are the surface that does move, and every one of them is a rename of a TanStack concept rather than a shadstack decision.
 
 Persisted table state needs migrating on read: `columnPinning` changed shape and `columnSizingInfo` changed name. Both are listed under Changed.
 
@@ -45,6 +47,8 @@ Persisted table state needs migrating on read: `columnPinning` changed shape and
 ### Fixed
 
 - Row editing opened from the row-actions menu no longer breaks. The handler shallow-copied the row before storing it as `editingRow`; v9 puts row methods on the prototype, so the copy lost `getAllCells()` and the edit modal could not build its form.
+
+## [0.2.1] — 2026-08-11
 
 Declarative control over the internal surfaces a consumer previously had to take a render slot to change. Every entry in the column-actions menu except "filter by column" was already suppressible by the feature flag that produced it; that entry shared its gate with "clear filter", so it gets one of its own. Menu entries are addressable by stable id rather than array position. The filter-mode menu's dividers, the show/hide-search button, and the background of every library-rendered input each become a single option.
 
@@ -277,6 +281,7 @@ First public pre-release. The full `material-react-table` feature surface is por
 - Column drag-reorder.
 - `filterVariant: 'time' | 'datetime' | 'time-range' | 'datetime-range'` — native `<input>` is used until a shadcn time picker recipe lands.
 
+[0.3.0]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.6...v0.2.0
 [0.1.1]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.0...v0.1.1
