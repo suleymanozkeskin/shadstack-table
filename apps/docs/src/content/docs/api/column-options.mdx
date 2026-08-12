@@ -48,12 +48,12 @@ See the [data columns guide](../../guides/data-columns/) and [display columns gu
 
 ## Sorting
 
-| Option          | Type                                              | Description                                                             |
-| --------------- | ------------------------------------------------- | ----------------------------------------------------------------------- |
-| `enableSorting` | `boolean`                                         | Allow sorting on this column. Default `true` for data columns.          |
-| `sortingFn`     | `SST_SortingFn<TData> \| keyof typeof sortingFns` | Pick a built-in (`'alphanumeric'`, `'datetime'`, …) or supply your own. |
-| `sortUndefined` | `1 \| -1 \| false`                                | Where to place undefined values when sorting.                           |
-| `invertSorting` | `boolean`                                         | Reverse the comparator output (useful for "rank" columns).              |
+| Option          | Type                                           | Description                                                             |
+| --------------- | ---------------------------------------------- | ----------------------------------------------------------------------- |
+| `enableSorting` | `boolean`                                      | Allow sorting on this column. Default `true` for data columns.          |
+| `sortFn`        | `SST_SortingFn<TData> \| keyof typeof sortFns` | Pick a built-in (`'alphanumeric'`, `'datetime'`, …) or supply your own. |
+| `sortUndefined` | `1 \| -1 \| false`                             | Where to place undefined values when sorting.                           |
+| `invertSorting` | `boolean`                                      | Reverse the comparator output (useful for "rank" columns).              |
 
 ## Filtering
 

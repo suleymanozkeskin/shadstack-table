@@ -18,7 +18,7 @@ export const SST_TableHeadCellResizeHandle = <TData extends SST_RowData>({
   const {
     getState,
     options: { columnResizeDirection, columnResizeMode },
-    setColumnSizingInfo,
+    setColumnResizing,
   } = table;
   const { density } = getState();
   const { column } = header;
@@ -42,7 +42,7 @@ export const SST_TableHeadCellResizeHandle = <TData extends SST_RowData>({
         className,
       )}
       onDoubleClick={() => {
-        setColumnSizingInfo((old) => ({
+        setColumnResizing((old) => ({
           ...old,
           isResizingColumn: false,
         }));
@@ -53,7 +53,7 @@ export const SST_TableHeadCellResizeHandle = <TData extends SST_RowData>({
       style={{
         transform:
           column.getIsResizing() && columnResizeMode === 'onEnd'
-            ? `translateX(${(isRtl ? -1 : 1) * (getState().columnSizingInfo.deltaOffset ?? 0)}px)`
+            ? `translateX(${(isRtl ? -1 : 1) * (getState().columnResizing.deltaOffset ?? 0)}px)`
             : undefined,
         left: isRtl ? lr : undefined,
         right: !isRtl ? lr : undefined,

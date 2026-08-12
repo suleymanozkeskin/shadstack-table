@@ -36,8 +36,8 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
     getIsAllColumnsVisible,
     getIsSomeColumnsPinned,
     getIsSomeColumnsVisible,
-    getLeftLeafColumns,
-    getRightLeafColumns,
+    getStartLeafColumns,
+    getEndLeafColumns,
     getState,
     initialState,
     options: {
@@ -69,11 +69,11 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
     const columns = getAllColumns();
     if (columnOrder.length > 0 && !columns.some((col) => col.columnDef.columnDefType === 'group')) {
       return [
-        ...getLeftLeafColumns(),
+        ...getStartLeafColumns(),
         ...Array.from(new Set(columnOrder)).map((colId) =>
           getCenterLeafColumns().find((col) => col?.id === colId),
         ),
-        ...getRightLeafColumns(),
+        ...getEndLeafColumns(),
       ].filter(Boolean);
     }
     return columns;
@@ -85,9 +85,9 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional accessor snapshot, see above
     getCenterLeafColumns(),
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional accessor snapshot, see above
-    getLeftLeafColumns(),
+    getStartLeafColumns(),
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional accessor snapshot, see above
-    getRightLeafColumns(),
+    getEndLeafColumns(),
   ]) as SST_Column<TData>[];
 
   const isNestedColumns = allColumns.some((col) => col.columnDef.columnDefType === 'group');

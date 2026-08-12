@@ -23,7 +23,7 @@ export const SST_Table = <TData extends SST_RowData>({
     getState,
     options: { columns, enableTableFooter, enableTableHead, layoutMode, renderCaption, slotProps },
   } = table;
-  const { columnSizing, columnSizingInfo, columnVisibility } = getState();
+  const { columnSizing, columnResizing, columnVisibility } = getState();
 
   const tableProps = {
     ...parseFromValuesOrFunc(slotProps?.table, { table }),
@@ -40,7 +40,7 @@ export const SST_Table = <TData extends SST_RowData>({
   //   - columns          -> getFlatHeaders() header set (add/remove)
   //   - columnVisibility -> getFlatHeaders() header set (filtered)
   //   - columnSizing     -> header.getSize() values (persisted sizes)
-  //   - columnSizingInfo -> header.getSize() values during live resize
+  //   - columnResizing -> header.getSize() values during live resize
   const columnSizeVars = useMemo(() => {
     const headers = getFlatHeaders();
     const colSizes: { [key: string]: number } = {};
@@ -52,7 +52,7 @@ export const SST_Table = <TData extends SST_RowData>({
     }
     return colSizes;
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- deps are accessor-driven invalidation keys; see comment above for the accessor each slice triggers.
-  }, [columns, columnSizing, columnSizingInfo, columnVisibility]);
+  }, [columns, columnSizing, columnResizing, columnVisibility]);
 
   const columnVirtualizer = useSST_ColumnVirtualizer(table);
 
@@ -76,7 +76,7 @@ export const SST_Table = <TData extends SST_RowData>({
     >
       {!!Caption && <caption>{Caption}</caption>}
       {enableTableHead && <SST_TableHead {...commonTableGroupProps} />}
-      {columnSizingInfo.isResizingColumn ? (
+      {columnResizing.isResizingColumn ? (
         <Memo_SST_TableBody {...commonTableGroupProps} />
       ) : (
         <SST_TableBody {...commonTableGroupProps} />

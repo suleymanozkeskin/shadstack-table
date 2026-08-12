@@ -1,4 +1,5 @@
 import { type DeepKeys, type Row } from '@tanstack/react-table';
+import { type SST_Features } from '../features';
 import { type SST_Cell } from './cell';
 import { type LiteralUnion } from './primitives';
 
@@ -11,7 +12,7 @@ export interface SST_RowModel<TData extends SST_RowData> {
 }
 
 export type SST_Row<TData extends SST_RowData> = Omit<
-  Row<TData>,
+  Row<SST_Features, TData>,
   | '_valuesCache'
   | 'getAllCells'
   | 'getParentRow'

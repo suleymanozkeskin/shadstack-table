@@ -60,7 +60,11 @@ export const SST_ToggleRowActionMenuButton = <TData extends SST_RowData>({
 
   const handleStartEditMode = (event: MouseEvent) => {
     event.stopPropagation();
-    setEditingRow({ ...row });
+    //Pass the row itself, never a shallow copy. TanStack v9 puts row methods
+    //on the prototype, so spreading yields an object without `getAllCells()` —
+    //which `SST_EditRowModal` calls to build the edit form. The copy existed
+    //only to force a new object identity, which the row already has here.
+    setEditingRow(row);
     setAnchorEl(null);
   };
 

@@ -1,6 +1,14 @@
 import { type ReactNode, type RefObject } from 'react';
-import { type DeepKeys, type OnChangeFn, type TableOptions } from '@tanstack/react-table';
+import {
+  type AggregationFnDef,
+  type DeepKeys,
+  type FilterFn,
+  type OnChangeFn,
+  type SortFn,
+  type TableOptions,
+} from '@tanstack/react-table';
 import { type VirtualizerOptions } from '@tanstack/react-virtual';
+import { type SST_Features } from '../features';
 import { type SST_Cell } from './cell';
 import {
   type SST_Column,
@@ -39,7 +47,7 @@ export type SST_StatefulTableOptions<TData extends SST_RowData> = SST_DefinedTab
     SST_TableState<TData>,
     | 'columnFilterFns'
     | 'columnOrder'
-    | 'columnSizingInfo'
+    | 'columnResizing'
     | 'creatingRow'
     | 'density'
     | 'draggingColumn'
@@ -69,7 +77,7 @@ export type SST_StatefulTableOptions<TData extends SST_RowData> = SST_DefinedTab
  * @link https://suleymanozkeskin.github.io/shadstack-table/api/props/
  */
 export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
-  Partial<TableOptions<TData>>,
+  Partial<TableOptions<SST_Features, TData>>,
   | 'columns'
   | 'data'
   | 'defaultColumn'
@@ -81,6 +89,15 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
   | 'onStateChange'
   | 'state'
 > {
+  /**
+   * Extra aggregation functions, merged over the built-in shadstack registry.
+   *
+   * TanStack v9 moved its function registries out of table options and into the
+   * `tableFeatures()` feature set, so these three options are now owned by
+   * shadstack: entries provided here are merged into the feature set that backs
+   * this table.
+   */
+  aggregationFns?: Record<string, AggregationFnDef<any, any, any, any>>;
   columnFilterDisplayMode?: 'custom' | 'popover' | 'subheader';
   columnFilterModeOptions?: Array<LiteralUnion<string & SST_FilterOption>> | null;
   /**
@@ -194,6 +211,8 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
   enableToolbarInternalActions?: boolean;
   enableTopToolbar?: boolean;
   expandRowsFn?: (dataRow: TData) => TData[];
+  /** Extra filter functions, merged over the built-in shadstack registry. */
+  filterFns?: Record<string, FilterFn<any, TData>>;
   getRowId?: (originalRow: TData, index: number, parentRow: SST_Row<TData>) => string;
   globalFilterFn?: SST_FilterOption;
   globalFilterModeOptions?: SST_FilterOption[] | null;
@@ -370,6 +389,8 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
       }) => Partial<VirtualizerOptions<HTMLDivElement, HTMLTableRowElement>>)
     | Partial<VirtualizerOptions<HTMLDivElement, HTMLTableRowElement>>;
   selectAllMode?: 'all' | 'page';
+  /** Extra sorting functions, merged over the built-in shadstack registry. */
+  sortFns?: Record<string, SortFn<any, TData>>;
   /**
    * Manage state externally any way you want, then pass it back into MRT.
    */

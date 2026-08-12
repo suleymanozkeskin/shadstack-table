@@ -24,7 +24,7 @@ export const SST_ColumnPinningButtons = <TData extends SST_RowData>({
     },
   } = table;
 
-  const handlePinColumn = (pinDirection: 'left' | 'right' | false) => {
+  const handlePinColumn = (pinDirection: 'start' | 'end' | false) => {
     column.pin(pinDirection);
   };
 
@@ -43,7 +43,7 @@ export const SST_ColumnPinningButtons = <TData extends SST_RowData>({
         <>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button onClick={() => handlePinColumn('left')} size="icon" variant="ghost">
+              <Button onClick={() => handlePinColumn('start')} size="icon" variant="ghost">
                 <PushPinIcon style={{ transform: 'rotate(90deg)' }} />
               </Button>
             </TooltipTrigger>
@@ -51,7 +51,7 @@ export const SST_ColumnPinningButtons = <TData extends SST_RowData>({
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button onClick={() => handlePinColumn('right')} size="icon" variant="ghost">
+              <Button onClick={() => handlePinColumn('end')} size="icon" variant="ghost">
                 <PushPinIcon style={{ transform: 'rotate(-90deg)' }} />
               </Button>
             </TooltipTrigger>

@@ -48,6 +48,13 @@ export const SST_ExpandButton = <TData extends SST_RowData>({
   };
 
   const detailPanel = !!renderDetailPanel?.({ row, table });
+  //`getCanExpand()` cannot be used as the disabled rule when `renderDetailPanel`
+  //is set: the table option `getRowCanExpand` reports every row as expandable so
+  //that v9's expand-all guard works, which would leave this button enabled on
+  //rows that render no panel. Toggling such a row writes a key into `expanded`,
+  //and `getCanRankRows` treats any expanded row as a reason to stop ranking —
+  //so an enabled no-op button here silently disables global-filter ranking.
+  const isExpandable = renderDetailPanel ? detailPanel : canExpand;
   const indentSide = isRtl || positionExpandColumn === 'last' ? 'mr' : 'ml';
 
   return (
@@ -56,7 +63,7 @@ export const SST_ExpandButton = <TData extends SST_RowData>({
         <span>
           <Button
             aria-label={localization.expand}
-            disabled={!canExpand && !detailPanel}
+            disabled={!isExpandable}
             size="icon"
             variant="ghost"
             {...iconButtonProps}
@@ -67,7 +74,7 @@ export const SST_ExpandButton = <TData extends SST_RowData>({
             }}
             className={cn(
               density === 'compact' ? 'h-7 w-7' : 'h-9 w-9',
-              !canExpand && !detailPanel && 'opacity-30',
+              !isExpandable && 'opacity-30',
               iconButtonProps?.className,
             )}
             title={undefined}

@@ -62,7 +62,7 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
     refs: { filterInputRefs },
     setColumnFilterFns,
     setColumnOrder,
-    setColumnSizingInfo,
+    setColumnResizing,
     setShowColumnFilters,
   } = table;
   const { column } = header;
@@ -92,7 +92,7 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
   };
 
   const handleResetColumnSize = () => {
-    setColumnSizingInfo((old) => ({ ...old, isResizingColumn: false }));
+    setColumnResizing((old) => ({ ...old, isResizingColumn: false }));
     column.resetSize();
     setAnchorEl(null);
   };
@@ -102,7 +102,7 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
     setAnchorEl(null);
   };
 
-  const handlePinColumn = (pinDirection: 'left' | 'right' | false) => {
+  const handlePinColumn = (pinDirection: 'start' | 'end' | false) => {
     column.pin(pinDirection);
     setAnchorEl(null);
   };
@@ -251,19 +251,19 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
     ...(enableColumnPinning && column.getCanPin()
       ? [
           <SST_ActionMenuItem
-            disabled={column.getIsPinned() === 'left' || !column.getCanPin()}
+            disabled={column.getIsPinned() === 'start' || !column.getCanPin()}
             icon={<PushPinIcon style={{ transform: 'rotate(90deg)' }} />}
             key={SST_COLUMN_MENU_ITEM_IDS.pinToLeft}
             label={localization.pinToLeft}
-            onClick={() => handlePinColumn('left')}
+            onClick={() => handlePinColumn('start')}
             table={table}
           />,
           <SST_ActionMenuItem
-            disabled={column.getIsPinned() === 'right' || !column.getCanPin()}
+            disabled={column.getIsPinned() === 'end' || !column.getCanPin()}
             icon={<PushPinIcon style={{ transform: 'rotate(-90deg)' }} />}
             key={SST_COLUMN_MENU_ITEM_IDS.pinToRight}
             label={localization.pinToRight}
-            onClick={() => handlePinColumn('right')}
+            onClick={() => handlePinColumn('end')}
             table={table}
           />,
           <SST_ActionMenuItem

@@ -79,9 +79,9 @@ export const SST_ShowHideColumnsMenuItems = <TData extends SST_RowData>({
     if (hoveredColumn) {
       const reorderedColumns = reorderColumn(column, hoveredColumn, columnOrder);
       setColumnOrder(reorderedColumns);
-      setColumnPinning(({ left = [], right = [] }) => ({
-        left: reorderedColumns.filter((header) => left.includes(header)),
-        right: reorderedColumns.filter((header) => right.includes(header)),
+      setColumnPinning(({ end = [], start = [] }) => ({
+        end: reorderedColumns.filter((header) => end.includes(header)),
+        start: reorderedColumns.filter((header) => start.includes(header)),
       }));
     }
   };
