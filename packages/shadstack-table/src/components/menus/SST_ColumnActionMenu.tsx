@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { type MouseEvent, useState } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Popover, PopoverAnchor, PopoverContent } from '../../_ui/popover';
 import { SST_ActionMenuItem } from './SST_ActionMenuItem';
 import { SST_FilterOptionMenu } from './SST_FilterOptionMenu';
@@ -31,7 +32,6 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
 }: SST_ColumnActionMenuProps<TData>) => {
   const {
     getAllLeafColumns,
-    getState,
     options: {
       columnFilterDisplayMode,
       columnFilterModeOptions,
@@ -67,7 +67,20 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
   } = table;
   const { column } = header;
   const { columnDef } = column;
-  const { columnSizing, columnVisibility, density, showColumnFilters } = getState();
+  const { columnSizing, columnVisibility, density, showColumnFilters } = useSST_TableState(
+    table,
+    (s) => ({
+      columnSizing: s.columnSizing,
+      columnVisibility: s.columnVisibility,
+      density: s.density,
+      showColumnFilters: s.showColumnFilters,
+      //menu entries render this column's sort/group/pin/filter state
+      columnFilters: s.columnFilters,
+      columnPinning: s.columnPinning,
+      grouping: s.grouping,
+      sorting: s.sorting,
+    }),
+  );
   const columnFilterValue = column.getFilterValue();
   const virtualRef = React.useMemo<React.RefObject<HTMLElement | null> | undefined>(
     () => (anchorEl ? { current: anchorEl } : undefined),

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { type ChangeEvent, type MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Button } from '../../_ui/button';
 import { Collapsible, CollapsibleContent } from '../../_ui/collapsible';
 import { Input } from '../../_ui/input';
@@ -21,7 +22,6 @@ export const SST_GlobalFilterTextField = <TData extends SST_RowData>({
   ...rest
 }: SST_GlobalFilterTextFieldProps<TData>) => {
   const {
-    getState,
     options: {
       enableGlobalFilterModes,
       icons: { CloseIcon, SearchIcon },
@@ -32,7 +32,10 @@ export const SST_GlobalFilterTextField = <TData extends SST_RowData>({
     refs: { searchInputRef },
     setGlobalFilter,
   } = table;
-  const { globalFilter, showGlobalFilter } = getState();
+  const { globalFilter, showGlobalFilter } = useSST_TableState(table, (s) => ({
+    globalFilter: s.globalFilter,
+    showGlobalFilter: s.showGlobalFilter,
+  }));
 
   const inputProps = {
     ...parseFromValuesOrFunc(slotProps?.searchInput, {

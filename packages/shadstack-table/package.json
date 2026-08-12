@@ -1,6 +1,6 @@
 {
   "name": "shadstack-table",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "shadcn-native React data table — full data-table feature surface on TanStack Table v8 + shadcn/ui primitives.",
   "keywords": [
     "data-table",
@@ -74,6 +74,7 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@tanstack/match-sorter-utils": "^8.19.4",
+    "@tanstack/react-store": "^0.11.0",
     "@tanstack/react-table": "^9.1.2",
     "@tanstack/react-virtual": "^3.10.0",
     "class-variance-authority": "^0.7.1",

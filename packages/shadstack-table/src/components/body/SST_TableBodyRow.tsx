@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { type DragEvent, memo, useMemo, useRef } from 'react';
 import { type VirtualItem } from '@tanstack/react-virtual';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { SST_TableBodyCell, Memo_SST_TableBodyCell } from './SST_TableBodyCell';
 import { SST_TableDetailPanel } from './SST_TableDetailPanel';
 import { cn } from '../../lib/utils';
@@ -42,7 +43,6 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
   ...rest
 }: SST_TableBodyRowProps<TData>) => {
   const {
-    getState,
     options: {
       enableRowOrdering,
       enableRowPinning,
@@ -58,24 +58,40 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
     refs: { tableFooterRef, tableHeadRef },
     setHoveredRow,
   } = table;
+  //Per-row projections: this row re-renders only when a value that affects
+  //THIS row changes — hovering or dragging over row A no longer re-renders
+  //row B. The projections read row APIs (selection/pinning), so the
+  //subscription covers those slices too.
   const {
     density,
-    draggingColumn,
-    draggingRow,
-    editingCell,
-    editingRow,
-    hoveredRow,
+    editingCellId,
+    isDraggingColumnActive,
+    isDraggingRowActive,
+    isDraggingThisRow,
+    isEditingThisRow,
     isFullScreen,
-  } = getState();
+    isHoveredThisRow,
+    isRowPinned,
+    isRowSelected,
+  } = useSST_TableState(table, (s) => ({
+    density: s.density,
+    //only the memoMode==='cells' gate reads these; keeping them out of the
+    //projection otherwise means editing one cell re-renders one cell, not
+    //every row
+    editingCellId: memoMode === 'cells' ? (s.editingCell?.id ?? null) : null,
+    isDraggingColumnActive: !!s.draggingColumn,
+    isDraggingRowActive: !!s.draggingRow,
+    isDraggingThisRow: s.draggingRow?.id === row.id,
+    isEditingThisRow: memoMode === 'cells' ? s.editingRow?.id === row.id : false,
+    isFullScreen: s.isFullScreen,
+    isHoveredThisRow: s.hoveredRow?.id === row.id,
+    isRowPinned: !!(enableRowPinning && row.getIsPinned()),
+    isRowSelected: getIsRowSelected({ row, table }),
+  }));
 
   const visibleCells = row.getVisibleCells();
 
   const { virtualColumns, virtualPaddingLeft, virtualPaddingRight } = columnVirtualizer ?? {};
-
-  const isRowSelected = getIsRowSelected({ row, table });
-  const isRowPinned = enableRowPinning && row.getIsPinned();
-  const isDraggingRow = draggingRow?.id === row.id;
-  const isHoveredRow = hoveredRow?.id === row.id;
 
   const tableRowProps = {
     ...parseFromValuesOrFunc(slotProps?.tableBodyRow, {
@@ -109,7 +125,7 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
   const rowHeight = customRowHeight || defaultRowHeight;
 
   const handleDragEnter = (_e: DragEvent) => {
-    if (enableRowOrdering && draggingRow) {
+    if (enableRowOrdering && isDraggingRowActive) {
       setHoveredRow(row);
     }
   };
@@ -151,7 +167,7 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
                   bottomPinnedIndex * rowHeight + (enableStickyFooter ? tableFooterHeight - 1 : 0)
                 }px`
               : undefined,
-          opacity: isRowPinned ? 0.97 : isDraggingRow || isHoveredRow ? 0.5 : 1,
+          opacity: isRowPinned ? 0.97 : isDraggingThisRow || isHoveredThisRow ? 0.5 : 1,
           top: virtualRow
             ? 0
             : topPinnedIndex !== undefined && isRowPinned
@@ -196,10 +212,10 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
           return cell ? (
             memoMode === 'cells' &&
             cell.column.columnDef.columnDefType === 'data' &&
-            !draggingColumn &&
-            !draggingRow &&
-            editingCell?.id !== cell.id &&
-            editingRow?.id !== row.id ? (
+            !isDraggingColumnActive &&
+            !isDraggingRowActive &&
+            editingCellId !== cell.id &&
+            !isEditingThisRow ? (
               <Memo_SST_TableBodyCell key={key} {...props} />
             ) : (
               <SST_TableBodyCell key={key} {...props} />

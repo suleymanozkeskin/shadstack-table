@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Button } from '../../_ui/button';
 import { Label } from '../../_ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../_ui/select';
@@ -44,7 +45,6 @@ export const SST_TablePagination = <TData extends SST_RowData>({
   const flipStyle = dir === 'rtl' ? { transform: 'scaleX(-1)' } : undefined;
 
   const {
-    getState,
     options: {
       enableToolbarInternalActions,
       icons: { ChevronLeftIcon, ChevronRightIcon, FirstPageIcon, LastPageIcon },
@@ -54,9 +54,14 @@ export const SST_TablePagination = <TData extends SST_RowData>({
       slotProps,
     },
   } = table;
+  //re-render on pagination itself and whenever the displayed totals change
+  //(filtering shrinks the row count without touching `pagination`)
   const {
     pagination: { pageIndex = 0, pageSize = 10 },
-  } = getState();
+  } = useSST_TableState(table, (s) => ({
+    pagination: s.pagination,
+    totalRowCount: table.getRowCount(),
+  }));
 
   const paginationProps = {
     ...parseFromValuesOrFunc(slotProps?.pagination, {

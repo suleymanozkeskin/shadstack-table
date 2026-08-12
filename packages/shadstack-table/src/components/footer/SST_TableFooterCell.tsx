@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { cn } from '../../lib/utils';
 import { type SST_Header, type SST_RowData, type SST_TableInstance } from '../../types';
 import { getCommonMRTCellStyles } from '../../utils/style.utils';
@@ -22,10 +23,15 @@ export const SST_TableFooterCell = <TData extends SST_RowData>({
 }: SST_TableFooterCellProps<TData>) => {
   const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
   const {
-    getState,
     options: { enableColumnPinning, enableKeyboardShortcuts, slotProps },
   } = table;
-  const { density } = getState();
+  const { density } = useSST_TableState(table, (s) => ({
+    density: s.density,
+    //getCommonMRTCellStyles reads these for this column's styling
+    isDraggingThisColumn: s.draggingColumn?.id === footer.column.id,
+    isHoveredThisColumn: s.hoveredColumn?.id === footer.column.id,
+    isColumnPinned: footer.column.getIsPinned(),
+  }));
   const { column } = footer;
   const { columnDef } = column;
   const { columnDefType } = columnDef;

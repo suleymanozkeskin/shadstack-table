@@ -180,6 +180,22 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
     manualSorting = true;
   }
 
+  //An `on*Change` key that is PRESENT but undefined would override the
+  //feature-supplied default state updater in TanStack's options merge, and
+  //`setStateSlice` treats a missing handler as "do nothing" — silently
+  //freezing that slice. Consumers spreading partially-built option objects
+  //hit this, so strip explicit-undefined handler keys before they reach the
+  //table.
+  for (const key of Object.keys(rest)) {
+    if (
+      key.startsWith('on') &&
+      key.endsWith('Change') &&
+      (rest as Record<string, unknown>)[key] === undefined
+    ) {
+      delete (rest as Record<string, unknown>)[key];
+    }
+  }
+
   //TanStack v9 registers row models as feature-set slots rather than
   //`get*RowModel` table options, so the enable flags that used to decide
   //whether to pass a factory now decide whether to register the slot. The

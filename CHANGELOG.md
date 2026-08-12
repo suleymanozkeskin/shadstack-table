@@ -4,12 +4,36 @@ All notable changes to `shadstack-table` are recorded here. The format is based 
 
 ## [Unreleased]
 
-Moves the table engine from TanStack Table v8 to v9 (pinned to `9.1.2`), with behaviour preserved. v9 makes the feature set explicit and adds a `TFeatures` type parameter to nearly every TanStack type; shadstack registers the full feature set once internally, so the public `SST_*` types keep their existing generics — `SST_Row<TData>`, `SST_TableInstance<TData>`, `SST_ColumnDef<TData, TValue>` are unchanged. The renames below are the surface that does move, and every one of them is a rename of a TanStack concept rather than a shadstack decision.
+## [0.3.0] — 2026-08-12
+
+Moves the table engine from TanStack Table v8 to v9 (pinned to `9.1.2`) and makes v9’s render granularity the default: every state slice lives in the table’s TanStack Store atoms, every internal component subscribes to exactly the state it renders, and a state write re-renders only its subscribers. v9 makes the feature set explicit and adds a `TFeatures` type parameter to nearly every TanStack type; shadstack registers the full feature set once internally, so the public `SST_*` types keep their existing generics — `SST_Row<TData>`, `SST_TableInstance<TData>`, `SST_ColumnDef<TData, TValue>` are unchanged. The renames below are the surface that does move, and every one of them is a rename of a TanStack concept rather than a shadstack decision.
 
 Persisted table state needs migrating on read: `columnPinning` changed shape and `columnSizingInfo` changed name. Both are listed under Changed.
 
+### Added
+
+- **Granular render subscriptions.** Every internal component now subscribes to exactly the state it renders, with per-row/per-cell projections in the hot paths, and the hook host's `useTable` selector covers only what table construction itself consumes. What this means in practice (all verified by render-count tests and interaction benchmarks against the parity port, 10k–50k rows, virtualized):
+  - hovering a row during a drag re-renders that row alone (a drag-hover move: ~3.7ms → ~0.2ms, ~18x);
+  - entering/leaving cell editing re-renders that cell alone (~7.9ms → ~0.4ms, ~20x);
+  - toggling one row's selection re-renders the affected checkboxes/rows, not the table (~10.2ms → ~2.5ms);
+  - a page flip leaves every header cell un-rendered (~7.4ms → ~3.1ms);
+  - interaction cost is independent of table size — the 50k-row numbers match the 10k-row numbers.
+    Mount and sort-after-mount times are unchanged (50k virtualized sort: 153ms parity vs 154ms). `memoMode` is retained: its remaining job is blunting the one legitimate full-subtree cascade, per-tick column resizing, which re-renders through the table-level CSS-variable styles; moving those to imperative style writes is a possible future refinement.
+- `useSST_TableState(table, selector?)` — subscribe to table state during render. With no selector it returns the full state snapshot and re-renders on any change; with a selector the selected value is shallow-compared, so a component re-renders only when what it selected changes. This is the render-phase counterpart to `getState()`, which remains the right call inside event handlers and effects.
+- `useSST_TableContext()` and `SST_TableContext` — read the table instance from context anywhere below `SST_TablePaper`, e.g. inside custom `Cell`/`Header` renderers and toolbar slots, without threading the `table` prop.
+- `@tanstack/react-store` is a declared (externalized) dependency; it resolves to the same copy `@tanstack/react-table` already ships.
+
 ### Changed
 
+- The table instance returned by `useShadStackTable` (and used internally by `ShadStackTable`) is referentially stable across renders; its contents are refreshed each render. Consumer effects keyed on `[table]` now run once instead of on every render. Internal components read state through `useSST_TableState`, so the read is the subscription.
+- Internal event handlers that can fire without their component having re-rendered (drag-enter on cells and head cells) read `table.getState()` live instead of render-captured values.
+- Table-level side effects (fullscreen body styles, ranked-filter sort save/restore, page-bounds clamping, pinned-row restyle on density change) run as store/atom subscriptions rather than render-phase effects. Their observable behaviour is unchanged; the page-bounds clamp still fires only when row count or loading flags change.
+- **Breaking:** every shadstack state slice (`density`, `isFullScreen`, `editingRow`, `hoveredColumn`, …) is now real table state, owned by the table's TanStack Store atoms instead of React state inside the hook. Consequences for consumers:
+  - `table.options.state` now contains only the controlled state the consumer supplied — the v9 contract. Read current state through `table.getState()` (unchanged signature) or the new typed `table.atoms.<slice>` / `table.baseAtoms.<slice>` maps. Code that read merged state off `table.options.state` must switch to `getState()`.
+  - `table.reset()` now resets shadstack slices along with TanStack's, back to `initialState`. Consumer-controlled slices (supplied via `state`) are unaffected, matching v9 semantics. Previously the shadstack slices survived a reset.
+  - Uncontrolled setter writes are synchronous: `table.getState()` read immediately after `table.setDensity(...)` in the same event handler returns the new value. Previously the value appeared on the next render.
+  - Every slice — including `isLoading`, `isSaving`, `showLoadingOverlay`, `showProgressBars`, `showSkeletons` — is present in `getState()` with a seeded default (`undefined` for the three tri-state display flags, whose "auto" mode is preserved). Previously unset slices were absent from the snapshot.
+  - An `on*Change` option key explicitly set to `undefined` is stripped rather than silently freezing its slice.
 - **Breaking:** the `sortingFns` table option is now `sortFns`, and the `sortingFn` column option is now `sortFn`. No alias — a column def still passing `sortingFn` type-errors, and the value is ignored.
 - **Breaking:** `columnPinning` state is `{ start, end }` instead of `{ left, right }`. Pinning is expressed in logical regions, so `start` is the left edge in LTR and the right edge in RTL. `column.pin()` takes `'start' | 'end' | false`. Persisted `{ left, right }` state restores as an empty pinning set rather than erroring, so migrate stored values on read.
 - **Breaking:** the `columnSizingInfo` state slice is now `columnResizing`, `setColumnSizingInfo` is `setColumnResizing`, and `onColumnSizingInfoChange` is `onColumnResizingChange`. `SST_ColumnSizingInfoState` remains as a deprecated alias of the new `SST_ColumnResizingState`.
@@ -23,6 +47,8 @@ Persisted table state needs migrating on read: `columnPinning` changed shape and
 ### Fixed
 
 - Row editing opened from the row-actions menu no longer breaks. The handler shallow-copied the row before storing it as `editingRow`; v9 puts row methods on the prototype, so the copy lost `getAllCells()` and the edit modal could not build its form.
+
+## [0.2.1] — 2026-08-11
 
 Declarative control over the internal surfaces a consumer previously had to take a render slot to change. Every entry in the column-actions menu except "filter by column" was already suppressible by the feature flag that produced it; that entry shared its gate with "clear filter", so it gets one of its own. Menu entries are addressable by stable id rather than array position. The filter-mode menu's dividers, the show/hide-search button, and the background of every library-rendered input each become a single option.
 
@@ -255,6 +281,7 @@ First public pre-release. The full `material-react-table` feature surface is por
 - Column drag-reorder.
 - `filterVariant: 'time' | 'datetime' | 'time-range' | 'datetime-range'` — native `<input>` is used until a shadcn time picker recipe lands.
 
+[0.3.0]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.6...v0.2.0
 [0.1.1]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.1.0...v0.1.1

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { type MouseEvent, useState } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { SST_EditActionButtons } from './SST_EditActionButtons';
 import { Button } from '../../_ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
@@ -29,7 +30,6 @@ export const SST_ToggleRowActionMenuButton = <TData extends SST_RowData>({
   ...rest
 }: SST_ToggleRowActionMenuButtonProps<TData>) => {
   const {
-    getState,
     options: {
       createDisplayMode,
       editDisplayMode,
@@ -42,10 +42,10 @@ export const SST_ToggleRowActionMenuButton = <TData extends SST_RowData>({
     setEditingRow,
   } = table;
 
-  const { creatingRow, editingRow } = getState();
-
-  const isCreating = creatingRow?.id === row.id;
-  const isEditing = editingRow?.id === row.id;
+  const { isCreating, isEditing } = useSST_TableState(table, (s) => ({
+    isCreating: s.creatingRow?.id === row.id,
+    isEditing: s.editingRow?.id === row.id,
+  }));
 
   const showEditActionButtons =
     (isCreating && createDisplayMode === 'row') || (isEditing && editDisplayMode === 'row');

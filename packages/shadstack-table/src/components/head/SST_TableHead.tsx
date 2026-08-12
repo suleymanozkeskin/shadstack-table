@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { SST_TableHeadRow } from './SST_TableHeadRow';
 import { cn } from '../../lib/utils';
 import { type SST_ColumnVirtualizer, type SST_RowData, type SST_TableInstance } from '../../types';
@@ -19,11 +20,22 @@ export const SST_TableHead = <TData extends SST_RowData>({
   ...rest
 }: SST_TableHeadProps<TData>) => {
   const {
-    getState,
     options: { enableStickyHeader, layoutMode, positionToolbarAlertBanner, slotProps },
     refs: { tableHeadRef },
   } = table;
-  const { isFullScreen, showAlertBanner } = getState();
+  //getHeaderGroups() derives from column order/pinning/visibility/grouping;
+  //nothing above the head subscribes to columnOrder or columnPinning, so the
+  //head owns them
+  const { isFullScreen, showAlertBanner } = useSST_TableState(table, (s) => ({
+    columnOrder: s.columnOrder,
+    columnPinning: s.columnPinning,
+    columnVisibility: s.columnVisibility,
+    grouping: s.grouping,
+    isFullScreen: s.isFullScreen,
+    showAlertBanner: s.showAlertBanner,
+    //the in-head alert banner also shows whenever any row is selected
+    hasSelectedRows: table.getSelectedRowModel().rows.length > 0,
+  }));
 
   const tableHeadProps = {
     ...parseFromValuesOrFunc(slotProps?.tableHead, { table }),

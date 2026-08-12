@@ -1,8 +1,10 @@
 import * as React from 'react';
 import { type DragEvent, type RefObject } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { type Button } from '../../_ui/button';
 import { type SST_Column, type SST_RowData, type SST_TableInstance } from '../../types';
 import { reorderColumn } from '../../utils/column.utils';
+import { batchTableStateUpdates } from '../../utils/tanstack.helpers';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 import { SST_GrabHandleButton } from '../buttons/SST_GrabHandleButton';
 
@@ -21,7 +23,6 @@ export const SST_TableHeadCellGrabHandle = <TData extends SST_RowData>({
   ...rest
 }: SST_TableHeadCellGrabHandleProps<TData>) => {
   const {
-    getState,
     options: { enableColumnOrdering, slotProps },
     setColumnOrder,
     setColumnPinning,
@@ -29,7 +30,11 @@ export const SST_TableHeadCellGrabHandle = <TData extends SST_RowData>({
     setHoveredColumn,
   } = table;
   const { columnDef } = column;
-  const { columnOrder, draggingColumn, hoveredColumn } = getState();
+  const { columnOrder, draggingColumn, hoveredColumn } = useSST_TableState(table, (s) => ({
+    columnOrder: s.columnOrder,
+    draggingColumn: s.draggingColumn,
+    hoveredColumn: s.hoveredColumn,
+  }));
 
   const iconButtonProps = {
     ...parseFromValuesOrFunc(slotProps?.columnDragHandle, { column, table }),
@@ -52,22 +57,31 @@ export const SST_TableHeadCellGrabHandle = <TData extends SST_RowData>({
 
   const handleDragEnd = (event: DragEvent<HTMLButtonElement>) => {
     iconButtonProps?.onDragEnd?.(event);
-    if (hoveredColumn?.id === 'drop-zone') {
-      column.toggleGrouping();
-    } else if (enableColumnOrdering && hoveredColumn && hoveredColumn?.id !== draggingColumn?.id) {
-      const reorderedColumns = reorderColumn(
-        column,
-        hoveredColumn as SST_Column<TData>,
-        columnOrder,
-      );
-      setColumnOrder(reorderedColumns);
-      setColumnPinning(({ end = [], start = [] }) => ({
-        end: reorderedColumns.filter((header) => end.includes(header)),
-        start: reorderedColumns.filter((header) => start.includes(header)),
-      }));
-    }
-    setDraggingColumn(null);
-    setHoveredColumn(null);
+    //up to four slices change on a drop — apply them as one atomic update so
+    //no subscriber sees a reordered column list with stale pinning or a
+    //half-cleared drag state
+    batchTableStateUpdates(table, () => {
+      if (hoveredColumn?.id === 'drop-zone') {
+        column.toggleGrouping();
+      } else if (
+        enableColumnOrdering &&
+        hoveredColumn &&
+        hoveredColumn?.id !== draggingColumn?.id
+      ) {
+        const reorderedColumns = reorderColumn(
+          column,
+          hoveredColumn as SST_Column<TData>,
+          columnOrder,
+        );
+        setColumnOrder(reorderedColumns);
+        setColumnPinning(({ end = [], start = [] }) => ({
+          end: reorderedColumns.filter((header) => end.includes(header)),
+          start: reorderedColumns.filter((header) => start.includes(header)),
+        }));
+      }
+      setDraggingColumn(null);
+      setHoveredColumn(null);
+    });
   };
 
   return (

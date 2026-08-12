@@ -1,4 +1,5 @@
 import { type ReactNode, type RefObject } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { highlightWords } from '../../utils/highlightWords';
 import { type SST_Cell, type SST_RowData, type SST_TableInstance } from '../../types';
 
@@ -20,7 +21,6 @@ export const SST_TableBodyCellValue = <TData extends SST_RowData>({
   table,
 }: SST_TableBodyCellValueProps<TData>) => {
   const {
-    getState,
     options: {
       enableFilterMatchHighlighting,
       mrtTheme: { matchHighlightColor },
@@ -28,8 +28,14 @@ export const SST_TableBodyCellValue = <TData extends SST_RowData>({
   } = table;
   const { column, row } = cell;
   const { columnDef } = column;
-  const { globalFilter, globalFilterFn } = getState();
-  const filterValue = column.getFilterValue();
+  //highlighting depends on this column's filter value, the global filter,
+  //and the resolved filter fn; the projection covers exactly those, so a
+  //filter change on ANOTHER column does not re-render this cell value
+  const { globalFilter, globalFilterFn, filterValue } = useSST_TableState(table, (s) => ({
+    globalFilter: s.globalFilter,
+    globalFilterFn: s.globalFilterFn,
+    filterValue: cell.column.getFilterValue(),
+  }));
 
   let renderedCellValue =
     cell.getIsAggregated() && columnDef.AggregatedCell

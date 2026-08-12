@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { type DragEvent, useEffect } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { cn } from '../../lib/utils';
 import { type SST_RowData, type SST_TableInstance } from '../../types';
 
@@ -15,13 +16,20 @@ export const SST_ToolbarDropZone = <TData extends SST_RowData>({
   ...rest
 }: SST_ToolbarDropZoneProps<TData>) => {
   const {
-    getState,
     options: { enableGrouping, localization },
     setHoveredColumn,
     setShowToolbarDropZone,
   } = table;
 
-  const { draggingColumn, grouping, hoveredColumn, showToolbarDropZone } = getState();
+  const { draggingColumn, grouping, hoveredColumn, showToolbarDropZone } = useSST_TableState(
+    table,
+    (s) => ({
+      draggingColumn: s.draggingColumn,
+      grouping: s.grouping,
+      hoveredColumn: s.hoveredColumn,
+      showToolbarDropZone: s.showToolbarDropZone,
+    }),
+  );
 
   const handleDragEnter = (_event: DragEvent<HTMLDivElement>) => {
     setHoveredColumn({ id: 'drop-zone' });
@@ -32,15 +40,19 @@ export const SST_ToolbarDropZone = <TData extends SST_RowData>({
   };
 
   useEffect(() => {
-    if (table.options.state?.showToolbarDropZone !== undefined) {
-      setShowToolbarDropZone(
-        !!enableGrouping &&
-          !!draggingColumn &&
-          draggingColumn.columnDef.enableGrouping !== false &&
-          !grouping.includes(draggingColumn.id),
-      );
-    }
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional narrow deps; the `table.options.state.showToolbarDropZone` read is a controlled-mode gate (consumer ownership) and setShowToolbarDropZone is a stable setter — adding either would cause render loops
+    //Auto-drive the drop-zone visibility from drag state. The MRT-era
+    //`options.state?.showToolbarDropZone !== undefined` gate is gone: it was
+    //always true when `options.state` carried the merged snapshot, and under
+    //v9 ownership `options.state` holds only consumer-controlled state — a
+    //consumer who controls the slice keeps ownership anyway because the
+    //setter routes to their `onShowToolbarDropZoneChange`.
+    setShowToolbarDropZone(
+      !!enableGrouping &&
+        !!draggingColumn &&
+        draggingColumn.columnDef.enableGrouping !== false &&
+        !grouping.includes(draggingColumn.id),
+    );
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional narrow deps; setShowToolbarDropZone is a stable setter — adding it would cause render loops
   }, [enableGrouping, draggingColumn, grouping]);
 
   if (!showToolbarDropZone) return null;

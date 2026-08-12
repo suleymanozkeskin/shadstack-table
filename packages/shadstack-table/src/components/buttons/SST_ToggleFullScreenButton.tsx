@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Button } from '../../_ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
 import { type SST_RowData, type SST_TableInstance } from '../../types';
@@ -15,14 +16,13 @@ export const SST_ToggleFullScreenButton = <TData extends SST_RowData>({
   ...rest
 }: SST_ToggleFullScreenButtonProps<TData>) => {
   const {
-    getState,
     options: {
       icons: { FullscreenExitIcon, FullscreenIcon },
       localization,
     },
     setIsFullScreen,
   } = table;
-  const { isFullScreen } = getState();
+  const { isFullScreen } = useSST_TableState(table, (s) => ({ isFullScreen: s.isFullScreen }));
 
   const [tooltipOpened, setTooltipOpened] = useState(false);
 

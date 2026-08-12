@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { SST_TableFooterRow } from './SST_TableFooterRow';
 import { cn } from '../../lib/utils';
 import { type SST_ColumnVirtualizer, type SST_RowData, type SST_TableInstance } from '../../types';
@@ -18,11 +19,17 @@ export const SST_TableFooter = <TData extends SST_RowData>({
   ...rest
 }: SST_TableFooterProps<TData>) => {
   const {
-    getState,
     options: { enableStickyFooter, layoutMode, slotProps },
     refs: { tableFooterRef },
   } = table;
-  const { isFullScreen } = getState();
+  //getFooterGroups() derives from column order/pinning/visibility/grouping
+  const { isFullScreen } = useSST_TableState(table, (s) => ({
+    columnOrder: s.columnOrder,
+    columnPinning: s.columnPinning,
+    columnVisibility: s.columnVisibility,
+    grouping: s.grouping,
+    isFullScreen: s.isFullScreen,
+  }));
 
   const tableFooterProps = {
     ...parseFromValuesOrFunc(slotProps?.tableFooter, {

@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Skeleton } from '../../_ui/skeleton';
 import { SST_TableBodyCellValue } from './SST_TableBodyCellValue';
 import { cn } from '../../lib/utils';
@@ -42,7 +43,6 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
 }: SST_TableBodyCellProps<TData>) => {
   const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
   const {
-    getState,
     options: {
       columnResizeDirection,
       columnResizeMode,
@@ -60,20 +60,38 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
     },
     setHoveredColumn,
   } = table;
+  //Per-cell projections: the cell re-renders only when a value that affects
+  //THIS cell changes. Dragging, hovering, resizing, or editing elsewhere in
+  //the table leaves it untouched. Event handlers below read table.getState()
+  //live instead of these values, because a handler can fire while none of
+  //this cell's projections have changed.
   const {
-    actionCell,
-    columnResizing,
-    creatingRow,
     density,
-    draggingColumn,
-    draggingRow,
-    editingCell,
-    editingRow,
-    hoveredColumn,
-    hoveredRow,
+    isActionCell,
+    isCreatingThisRow,
+    isDraggingThisColumn,
+    isDraggingThisRow,
+    isEditingThisCell,
+    isEditingThisRow,
+    isHoveredThisColumn,
+    isHoveredThisRow,
     isLoading,
+    isResizingThisColumn,
     showSkeletons,
-  } = getState();
+  } = useSST_TableState(table, (s) => ({
+    density: s.density,
+    isActionCell: s.actionCell?.id === cell.id,
+    isCreatingThisRow: s.creatingRow?.id === cell.row.id,
+    isDraggingThisColumn: s.draggingColumn?.id === cell.column.id,
+    isDraggingThisRow: s.draggingRow?.id === cell.row.id,
+    isEditingThisCell: s.editingCell?.id === cell.id,
+    isEditingThisRow: s.editingRow?.id === cell.row.id,
+    isHoveredThisColumn: s.hoveredColumn?.id === cell.column.id,
+    isHoveredThisRow: s.hoveredRow?.id === cell.row.id,
+    isLoading: s.isLoading,
+    isResizingThisColumn: s.columnResizing.isResizingColumn === cell.column.id,
+    showSkeletons: s.showSkeletons,
+  }));
   const { column, row } = cell;
   const { columnDef } = column;
   const { columnDefType } = columnDef;
@@ -108,14 +126,14 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
   }, [isLoading, showSkeletons, column, columnDefType]);
 
   const draggingBorders = useMemo(() => {
-    const isDraggingColumn = draggingColumn?.id === column.id;
-    const isHoveredColumn = hoveredColumn?.id === column.id;
-    const isDraggingRow = draggingRow?.id === row.id;
-    const isHoveredRow = hoveredRow?.id === row.id;
+    const isDraggingColumn = isDraggingThisColumn;
+    const isHoveredColumn = isHoveredThisColumn;
+    const isDraggingRow = isDraggingThisRow;
+    const isHoveredRow = isHoveredThisRow;
     const isFirstColumn = column.getIsFirstColumn();
     const isLastColumn = column.getIsLastColumn();
     const isLastRow = numRows && staticRowIndex === numRows - 1;
-    const isResizingColumn = columnResizing.isResizingColumn === column.id;
+    const isResizingColumn = isResizingThisColumn;
     const showResizeBorder = isResizingColumn && columnResizeMode === 'onChange';
 
     const borderStyle = showResizeBorder
@@ -153,11 +171,11 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
       : undefined;
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional narrow deps; column/row/draggingBorderColor/columnResizeMode are stable per cell-instance, and recomputing borders on every column-resize tick would tank perf. FOLLOW-UP: verify each "stable" dep is truly stable across the cell lifetime.
   }, [
-    columnResizing.isResizingColumn,
-    draggingColumn,
-    draggingRow,
-    hoveredColumn,
-    hoveredRow,
+    isResizingThisColumn,
+    isDraggingThisColumn,
+    isDraggingThisRow,
+    isHoveredThisColumn,
+    isHoveredThisRow,
     staticRowIndex,
   ]);
 
@@ -169,10 +187,10 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
   const isEditing =
     isEditable &&
     !['custom', 'modal'].includes(editDisplayMode as string) &&
-    (editDisplayMode === 'table' || editingRow?.id === row.id || editingCell?.id === cell.id) &&
+    (editDisplayMode === 'table' || isEditingThisRow || isEditingThisCell) &&
     !row.getIsGrouped();
 
-  const isCreating = isEditable && createDisplayMode === 'row' && creatingRow?.id === row.id;
+  const isCreating = isEditable && createDisplayMode === 'row' && isCreatingThisRow;
 
   const showClickToCopyButton =
     (parseFromValuesOrFunc(enableClickToCopy, cell) === true ||
@@ -198,6 +216,9 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
 
   const handleDragEnter = (e: DragEvent<HTMLTableCellElement>) => {
     tableCellProps?.onDragEnter?.(e);
+    //live reads: a drag can pass over this cell without any of its
+    //subscribed projections having changed since its last render
+    const { draggingColumn, hoveredColumn } = table.getState();
     if (enableGrouping && hoveredColumn?.id === 'drop-zone') {
       setHoveredColumn(null);
     }
@@ -265,10 +286,9 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
           : isEditable && editDisplayMode === 'cell'
             ? 'pointer'
             : 'inherit',
-        outline:
-          actionCell?.id === cell.id
-            ? `1px solid color-mix(in oklch, var(--foreground) 50%, transparent)`
-            : undefined,
+        outline: isActionCell
+          ? `1px solid color-mix(in oklch, var(--foreground) 50%, transparent)`
+          : undefined,
         padding,
         textOverflow: columnDefType !== 'display' ? 'ellipsis' : undefined,
         whiteSpace: row.getIsPinned() || density === 'compact' ? 'nowrap' : 'normal',

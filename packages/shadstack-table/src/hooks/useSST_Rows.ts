@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useSST_TableState } from './useSST_TableState';
 import { type SST_Row, type SST_RowData, type SST_TableInstance } from '../types';
 import { getSST_Rows } from '../utils/row.utils';
 
@@ -7,10 +8,17 @@ export const useSST_Rows = <TData extends SST_RowData>(
 ): SST_Row<TData>[] => {
   const {
     getRowModel,
-    getState,
     options: { data, enableGlobalFilterRankedResults, positionCreatingRow },
   } = table;
-  const { creatingRow, expanded, globalFilter, pagination, rowPinning, sorting } = getState();
+  const { creatingRow, expanded, globalFilter, pagination, rowPinning, sorting } =
+    useSST_TableState(table, (s) => ({
+      creatingRow: s.creatingRow,
+      expanded: s.expanded,
+      globalFilter: s.globalFilter,
+      pagination: s.pagination,
+      rowPinning: s.rowPinning,
+      sorting: s.sorting,
+    }));
 
   const rows = useMemo(
     () => getSST_Rows(table),

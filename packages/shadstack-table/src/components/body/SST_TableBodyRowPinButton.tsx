@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { type Button } from '../../_ui/button';
 import { cn } from '../../lib/utils';
 import { type SST_Row, type SST_RowData, type SST_TableInstance } from '../../types';
@@ -18,10 +19,13 @@ export const SST_TableBodyRowPinButton = <TData extends SST_RowData>({
   ...rest
 }: SST_TableBodyRowPinButtonProps<TData>) => {
   const {
-    getState,
     options: { enableRowPinning, rowPinningDisplayMode },
   } = table;
-  const { density } = getState();
+  const { density } = useSST_TableState(table, (s) => ({
+    density: s.density,
+    //re-render when this row's pinned state flips
+    isRowPinned: !!row.getIsPinned(),
+  }));
 
   const canPin = parseFromValuesOrFunc(enableRowPinning, row as any);
 

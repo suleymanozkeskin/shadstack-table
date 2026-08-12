@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useMemo, useState } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Button } from '../../_ui/button';
 import { Popover, PopoverAnchor, PopoverContent } from '../../_ui/popover';
 import { Separator } from '../../_ui/separator';
@@ -38,7 +39,6 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
     getIsSomeColumnsVisible,
     getStartLeafColumns,
     getEndLeafColumns,
-    getState,
     initialState,
     options: {
       enableColumnOrdering,
@@ -48,7 +48,13 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
       mrtTheme: { menuBackgroundColor },
     },
   } = table;
-  const { columnOrder, density } = getState();
+  const { columnOrder, density } = useSST_TableState(table, (s) => ({
+    columnOrder: s.columnOrder,
+    density: s.density,
+    //hide/show/pin buttons render from these
+    columnPinning: s.columnPinning,
+    columnVisibility: s.columnVisibility,
+  }));
   const virtualRef = useMemo<React.RefObject<HTMLElement | null> | undefined>(
     () => (anchorEl ? { current: anchorEl } : undefined),
     [anchorEl],
@@ -134,7 +140,19 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => table.setColumnOrder(getDefaultColumnOrderIds(table.options, true))}
+              onClick={() =>
+                //`options.state` is consumer-controlled state only; the
+                //order derivation needs the live state for its display-column
+                //predicates
+                table.setColumnOrder(
+                  getDefaultColumnOrderIds(
+                    { ...table.options, state: table.getState() } as Parameters<
+                      typeof getDefaultColumnOrderIds<TData>
+                    >[0],
+                    true,
+                  ),
+                )
+              }
               disabled={!hasColumnOrderChanged}
             >
               {localization.resetOrder}

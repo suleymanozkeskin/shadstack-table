@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { type Dispatch, type DragEvent, type SetStateAction, useRef, useState } from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Label } from '../../_ui/label';
 import { Switch } from '../../_ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
@@ -31,7 +32,6 @@ export const SST_ShowHideColumnsMenuItems = <TData extends SST_RowData>({
   ...rest
 }: SST_ShowHideColumnsMenuItemsProps<TData>) => {
   const {
-    getState,
     options: {
       enableColumnOrdering,
       enableColumnPinning,
@@ -42,7 +42,11 @@ export const SST_ShowHideColumnsMenuItems = <TData extends SST_RowData>({
     setColumnOrder,
     setColumnPinning,
   } = table;
-  const { columnOrder } = getState();
+  const { columnOrder } = useSST_TableState(table, (s) => ({
+    columnOrder: s.columnOrder,
+    columnPinning: s.columnPinning,
+    columnVisibility: s.columnVisibility,
+  }));
   const { columnDef } = column;
   const { columnDefType } = columnDef;
 

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { SST_LinearProgressBar } from './SST_LinearProgressBar';
 import { SST_TablePagination } from './SST_TablePagination';
 import { SST_ToolbarAlertBanner } from './SST_ToolbarAlertBanner';
@@ -30,7 +31,6 @@ export const SST_TopToolbar = <TData extends SST_RowData>({
   table,
 }: SST_TopToolbarProps<TData>) => {
   const {
-    getState,
     options: {
       enableGlobalFilter,
       enablePagination,
@@ -45,7 +45,10 @@ export const SST_TopToolbar = <TData extends SST_RowData>({
     refs: { topToolbarRef },
   } = table;
 
-  const { isFullScreen, showGlobalFilter } = getState();
+  const { isFullScreen, showGlobalFilter } = useSST_TableState(table, (s) => ({
+    isFullScreen: s.isFullScreen,
+    showGlobalFilter: s.showGlobalFilter,
+  }));
 
   const isMobile = useMediaQuery('(max-width:720px)');
   const isTablet = useMediaQuery('(max-width:1024px)');
