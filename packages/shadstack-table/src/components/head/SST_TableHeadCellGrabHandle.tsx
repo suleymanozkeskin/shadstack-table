@@ -61,9 +61,9 @@ export const SST_TableHeadCellGrabHandle = <TData extends SST_RowData>({
         columnOrder,
       );
       setColumnOrder(reorderedColumns);
-      setColumnPinning(({ left = [], right = [] }) => ({
-        left: reorderedColumns.filter((header) => left.includes(header)),
-        right: reorderedColumns.filter((header) => right.includes(header)),
+      setColumnPinning(({ end = [], start = [] }) => ({
+        end: reorderedColumns.filter((header) => end.includes(header)),
+        start: reorderedColumns.filter((header) => start.includes(header)),
       }));
     }
     setDraggingColumn(null);

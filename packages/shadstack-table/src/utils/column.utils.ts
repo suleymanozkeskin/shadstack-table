@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { type Row } from '@tanstack/react-table';
+import { type AggregationFnDef } from '@tanstack/react-table';
 import {
   type DropdownOption,
   type SST_Column,
@@ -49,7 +49,7 @@ type PreparedColumnCacheEntry<TData extends SST_RowData> = {
   // inputs that, when changed, invalidate the cached enriched def
   aggregationFns: Record<string, unknown>;
   filterFns: Record<string, unknown>;
-  sortingFns: Record<string, unknown>;
+  sortFns: Record<string, unknown>;
   filterFnId: string | undefined;
   defaultDisplayColumn: unknown;
   // the original columns array reference (for group columns) — if a
@@ -79,7 +79,7 @@ export const prepareColumns = <TData extends SST_RowData>({
     aggregationFns = {},
     defaultDisplayColumn,
     filterFns = {},
-    sortingFns = {},
+    sortFns = {},
     state: { columnFilterFns = {} } = {},
   } = tableOptions;
   return columnDefs.map((columnDef) => {
@@ -93,7 +93,7 @@ export const prepareColumns = <TData extends SST_RowData>({
       cached &&
       cached.aggregationFns === aggregationFns &&
       cached.filterFns === filterFns &&
-      cached.sortingFns === sortingFns &&
+      cached.sortFns === sortFns &&
       cached.filterFnId === filterFnId &&
       cached.defaultDisplayColumn === defaultDisplayColumn &&
       cached.childrenRef === childrenRef
@@ -115,14 +115,18 @@ export const prepareColumns = <TData extends SST_RowData>({
         tableOptions,
       });
     } else if (enriched.columnDefType === 'data') {
-      //assign aggregationFns if multiple aggregationFns are provided
+      //assign aggregationFns if multiple aggregationFns are provided.
+      //TanStack v9 replaced the bare aggregation callback with a definition
+      //object, so the composite is built as one too. The result stays an array
+      //keyed by the order the fn names were given, as it was before.
       if (Array.isArray(enriched.aggregationFn)) {
         const aggFns = enriched.aggregationFn as string[];
-        enriched.aggregationFn = (
-          columnId: string,
-          leafRows: Row<TData>[],
-          childRows: Row<TData>[],
-        ) => aggFns.map((fn) => aggregationFns[fn]?.(columnId, leafRows, childRows));
+        enriched.aggregationFn = {
+          aggregate: (context) =>
+            aggFns.map((fn) =>
+              (aggregationFns[fn] as AggregationFnDef<any, TData>)?.aggregate(context),
+            ),
+        };
       }
 
       //assign filterFns
@@ -132,10 +136,9 @@ export const prepareColumns = <TData extends SST_RowData>({
         (enriched as SST_DefinedColumnDef<TData>)._filterFn = filterFnId;
       }
 
-      //assign sortingFns
-      if (Object.keys(sortingFns).includes(enriched.sortingFn as string)) {
-        // @ts-expect-error
-        enriched.sortingFn = sortingFns[enriched.sortingFn];
+      //assign sortFns
+      if (Object.keys(sortFns).includes(enriched.sortFn as string)) {
+        enriched.sortFn = sortFns[enriched.sortFn as string];
       }
     } else if (enriched.columnDefType === 'display') {
       enriched = {
@@ -152,7 +155,7 @@ export const prepareColumns = <TData extends SST_RowData>({
       enriched: result,
       filterFnId,
       filterFns,
-      sortingFns,
+      sortFns,
     });
     return result;
   });

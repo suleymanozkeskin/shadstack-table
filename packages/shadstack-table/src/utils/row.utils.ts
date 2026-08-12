@@ -9,7 +9,7 @@ export const getSST_Rows = <TData extends SST_RowData>(
 ): SST_Row<TData>[] => {
   const {
     getCenterRows,
-    getPrePaginationRowModel,
+    getPrePaginatedRowModel,
     getRowModel,
     getState,
     getTopRows,
@@ -31,13 +31,13 @@ export const getSST_Rows = <TData extends SST_RowData>(
     rows =
       !enableRowPinning || rowPinningDisplayMode?.includes('sticky')
         ? all
-          ? getPrePaginationRowModel().rows
+          ? getPrePaginatedRowModel().rows
           : getRowModel().rows
         : getCenterRows();
   } else {
     // fuzzy ranking adjustments — clone before sorting so TanStack's
     // internal row-model array isn't mutated by reorder
-    rows = [...getPrePaginationRowModel().rows].sort((a, b) => rankGlobalFuzzy(a, b));
+    rows = [...getPrePaginatedRowModel().rows].sort((a, b) => rankGlobalFuzzy(a, b));
     if (enablePagination && !manualPagination && !all) {
       const start = pagination.pageIndex * pagination.pageSize;
       rows = rows.slice(start, start + pagination.pageSize);

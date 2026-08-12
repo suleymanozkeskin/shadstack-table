@@ -1,15 +1,5 @@
 import { useId, useMemo, useRef } from 'react';
-import {
-  getCoreRowModel,
-  getExpandedRowModel,
-  getFacetedMinMaxValues,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFilteredRowModel,
-  getGroupedRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-} from '@tanstack/react-table';
+import { createSST_features } from '../features';
 import { SST_AggregationFns } from '../fns/aggregationFns';
 import { SST_FilterFns } from '../fns/filterFns';
 import { SST_SortingFns } from '../fns/sortingFns';
@@ -110,7 +100,7 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
   rowNumberDisplayMode = 'static',
   rowPinningDisplayMode = 'sticky',
   selectAllMode = 'page',
-  sortingFns,
+  sortFns,
   ...rest
 }: SST_TableOptions<TData>) => {
   const generatedId = useId();
@@ -128,14 +118,20 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
   // reference) so legacy components reading `options.mrtTheme.<color>` keep
   // working.
   const resolvedTheme = useMemo(() => getSST_Theme(theme ?? mrtTheme), [theme, mrtTheme]);
-  //Merge consumer-provided fn maps with built-ins. Previously these
-  //memoized with `[]` and a stable identity, which froze consumer
-  //overrides at the first render. Including the consumer input in the
-  //dep list lets later renders see updated overrides while still
-  //skipping the merge when nothing changed.
+  //Merge consumer-provided fn maps with built-ins, keeping the consumer input
+  //in the dep list so the merge re-runs when an override changes.
+  //
+  //How far a later change actually reaches differs under TanStack v9.
+  //`constructTable` destructures these registries out of `options.features`
+  //once and stores them on the table; nothing re-syncs that copy. `filterFn`
+  //and `sortFn` still pick up late additions because `prepareColumns` resolves
+  //those names against the live map before the column def reaches TanStack.
+  //Anything resolved by TanStack itself — `aggregationFn: '<name>'`, and the
+  //`'auto'` defaults — reads the frozen copy, so an entry added after the first
+  //render will not resolve there.
   aggregationFns = useMemo(() => ({ ...SST_AggregationFns, ...aggregationFns }), [aggregationFns]);
   filterFns = useMemo(() => ({ ...SST_FilterFns, ...filterFns }), [filterFns]);
-  sortingFns = useMemo(() => ({ ...SST_SortingFns, ...sortingFns }), [sortingFns]);
+  sortFns = useMemo(() => ({ ...SST_SortingFns, ...sortFns }), [sortFns]);
   defaultColumn = useMemo(() => ({ ...SST_DefaultColumn, ...defaultColumn }), [defaultColumn]);
   defaultDisplayColumn = useMemo(
     () => ({
@@ -184,6 +180,47 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
     manualSorting = true;
   }
 
+  //TanStack v9 registers row models as feature-set slots rather than
+  //`get*RowModel` table options, so the enable flags that used to decide
+  //whether to pass a factory now decide whether to register the slot. The
+  //conditions are unchanged from v8.
+  const features = useMemo(
+    () =>
+      createSST_features({
+        aggregationFns,
+        enabledRowModels: {
+          expandedRowModel: !!(enableExpanding || enableGrouping),
+          facetedMinMaxValues: enableFacetedValues,
+          facetedRowModel: enableFacetedValues,
+          facetedUniqueValues: enableFacetedValues,
+          filteredRowModel:
+            (enableColumnFilters || enableGlobalFilter || enableFilters) && !manualFiltering,
+          groupedRowModel: enableGrouping && !manualGrouping,
+          paginatedRowModel: enablePagination && !manualPagination,
+          sortedRowModel: enableSorting && !manualSorting,
+        },
+        filterFns,
+        sortFns,
+      }),
+    [
+      aggregationFns,
+      enableColumnFilters,
+      enableExpanding,
+      enableFacetedValues,
+      enableFilters,
+      enableGlobalFilter,
+      enableGrouping,
+      enablePagination,
+      enableSorting,
+      filterFns,
+      manualFiltering,
+      manualGrouping,
+      manualPagination,
+      manualSorting,
+      sortFns,
+    ],
+  );
+
   return {
     aggregationFns,
     autoResetExpanded,
@@ -230,20 +267,14 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
     enableTableHead,
     enableToolbarInternalActions,
     enableTopToolbar,
+    features,
     filterFns,
-    getCoreRowModel: getCoreRowModel(),
-    getExpandedRowModel: enableExpanding || enableGrouping ? getExpandedRowModel() : undefined,
-    getFacetedMinMaxValues: enableFacetedValues ? getFacetedMinMaxValues() : undefined,
-    getFacetedRowModel: enableFacetedValues ? getFacetedRowModel() : undefined,
-    getFacetedUniqueValues: enableFacetedValues ? getFacetedUniqueValues() : undefined,
-    getFilteredRowModel:
-      (enableColumnFilters || enableGlobalFilter || enableFilters) && !manualFiltering
-        ? getFilteredRowModel()
-        : undefined,
-    getGroupedRowModel: enableGrouping && !manualGrouping ? getGroupedRowModel() : undefined,
-    getPaginationRowModel:
-      enablePagination && !manualPagination ? getPaginationRowModel() : undefined,
-    getSortedRowModel: enableSorting && !manualSorting ? getSortedRowModel() : undefined,
+    //TanStack v9 makes `row.toggleExpanded()` a no-op unless the row reports
+    //`getCanExpand()`, whose default requires sub-rows. Detail panels attach to
+    //rows that have none, so without this every detail-panel toggle would
+    //silently do nothing. `SST_ExpandButton` already treats a detail panel as
+    //making a row expandable; this states the same rule to the table.
+    getRowCanExpand: rest.getRowCanExpand ?? (rest.renderDetailPanel ? () => true : undefined),
     getSubRows: (row) => row?.subRows,
     icons,
     id,
@@ -266,7 +297,7 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
     rowNumberDisplayMode,
     rowPinningDisplayMode,
     selectAllMode,
-    sortingFns,
+    sortFns,
     ...rest,
   } as SST_DefinedTableOptions<TData>;
 };

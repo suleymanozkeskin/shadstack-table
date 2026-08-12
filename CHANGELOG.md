@@ -4,7 +4,25 @@ All notable changes to `shadstack-table` are recorded here. The format is based 
 
 ## [Unreleased]
 
-## [0.2.1] — 2026-08-11
+Moves the table engine from TanStack Table v8 to v9 (pinned to `9.1.2`), with behaviour preserved. v9 makes the feature set explicit and adds a `TFeatures` type parameter to nearly every TanStack type; shadstack registers the full feature set once internally, so the public `SST_*` types keep their existing generics — `SST_Row<TData>`, `SST_TableInstance<TData>`, `SST_ColumnDef<TData, TValue>` are unchanged. The renames below are the surface that does move, and every one of them is a rename of a TanStack concept rather than a shadstack decision.
+
+Persisted table state needs migrating on read: `columnPinning` changed shape and `columnSizingInfo` changed name. Both are listed under Changed.
+
+### Changed
+
+- **Breaking:** the `sortingFns` table option is now `sortFns`, and the `sortingFn` column option is now `sortFn`. No alias — a column def still passing `sortingFn` type-errors, and the value is ignored.
+- **Breaking:** `columnPinning` state is `{ start, end }` instead of `{ left, right }`. Pinning is expressed in logical regions, so `start` is the left edge in LTR and the right edge in RTL. `column.pin()` takes `'start' | 'end' | false`. Persisted `{ left, right }` state restores as an empty pinning set rather than erroring, so migrate stored values on read.
+- **Breaking:** the `columnSizingInfo` state slice is now `columnResizing`, `setColumnSizingInfo` is `setColumnResizing`, and `onColumnSizingInfoChange` is `onColumnResizingChange`. `SST_ColumnSizingInfoState` remains as a deprecated alias of the new `SST_ColumnResizingState`.
+- **Breaking:** `SST_AggregationFn` is now a definition object — `{ aggregate(context), merge? }` — rather than a bare `(columnId, leafRows, childRows)` callback. Custom aggregation functions need rewriting; the built-in names are unaffected.
+- **Breaking:** custom filter functions receive `addMeta` as an optional parameter, typed from the table's filter-meta slot rather than concretely. A filter function declaring it required no longer type-checks.
+- **Breaking:** table-instance row-model accessors follow the TanStack rename: `getPaginationRowModel` is `getPaginatedRowModel` and `getPrePaginationRowModel` is `getPrePaginatedRowModel`. `getLeftLeafColumns` / `getRightLeafColumns` are `getStartLeafColumns` / `getEndLeafColumns`, and the `Visible` variants likewise.
+- Pinned columns are positioned with the CSS logical properties `inset-inline-start` / `inset-inline-end` instead of `left` / `right`. v9 accumulates pinned offsets in logical order, so pairing those offsets with physical insets misplaces pinned columns under `dir="rtl"`. LTR output is unchanged.
+- `filterFns`, `sortFns` and `aggregationFns` are shadstack table options again rather than TanStack ones; v9 moved its registries into the feature set. Entries passed there are merged into that feature set. An `aggregationFns` entry added after the table's first render does not take effect, because TanStack reads its registries once at construction.
+- **Behaviour change:** the `arrIncludesSome` filter — what `filterVariant: 'multi-select'` resolves to — matches scalar column values on equality rather than substring. It previously delegated to the row value's own `.includes`, so on a string column selecting `'Engineer'` also matched `'Engineering Manager'`. Array-valued columns are unaffected: they still pass when they share any member with the selection. A column that relied on the substring behaviour wants `filterVariant: 'text'` with `contains`, or an explicit `filterFn`.
+
+### Fixed
+
+- Row editing opened from the row-actions menu no longer breaks. The handler shallow-copied the row before storing it as `editingRow`; v9 puts row methods on the prototype, so the copy lost `getAllCells()` and the edit modal could not build its form.
 
 Declarative control over the internal surfaces a consumer previously had to take a render slot to change. Every entry in the column-actions menu except "filter by column" was already suppressible by the feature flag that produced it; that entry shared its gate with "clear filter", so it gets one of its own. Menu entries are addressable by stable id rather than array position. The filter-mode menu's dividers, the show/hide-search button, and the background of every library-rendered input each become a single option.
 

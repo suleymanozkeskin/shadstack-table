@@ -32,7 +32,7 @@ describe('ShadStackTable — global filter', () => {
   });
 
   // Regression: ranked fuzzy search used to mutate
-  // getPrePaginationRowModel().rows in place via Array.prototype.sort. Other
+  // getPrePaginatedRowModel().rows in place via Array.prototype.sort. Other
   // consumers reading the same model could observe the reordered (or stale)
   // sequence. Cloning before sort fixes that; this test pins the observable
   // outcome — natural data order returns once the search clears.

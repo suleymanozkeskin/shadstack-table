@@ -62,7 +62,7 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
   } = table;
   const {
     actionCell,
-    columnSizingInfo,
+    columnResizing,
     creatingRow,
     density,
     draggingColumn,
@@ -115,7 +115,7 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
     const isFirstColumn = column.getIsFirstColumn();
     const isLastColumn = column.getIsLastColumn();
     const isLastRow = numRows && staticRowIndex === numRows - 1;
-    const isResizingColumn = columnSizingInfo.isResizingColumn === column.id;
+    const isResizingColumn = columnResizing.isResizingColumn === column.id;
     const showResizeBorder = isResizingColumn && columnResizeMode === 'onChange';
 
     const borderStyle = showResizeBorder
@@ -153,7 +153,7 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
       : undefined;
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional narrow deps; column/row/draggingBorderColor/columnResizeMode are stable per cell-instance, and recomputing borders on every column-resize tick would tank perf. FOLLOW-UP: verify each "stable" dep is truly stable across the cell lifetime.
   }, [
-    columnSizingInfo.isResizingColumn,
+    columnResizing.isResizingColumn,
     draggingColumn,
     draggingRow,
     hoveredColumn,

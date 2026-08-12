@@ -1,11 +1,12 @@
 import { type TableState } from '@tanstack/react-table';
+import { type SST_Features } from '../features';
 import { type SST_Cell } from './cell';
 import { type SST_Column } from './column';
 import { type SST_ColumnFilterFnsState, type SST_FilterOption } from './fns';
 import { type SST_DensityState } from './primitives';
 import { type SST_Row, type SST_RowData } from './row';
 
-export interface SST_TableState<TData extends SST_RowData> extends TableState {
+export interface SST_TableState<TData extends SST_RowData> extends TableState<SST_Features> {
   actionCell?: SST_Cell<TData> | null;
   columnFilterFns: SST_ColumnFilterFnsState;
   creatingRow: SST_Row<TData> | null;

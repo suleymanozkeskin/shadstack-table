@@ -55,7 +55,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
     refs: { tableHeadCellRefs },
     setHoveredColumn,
   } = table;
-  const { columnSizingInfo, density, draggingColumn, grouping, hoveredColumn, showColumnFilters } =
+  const { columnResizing, density, draggingColumn, grouping, hoveredColumn, showColumnFilters } =
     getState();
   const { column } = header;
   const { columnDef } = column;
@@ -95,7 +95,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
 
   const draggingBorders = useMemo(() => {
     const showResizeBorder =
-      columnSizingInfo.isResizingColumn === column.id &&
+      columnResizing.isResizingColumn === column.id &&
       columnResizeMode === 'onChange' &&
       !header.subHeaders.length;
 
@@ -120,7 +120,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
         }
       : undefined;
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional narrow deps; resize-border state must only react to drag/hover/resize transitions. column.id / columnResizeMode / columnResizeDirection / draggingBorderColor / header.subHeaders.length are effectively per-instance constants over the cell lifetime, and including them would cause unnecessary recomputes during column-resize streams. FOLLOW-UP: verify all listed deps are truly stable.
-  }, [draggingColumn, hoveredColumn, columnSizingInfo.isResizingColumn]);
+  }, [draggingColumn, hoveredColumn, columnResizing.isResizingColumn]);
 
   const handleDragEnter = (_e: DragEvent) => {
     if (enableGrouping && hoveredColumn?.id === 'drop-zone') {

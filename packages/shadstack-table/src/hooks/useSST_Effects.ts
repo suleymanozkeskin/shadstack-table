@@ -7,14 +7,14 @@ import { getCanRankRows } from '../utils/row.utils';
 export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstance<TData>) => {
   const {
     getIsSomeRowsPinned,
-    getPrePaginationRowModel,
+    getPrePaginatedRowModel,
     getState,
     options: { enablePagination, enableRowPinning, rowCount },
   } = table;
   const { density, globalFilter, isFullScreen, isLoading, pagination, showSkeletons, sorting } =
     getState();
 
-  const totalRowCount = rowCount ?? getPrePaginationRowModel().rows.length;
+  const totalRowCount = rowCount ?? getPrePaginatedRowModel().rows.length;
 
   const rerender = useReducer(() => ({}), {})[1];
   const initialBodyHeight = useRef<string>(null);

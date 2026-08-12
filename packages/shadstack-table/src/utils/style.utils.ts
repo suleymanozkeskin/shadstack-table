@@ -117,9 +117,14 @@ export const getCommonMRTCellStyles = <TData extends SST_RowData>({
   const pinnedStyles = isColumnPinned
     ? {
         ...getCommonPinnedCellStyles({ column, table }),
-        left: isColumnPinned === 'left' ? `${column.getStart('left')}px` : undefined,
+        // TanStack v9 pins to logical regions: `getStart('start')` accumulates
+        // offsets in inline-start order rather than physically from the left.
+        // Pairing that with the CSS logical inset properties is what keeps the
+        // offsets and the painted position agreeing under `dir="rtl"`; under
+        // LTR the rendered result is identical to the previous left/right pair.
+        insetInlineEnd: isColumnPinned === 'end' ? `${column.getAfter('end')}px` : undefined,
+        insetInlineStart: isColumnPinned === 'start' ? `${column.getStart('start')}px` : undefined,
         position: 'sticky',
-        right: isColumnPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
       }
     : {};
 

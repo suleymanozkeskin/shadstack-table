@@ -9,6 +9,7 @@ import {
   type HeaderGroup,
 } from '@tanstack/react-table';
 import { type SST_ColumnMenuItemIds } from '../constants';
+import { type SST_Features } from '../features';
 import { type SST_Cell } from './cell';
 import {
   type SST_AggregationFn,
@@ -58,7 +59,7 @@ export type SST_ColumnHelper<TData extends SST_RowData> = {
 };
 
 export interface SST_ColumnDef<TData extends SST_RowData, TValue = unknown> extends Omit<
-  ColumnDef<TData, TValue>,
+  ColumnDef<SST_Features, TData, TValue>,
   | 'accessorKey'
   | 'aggregatedCell'
   | 'aggregationFn'
@@ -68,7 +69,7 @@ export interface SST_ColumnDef<TData extends SST_RowData, TValue = unknown> exte
   | 'footer'
   | 'header'
   | 'id'
-  | 'sortingFn'
+  | 'sortFn'
 > {
   /**
    * Either an `accessorKey` or a combination of an `accessorFn` and `id` are required for a data column definition.
@@ -249,7 +250,7 @@ export interface SST_ColumnDef<TData extends SST_RowData, TValue = unknown> exte
     onSelectFilterMode: (filterMode: SST_FilterOption) => void;
     table: SST_TableInstance<TData>;
   }) => ReactNode[];
-  sortingFn?: SST_SortingFn<TData>;
+  sortFn?: SST_SortingFn<TData>;
   visibleInShowHideMenu?: boolean;
 }
 
@@ -272,7 +273,7 @@ export type SST_DefinedColumnDef<TData extends SST_RowData, TValue = unknown> = 
 };
 
 export type SST_Column<TData extends SST_RowData, TValue = unknown> = Omit<
-  Column<TData, TValue>,
+  Column<SST_Features, TData, TValue>,
   'columnDef' | 'columns' | 'filterFn' | 'footer' | 'header'
 > & {
   columnDef: SST_DefinedColumnDef<TData, TValue>;
@@ -282,10 +283,16 @@ export type SST_Column<TData extends SST_RowData, TValue = unknown> = Omit<
   header: string;
 };
 
-export type SST_Header<TData extends SST_RowData> = Omit<Header<TData, unknown>, 'column'> & {
+export type SST_Header<TData extends SST_RowData> = Omit<
+  Header<SST_Features, TData, unknown>,
+  'column'
+> & {
   column: SST_Column<TData>;
 };
 
-export type SST_HeaderGroup<TData extends SST_RowData> = Omit<HeaderGroup<TData>, 'headers'> & {
+export type SST_HeaderGroup<TData extends SST_RowData> = Omit<
+  HeaderGroup<SST_Features, TData>,
+  'headers'
+> & {
   headers: SST_Header<TData>[];
 };

@@ -1,12 +1,12 @@
 import { useMemo, useRef, useState } from 'react';
-import { useReactTable } from '@tanstack/react-table';
+import { useTable } from '@tanstack/react-table';
 import {
   type SST_Cell,
   type SST_Column,
   type SST_ColumnDef,
   type SST_ColumnFilterFnsState,
   type SST_ColumnOrderState,
-  type SST_ColumnSizingInfoState,
+  type SST_ColumnResizingState,
   type SST_DefinedTableOptions,
   type SST_DensityState,
   type SST_FilterOption,
@@ -48,7 +48,7 @@ import { getSST_RowSpacerColumnDef } from './display-columns/getSST_RowSpacerCol
 import { useSST_Effects } from './useSST_Effects';
 
 /**
- * The MRT hook that wraps the TanStack useReactTable hook and adds additional functionality
+ * The MRT hook that wraps the TanStack useTable hook and adds additional functionality
  * @param definedTableOptions - table options with proper defaults set
  * @returns the MRT table instance
  */
@@ -114,8 +114,8 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
   const [columnOrder, onColumnOrderChange] = useState<SST_ColumnOrderState>(
     initialState.columnOrder ?? [],
   );
-  const [columnSizingInfo, onColumnSizingInfoChange] = useState<SST_ColumnSizingInfoState>(
-    initialState.columnSizingInfo ?? ({} as SST_ColumnSizingInfoState),
+  const [columnResizing, onColumnResizingChange] = useState<SST_ColumnResizingState>(
+    initialState.columnResizing ?? ({} as SST_ColumnResizingState),
   );
   const [density, setDensity] = useState<SST_DensityState>(initialState?.density ?? 'comfortable');
   const [draggingColumn, setDraggingColumn] = useState<SST_Column<TData> | null>(
@@ -165,7 +165,7 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
     actionCell,
     columnFilterFns,
     columnOrder,
-    columnSizingInfo,
+    columnResizing,
     creatingRow,
     density,
     draggingColumn,
@@ -200,7 +200,7 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
   //renders so TanStack's column-def-keyed memoization stays warm.
   const prepareColumnsCacheRef = useRef<PrepareColumnsCache<TData>>(createPrepareColumnsCache());
   const preparedColumns =
-    statefulTableOptions.state.columnSizingInfo.isResizingColumn ||
+    statefulTableOptions.state.columnResizing.isResizingColumn ||
     statefulTableOptions.state.draggingColumn ||
     statefulTableOptions.state.draggingRow
       ? columnDefsRef.current
@@ -261,15 +261,30 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
     data: preparedData,
   };
 
-  //@ts-expect-error
-  const table = useReactTable({
+  const table = useTable({
     onColumnOrderChange,
-    onColumnSizingInfoChange,
+    onColumnResizingChange,
     onGroupingChange,
     onPaginationChange,
     ...statefulTableOptions,
     globalFilterFn: statefulTableOptions.filterFns?.[globalFilterFn ?? 'fuzzy'],
-  }) as SST_TableInstance<TData>;
+  } as any) as SST_TableInstance<TData>;
+
+  //v9 removed `table.getState()` in favour of `table.state`. shadstack keeps
+  //`getState()` as its own API: it is the single read surface every component
+  //uses, and it also carries the shadstack-owned slices that TanStack knows
+  //nothing about. With no selector passed to `useTable`, `table.state` is the
+  //complete TanStack state, so this is a faithful replacement.
+  //
+  //The merge is built once per render, not per call. `getState()` is read from
+  //~57 sites, several of them per-cell, and v8's `getState()` was a stored
+  //object read rather than an allocation. Nothing mutates the result between
+  //calls within a render, so hoisting is equivalent.
+  const state = {
+    ...(table as unknown as { state: Record<string, unknown> }).state,
+    ...mergedState,
+  } as SST_TableState<TData>;
+  table.getState = () => state;
 
   table.refs = {
     actionCellRef,

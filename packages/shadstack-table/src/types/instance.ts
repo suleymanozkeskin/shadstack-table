@@ -1,5 +1,6 @@
 import { type Dispatch, type RefObject, type SetStateAction } from 'react';
-import { type Table } from '@tanstack/react-table';
+import { type ReactTable } from '@tanstack/react-table';
+import { type SST_Features } from '../features';
 import { type SST_Cell } from './cell';
 import { type SST_Column, type SST_Header, type SST_HeaderGroup } from './column';
 import { type SST_ColumnFilterFnsState, type SST_FilterOption } from './fns';
@@ -9,7 +10,7 @@ import { type SST_Row, type SST_RowData, type SST_RowModel } from './row';
 import { type SST_TableState } from './state';
 
 export type SST_TableInstance<TData extends SST_RowData> = Omit<
-  Table<TData>,
+  ReactTable<SST_Features, TData>,
   | 'getAllColumns'
   | 'getAllFlatColumns'
   | 'getAllLeafColumns'
@@ -17,18 +18,18 @@ export type SST_TableInstance<TData extends SST_RowData> = Omit<
   | 'getCenterLeafColumns'
   | 'getCenterRows'
   | 'getColumn'
+  | 'getEndLeafColumns'
   | 'getExpandedRowModel'
   | 'getFlatHeaders'
   | 'getFooterGroups'
   | 'getHeaderGroups'
   | 'getLeafHeaders'
-  | 'getLeftLeafColumns'
-  | 'getPaginationRowModel'
+  | 'getPaginatedRowModel'
   | 'getPreFilteredRowModel'
-  | 'getPrePaginationRowModel'
-  | 'getRightLeafColumns'
+  | 'getPrePaginatedRowModel'
   | 'getRowModel'
   | 'getSelectedRowModel'
+  | 'getStartLeafColumns'
   | 'getState'
   | 'getTopRows'
   | 'options'
@@ -44,14 +45,14 @@ export type SST_TableInstance<TData extends SST_RowData> = Omit<
   getFlatHeaders: () => SST_Header<TData>[];
   getFooterGroups: () => SST_HeaderGroup<TData>[];
   getHeaderGroups: () => SST_HeaderGroup<TData>[];
+  getEndLeafColumns: () => SST_Column<TData>[];
   getLeafHeaders: () => SST_Header<TData>[];
-  getLeftLeafColumns: () => SST_Column<TData>[];
-  getPaginationRowModel: () => SST_RowModel<TData>;
+  getPaginatedRowModel: () => SST_RowModel<TData>;
   getPreFilteredRowModel: () => SST_RowModel<TData>;
-  getPrePaginationRowModel: () => SST_RowModel<TData>;
-  getRightLeafColumns: () => SST_Column<TData>[];
+  getPrePaginatedRowModel: () => SST_RowModel<TData>;
   getRowModel: () => SST_RowModel<TData>;
   getSelectedRowModel: () => SST_RowModel<TData>;
+  getStartLeafColumns: () => SST_Column<TData>[];
   getState: () => SST_TableState<TData>;
   getTopRows: () => SST_Row<TData>[];
   options: SST_StatefulTableOptions<TData>;
