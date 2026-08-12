@@ -32,4 +32,27 @@ describe('ShadStackTable — detail panel expand', () => {
     });
     expect(screen.queryByTestId('detail-p002')).not.toBeInTheDocument();
   });
+
+  it('disables the expand button on rows whose renderDetailPanel returns nothing', () => {
+    // `renderDetailPanel` may opt a row out by returning null. Such a row has no
+    // panel to reveal, so its expand button must stay disabled — an enabled
+    // no-op button would still write the row into `expanded`, and any expanded
+    // row switches off ranked global filtering for the whole table.
+    render(
+      <ShadStackTable
+        columns={personColumns}
+        data={people.slice(0, 2)}
+        renderDetailPanel={({ row }) =>
+          row.original.id === 'p001' ? (
+            <div data-testid={`detail-${row.original.id}`}>Detail for {row.original.firstName}</div>
+          ) : null
+        }
+      />,
+    );
+
+    const expandButtons = screen.getAllByRole('button', { name: /^expand$/i });
+    expect(expandButtons).toHaveLength(2);
+    expect(expandButtons[0]).toBeEnabled();
+    expect(expandButtons[1]).toBeDisabled();
+  });
 });

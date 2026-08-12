@@ -98,7 +98,12 @@ export const cellKeyboardShortcuts = <TData extends SST_RowData = SST_RowData>({
       })(event as any);
     } else if (
       cell?.column?.id === 'sst-row-expand' &&
-      (cell.row.getCanExpand() || table.options.renderDetailPanel?.({ row: cell.row, table }))
+      //Mirrors the disabled rule in `SST_ExpandButton`. When `renderDetailPanel`
+      //is set, `getCanExpand()` reports true for every row, so only the panel
+      //itself can say whether this row is expandable — see the comment there.
+      (table.options.renderDetailPanel
+        ? !!table.options.renderDetailPanel({ row: cell.row, table })
+        : cell.row.getCanExpand())
     ) {
       event.preventDefault();
       cell.row.toggleExpanded();
