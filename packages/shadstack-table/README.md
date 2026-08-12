@@ -1,10 +1,14 @@
 # shadstack-table
 
-A shadcn/ui-native React data table that follows the [`material-react-table`](https://github.com/KevinVandy/material-react-table) API direction — minus the MUI dependency. Built on TanStack Table v8 + TanStack Virtual.
+The most feature-complete React data table built on shadcn/ui components, with the performance of TanStack Table v9. Follows the [`material-react-table`](https://github.com/KevinVandy/material-react-table) API direction — minus the MUI dependency. Built on TanStack Table v9 + TanStack Virtual.
 
 **👉 [Documentation & live demo](https://suleymanozkeskin.github.io/shadstack-table/)** · [GitHub](https://github.com/suleymanozkeskin/shadstack-table) · [Changelog](https://github.com/suleymanozkeskin/shadstack-table/blob/main/CHANGELOG.md)
 
 > **Status: pre-1.0.** The MRT-compatible API surface is in place; a small set of features are deferred. The API is stable in shape but may receive breaking refinements before 1.0.
+
+## Performance
+
+TanStack Table v9's render granularity is the default: every state slice lives in the table's store atoms, and every internal component subscribes to exactly the state it renders. A state write re-renders only its subscribers — hovering a row during a drag re-renders that row alone, entering cell editing re-renders that cell alone, a page flip leaves every header cell untouched — and interaction cost does not grow with table size. Narrow a component of your own with [`useSST_TableState(table, selector)`](https://suleymanozkeskin.github.io/shadstack-table/), and reach the instance anywhere below the table with `useSST_TableContext()`.
 
 ## Install
 
