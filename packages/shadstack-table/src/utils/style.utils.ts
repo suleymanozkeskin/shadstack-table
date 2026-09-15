@@ -1,4 +1,4 @@
-import { type CSSProperties } from 'react';
+import { type CSSProperties, type ComponentProps } from 'react';
 import {
   type SST_Column,
   type SST_Header,
@@ -14,27 +14,29 @@ import { parseFromValuesOrFunc } from './utils';
 // here; we resolve everything through `var(--<token>)` (light/dark are handled
 // by the `.dark` class flipping the CSS vars).
 
-type CommonTableCellProps = {
-  align?: 'inherit' | 'left' | 'center' | 'right' | 'justify' | 'char';
-  sx?: any;
-  [key: string]: any;
+type CommonTableCellProps = Pick<ComponentProps<'td'>, 'align'> & {
+  sx?: CSSProperties | (() => CSSProperties);
 };
 
 export const parseCSSVarId = (id: string) => id.replace(/[^a-zA-Z0-9]/g, '_');
 
+const defaultTheme: Readonly<SST_Theme> = Object.freeze({
+  baseBackgroundColor: 'var(--background)',
+  cellNavigationOutlineColor: 'var(--ring)',
+  draggingBorderColor: 'var(--primary)',
+  matchHighlightColor: 'color-mix(in oklch, var(--chart-4) 60%, var(--background))',
+  menuBackgroundColor: 'var(--popover)',
+  pinnedRowBackgroundColor: 'color-mix(in oklch, var(--accent) 60%, transparent)',
+  selectedRowBackgroundColor: 'var(--muted)',
+});
+
 export const getSST_Theme = <TData extends SST_RowData>(
   themeInput: SST_TableOptions<TData>['theme'],
 ): SST_Theme => {
-  const overrides = parseFromValuesOrFunc(themeInput, undefined);
-  const baseBackgroundColor = overrides?.baseBackgroundColor ?? 'var(--background)';
+  const overrides = parseFromValuesOrFunc(themeInput, defaultTheme);
+
   return {
-    baseBackgroundColor,
-    cellNavigationOutlineColor: 'var(--ring)',
-    draggingBorderColor: 'var(--primary)',
-    matchHighlightColor: 'color-mix(in oklch, var(--chart-4) 60%, var(--background))',
-    menuBackgroundColor: 'var(--popover)',
-    pinnedRowBackgroundColor: 'color-mix(in oklch, var(--accent) 60%, transparent)',
-    selectedRowBackgroundColor: 'var(--muted)',
+    ...defaultTheme,
     ...overrides,
   };
 };
@@ -72,7 +74,7 @@ export const commonCellBeforeAfterStyles: CSSProperties = {
 export const getCommonPinnedCellStyles = <TData extends SST_RowData>(_args: {
   column?: SST_Column<TData>;
   table: SST_TableInstance<TData>;
-}): Record<string, Record<string, unknown>> => ({});
+}): CSSProperties => ({});
 
 export const getCommonMRTCellStyles = <TData extends SST_RowData>({
   column,
@@ -84,12 +86,13 @@ export const getCommonMRTCellStyles = <TData extends SST_RowData>({
   header?: SST_Header<TData>;
   table: SST_TableInstance<TData>;
   tableCellProps: CommonTableCellProps;
-}) => {
+}): CSSProperties => {
   const {
     getState,
     options: { enableColumnVirtualization, layoutMode },
   } = table;
-  const { draggingColumn } = getState();
+
+  const { draggingColumn, hoveredColumn } = getState();
   const { columnDef } = column;
   const { columnDefType } = columnDef;
 
@@ -114,7 +117,7 @@ export const getCommonMRTCellStyles = <TData extends SST_RowData>({
     widthStyles.flex = `${+(columnDef.grow || 0)} 0 auto`;
   }
 
-  const pinnedStyles = isColumnPinned
+  const pinnedStyles: CSSProperties = isColumnPinned
     ? {
         ...getCommonPinnedCellStyles({ column, table }),
         // TanStack v9 pins to logical regions: `getStart('start')` accumulates
@@ -145,7 +148,7 @@ export const getCommonMRTCellStyles = <TData extends SST_RowData>({
           : undefined,
     opacity:
       table.getState().draggingColumn?.id === column.id ||
-      table.getState().hoveredColumn?.id === column.id
+      (hoveredColumn?.kind === 'column' && hoveredColumn.column.id === column.id)
         ? 0.5
         : 1,
     position: 'relative',
@@ -158,7 +161,7 @@ export const getCommonMRTCellStyles = <TData extends SST_RowData>({
           : 0,
     ...pinnedStyles,
     ...widthStyles,
-    ...(parseFromValuesOrFunc(tableCellProps?.sx, undefined) as any),
+    ...parseFromValuesOrFunc(tableCellProps?.sx, undefined),
   };
 };
 

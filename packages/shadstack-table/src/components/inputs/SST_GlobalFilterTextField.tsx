@@ -1,3 +1,4 @@
+import { composeRefs } from '@radix-ui/react-compose-refs';
 import * as React from 'react';
 import { type ChangeEvent, type MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { useSST_TableState } from '../../hooks/useSST_TableState';
@@ -32,6 +33,7 @@ export const SST_GlobalFilterTextField = <TData extends SST_RowData>({
     refs: { searchInputRef },
     setGlobalFilter,
   } = table;
+
   const { globalFilter, showGlobalFilter } = useSST_TableState(table, (s) => ({
     globalFilter: s.globalFilter,
     showGlobalFilter: s.showGlobalFilter,
@@ -85,6 +87,7 @@ export const SST_GlobalFilterTextField = <TData extends SST_RowData>({
         setSearchValue(globalFilter);
       }
     }
+
     isMounted.current = true;
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: only re-sync local state when the external globalFilter identity changes. handleClear is stable across renders by construction (no captured render-dependent state) and including it would loop.
   }, [globalFilter]);
@@ -111,10 +114,10 @@ export const SST_GlobalFilterTextField = <TData extends SST_RowData>({
               <Button
                 aria-label={localization.changeSearchMode}
                 onClick={handleGlobalFilterMenuOpen}
-                size="icon"
+                size="icon-sm"
                 variant="ghost"
                 title={localization.changeSearchMode}
-                className="pointer-events-auto h-7 w-7"
+                className="pointer-events-auto"
               >
                 <SearchIcon />
               </Button>
@@ -128,10 +131,7 @@ export const SST_GlobalFilterTextField = <TData extends SST_RowData>({
             placeholder={localization.search}
             value={searchValue ?? ''}
             {...inputProps}
-            ref={(inputRef) => {
-              searchInputRef.current = inputRef;
-              if (typeof inputProps?.ref === 'function') inputProps.ref(inputRef);
-            }}
+            ref={composeRefs(searchInputRef, inputProps.ref)}
             className={cn(
               'w-full',
               enableGlobalFilterModes ? 'pl-9' : 'pl-8',
@@ -150,10 +150,10 @@ export const SST_GlobalFilterTextField = <TData extends SST_RowData>({
               aria-label={localization.clearSearch}
               disabled={!searchValue?.length}
               onClick={handleClear}
-              size="icon"
+              size="icon-sm"
               variant="ghost"
               title={localization.clearSearch}
-              className="pointer-events-auto h-7 w-7"
+              className="pointer-events-auto"
             >
               <CloseIcon className="size-3.5" />
             </Button>

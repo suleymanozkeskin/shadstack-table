@@ -37,6 +37,7 @@ const clip = ({ clipBy = 3, curr, next, prev }: ClipArgs): string => {
     if (len > clipBy * 2) {
       return [...words.slice(0, clipBy), ellipsis, ...words.slice(-clipBy)].join(' ');
     }
+
     return curr.text;
   }
 
@@ -67,10 +68,8 @@ const regexpQuery = ({
   matchExactly?: boolean;
   terms: string;
 }): string => {
-  if (typeof terms !== 'string') {
-    throw new TypeError('Expected a string');
-  }
   const escapedTerms = escapeRegexp(terms.trim());
+
   return `(${matchExactly ? escapedTerms : termsToRegExpString(escapedTerms)})`;
 };
 
@@ -93,18 +92,22 @@ const buildRegexp = ({
 const HEX = (() => {
   let idx = 36;
   let hex = '';
+
   while (idx--) {
     hex += idx.toString(36);
   }
+
   return hex;
 })();
 
 const uid = (len = 11): string => {
   let str = '';
   let num = len;
+
   while (num--) {
     str += HEX[(Math.random() * 36) | 0];
   }
+
   return str;
 };
 
@@ -116,11 +119,14 @@ export const highlightWords = ({
   query,
   text,
 }: HighlightWordsOptions): HighlightChunk[] => {
-  const safeQuery = typeof query === 'string' ? query.trim() : query;
+  const safeQuery = query.trim();
+
   if (safeQuery === '') {
     return [{ key: uid(), match: false, text }];
   }
+
   const searchRegexp = buildRegexp({ matchExactly, terms: query });
+
   return text
     .split(searchRegexp)
     .filter(hasLength)
@@ -131,7 +137,7 @@ export const highlightWords = ({
     }))
     .map((chunk, index, chunks) => ({
       ...chunk,
-      ...(typeof clipBy === 'number' && {
+      ...(clipBy !== undefined && {
         text: clip({
           clipBy,
           curr: chunk,

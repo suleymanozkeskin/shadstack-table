@@ -63,11 +63,13 @@ describe('filter inputs — debounce cancel on unmount', () => {
     // The global search input may be collapsed by default — open it via the
     // search-toggle button if needed, otherwise read directly.
     let searchInput = screen.queryByPlaceholderText(/search/i);
+
     if (!searchInput) {
       const searchToggle = screen.getByRole('button', { name: /show.*search|search/i });
       await user.click(searchToggle);
       searchInput = await screen.findByPlaceholderText(/search/i);
     }
+
     await user.type(searchInput, 'a');
 
     const beforeUnmount = onGlobalFilterChange.mock.calls.length;

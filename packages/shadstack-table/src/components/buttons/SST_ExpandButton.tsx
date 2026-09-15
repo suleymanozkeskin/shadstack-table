@@ -21,6 +21,7 @@ export const SST_ExpandButton = <TData extends SST_RowData>({
   table,
 }: SST_ExpandButtonProps<TData>) => {
   const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
+
   const {
     options: {
       icons: { ExpandMoreIcon },
@@ -30,6 +31,7 @@ export const SST_ExpandButton = <TData extends SST_RowData>({
       slotProps,
     },
   } = table;
+
   const { density } = useSST_TableState(table, (s) => ({
     density: s.density,
     //this row's expansion drives the chevron direction
@@ -68,7 +70,8 @@ export const SST_ExpandButton = <TData extends SST_RowData>({
           <Button
             aria-label={localization.expand}
             disabled={!isExpandable}
-            size="icon"
+            emphasis={isExpandable ? 'normal' : 'faint'}
+            size={density === 'compact' ? 'icon-sm' : 'icon-lg'}
             variant="ghost"
             {...iconButtonProps}
             onClick={handleToggleExpand}
@@ -76,11 +79,7 @@ export const SST_ExpandButton = <TData extends SST_RowData>({
               [indentSide === 'mr' ? 'marginRight' : 'marginLeft']: `${row.depth * 16}px`,
               ...iconButtonProps?.style,
             }}
-            className={cn(
-              density === 'compact' ? 'h-7 w-7' : 'h-9 w-9',
-              !isExpandable && 'opacity-30',
-              iconButtonProps?.className,
-            )}
+            className={cn(iconButtonProps?.className)}
             title={undefined}
           >
             {iconButtonProps?.children ?? (

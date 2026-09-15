@@ -33,3 +33,7 @@ Built on the design and engineering of [`material-react-table`](https://github.c
 ## License
 
 [MIT](./LICENSE).
+
+## Development
+
+See [Lint rules](docs/linting.md) for component contracts and checks. See [Typed rows and creation](apps/docs/src/content/docs/guides/typed-rows.mdx) for the next release’s API changes.

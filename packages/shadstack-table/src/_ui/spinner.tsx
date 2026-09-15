@@ -6,17 +6,16 @@ function Spinner({
   className,
   size,
   ...props
-}: React.ComponentProps<'span'> & { size?: number | string }) {
+}: React.ComponentProps<'output'> & { size?: number | string }) {
   return (
-    <span
+    <output
       data-slot="spinner"
-      role="status"
       aria-label="Loading"
       className={cn('inline-flex items-center justify-center', className)}
       {...props}
     >
       <Loader2 className="animate-spin" style={size ? { width: size, height: size } : undefined} />
-    </span>
+    </output>
   );
 }
 

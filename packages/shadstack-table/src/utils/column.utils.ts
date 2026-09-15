@@ -1,7 +1,9 @@
 import { useMemo } from 'react';
-import { type AggregationFnDef } from '@tanstack/react-table';
+import { isFunction } from '@tanstack/react-table';
 import {
   type DropdownOption,
+  type SST_AggregationFn,
+  type SST_AggregationOption,
   type SST_Column,
   type SST_ColumnDef,
   type SST_ColumnOrderState,
@@ -13,6 +15,10 @@ import {
   type SST_TableInstance,
 } from '../types';
 
+const isAggregationName = <TData extends SST_RowData>(
+  value: SST_AggregationFn<TData>,
+): value is SST_AggregationOption => typeof value === 'string';
+
 export const getColumnId = <TData extends SST_RowData>(columnDef: SST_ColumnDef<TData>): string =>
   columnDef.id ?? columnDef.accessorKey?.toString?.() ?? columnDef.header;
 
@@ -20,6 +26,7 @@ export const getAllLeafColumnDefs = <TData extends SST_RowData>(
   columns: SST_ColumnDef<TData>[],
 ): SST_ColumnDef<TData>[] => {
   const allLeafColumnDefs: SST_ColumnDef<TData>[] = [];
+
   const getLeafColumns = (cols: SST_ColumnDef<TData>[]) => {
     cols.forEach((col) => {
       if (col.columns) {
@@ -29,7 +36,9 @@ export const getAllLeafColumnDefs = <TData extends SST_RowData>(
       }
     });
   };
+
   getLeafColumns(columns);
+
   return allLeafColumnDefs;
 };
 
@@ -47,14 +56,14 @@ export const getAllLeafColumnDefs = <TData extends SST_RowData>(
 type PreparedColumnCacheEntry<TData extends SST_RowData> = {
   enriched: SST_DefinedColumnDef<TData>;
   // inputs that, when changed, invalidate the cached enriched def
-  aggregationFns: Record<string, unknown>;
-  filterFns: Record<string, unknown>;
-  sortFns: Record<string, unknown>;
+  aggregationFns: NonNullable<SST_DefinedTableOptions<TData>['aggregationFns']>;
+  filterFns: NonNullable<SST_DefinedTableOptions<TData>['filterFns']>;
+  sortFns: NonNullable<SST_DefinedTableOptions<TData>['sortFns']>;
   filterFnId: string | undefined;
-  defaultDisplayColumn: unknown;
+  defaultDisplayColumn: SST_DefinedTableOptions<TData>['defaultDisplayColumn'];
   // the original columns array reference (for group columns) — if a
   // group's children array reference changes we rebuild children too
-  childrenRef: unknown;
+  childrenRef: SST_ColumnDef<TData>['columns'];
 };
 
 export type PrepareColumnsCache<TData extends SST_RowData> = WeakMap<
@@ -82,6 +91,7 @@ export const prepareColumns = <TData extends SST_RowData>({
     sortFns = {},
     state: { columnFilterFns = {} } = {},
   } = tableOptions;
+
   return columnDefs.map((columnDef) => {
     const id = columnDef.id ?? getColumnId(columnDef);
     const filterFnId = columnFilterFns[id];
@@ -89,6 +99,7 @@ export const prepareColumns = <TData extends SST_RowData>({
 
     //fast path: return cached enriched def if no relevant inputs changed
     const cached = cache?.get(columnDef);
+
     if (
       cached &&
       cached.aggregationFns === aggregationFns &&
@@ -102,10 +113,16 @@ export const prepareColumns = <TData extends SST_RowData>({
     }
 
     //start from a shallow copy — never mutate the consumer-owned def
-    let enriched: SST_ColumnDef<TData> = { ...columnDef, id };
+    let enriched: SST_DefinedColumnDef<TData> = {
+      ...columnDef,
+      id,
+      _filterFn: filterFnId ?? getDefaultColumnFilterFn(columnDef),
+      defaultDisplayColumn: defaultDisplayColumn ?? {},
+    };
 
     //assign columnDefType
     if (!enriched.columnDefType) enriched.columnDefType = 'data';
+
     if (enriched.columns?.length) {
       enriched.columnDefType = 'group';
       //recursively prepare columns if this is a group column
@@ -120,11 +137,11 @@ export const prepareColumns = <TData extends SST_RowData>({
       //object, so the composite is built as one too. The result stays an array
       //keyed by the order the fn names were given, as it was before.
       if (Array.isArray(enriched.aggregationFn)) {
-        const aggFns = enriched.aggregationFn as string[];
+        const aggFns = enriched.aggregationFn;
         enriched.aggregationFn = {
           aggregate: (context) =>
             aggFns.map((fn) =>
-              (aggregationFns[fn] as AggregationFnDef<any, TData>)?.aggregate(context),
+              (isAggregationName(fn) ? aggregationFns[fn] : fn)?.aggregate(context),
             ),
         };
       }
@@ -133,21 +150,25 @@ export const prepareColumns = <TData extends SST_RowData>({
       if (filterFnId !== undefined && Object.keys(filterFns).includes(filterFnId)) {
         enriched.filterFn = filterFns[filterFnId] ?? filterFns.fuzzy;
         // oxlint-disable-next-line no-underscore-dangle
-        (enriched as SST_DefinedColumnDef<TData>)._filterFn = filterFnId;
+        enriched._filterFn = filterFnId;
       }
 
       //assign sortFns
-      if (Object.keys(sortFns).includes(enriched.sortFn as string)) {
-        enriched.sortFn = sortFns[enriched.sortFn as string];
+      if (
+        enriched.sortFn !== undefined &&
+        !isFunction(enriched.sortFn) &&
+        Object.hasOwn(sortFns, enriched.sortFn)
+      ) {
+        enriched.sortFn = sortFns[enriched.sortFn];
       }
     } else if (enriched.columnDefType === 'display') {
       enriched = {
-        ...(defaultDisplayColumn as SST_ColumnDef<TData>),
+        ...defaultDisplayColumn,
         ...enriched,
       };
     }
 
-    const result = enriched as SST_DefinedColumnDef<TData>;
+    const result = enriched;
     cache?.set(columnDef, {
       aggregationFns,
       childrenRef,
@@ -157,6 +178,7 @@ export const prepareColumns = <TData extends SST_RowData>({
       filterFns,
       sortFns,
     });
+
     return result;
   });
 };
@@ -169,12 +191,14 @@ export const reorderColumn = <TData extends SST_RowData>(
   if (draggedColumn.getCanPin()) {
     draggedColumn.pin(targetColumn.getIsPinned());
   }
+
   const newColumnOrder = [...columnOrder];
   newColumnOrder.splice(
     newColumnOrder.indexOf(targetColumn.id),
     0,
     newColumnOrder.splice(newColumnOrder.indexOf(draggedColumn.id), 1)[0],
   );
+
   return newColumnOrder;
 };
 
@@ -182,9 +206,13 @@ export const getDefaultColumnFilterFn = <TData extends SST_RowData>(
   columnDef: SST_ColumnDef<TData>,
 ): SST_FilterOption => {
   const { filterVariant } = columnDef;
+
   if (filterVariant === 'multi-select') return 'arrIncludesSome';
+
   if (filterVariant?.includes('range')) return 'betweenInclusive';
+
   if (filterVariant === 'select' || filterVariant === 'checkbox') return 'equals';
+
   return 'fuzzy';
 };
 
@@ -198,20 +226,25 @@ export const getColumnFilterInfo = <TData extends SST_RowData>({
   const {
     options: { columnFilterModeOptions },
   } = table;
+
   const { column } = header;
   const { columnDef } = column;
   const { filterVariant } = columnDef;
 
   const isDateFilter = !!(filterVariant?.startsWith('date') || filterVariant?.startsWith('time'));
   const isAutocompleteFilter = filterVariant === 'autocomplete';
+
   const isRangeFilter =
     filterVariant?.includes('range') ||
     // oxlint-disable-next-line no-underscore-dangle
     ['between', 'betweenInclusive', 'inNumberRange'].includes(columnDef._filterFn);
+
   const isSelectFilter = filterVariant === 'select';
   const isMultiSelectFilter = filterVariant === 'multi-select';
+
   const isTextboxFilter =
     ['autocomplete', 'text'].includes(filterVariant!) || (!isSelectFilter && !isMultiSelectFilter);
+
   // oxlint-disable-next-line no-underscore-dangle
   const currentFilterOption = columnDef._filterFn;
 
@@ -241,6 +274,7 @@ export const useDropdownOptions = <TData extends SST_RowData>({
 }): DropdownOption[] | undefined => {
   const { column } = header;
   const { columnDef } = column;
+
   const { facetedUniqueValues, isAutocompleteFilter, isMultiSelectFilter, isSelectFilter } =
     getColumnFilterInfo({ header, table });
 

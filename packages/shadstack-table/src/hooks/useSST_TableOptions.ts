@@ -1,4 +1,4 @@
-import { useId, useMemo, useRef } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { createSST_features } from '../features';
 import { SST_AggregationFns } from '../fns/aggregationFns';
 import { SST_FilterFns } from '../fns/filterFns';
@@ -33,14 +33,14 @@ export const SST_DefaultDisplayColumn = {
 export const useSST_TableOptions: <TData extends SST_RowData>(
   tableOptions: SST_TableOptions<TData>,
 ) => SST_DefinedTableOptions<TData> = <TData extends SST_RowData>({
-  aggregationFns,
+  aggregationFns: aggregationFnsInput,
   autoResetExpanded = false,
   columnFilterDisplayMode = 'subheader',
   columnResizeDirection,
   columnResizeMode = 'onChange',
   createDisplayMode = 'modal',
-  defaultColumn,
-  defaultDisplayColumn,
+  defaultColumn: defaultColumnInput,
+  defaultDisplayColumn: defaultDisplayColumnInput,
   editDisplayMode = 'modal',
   enableBatchRowSelection = true,
   enableBottomToolbar = true,
@@ -78,11 +78,11 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
   enableTableHead = true,
   enableToolbarInternalActions = true,
   enableTopToolbar = true,
-  filterFns,
-  icons,
+  filterFns: filterFnsInput,
+  icons: iconsInput,
   id,
   layoutMode,
-  localization,
+  localization: localizationInput,
   manualFiltering,
   manualGrouping,
   manualPagination,
@@ -100,24 +100,27 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
   rowNumberDisplayMode = 'static',
   rowPinningDisplayMode = 'sticky',
   selectAllMode = 'page',
-  sortFns,
+  sortFns: sortFnsInput,
   ...rest
-}: SST_TableOptions<TData>) => {
+}: SST_TableOptions<TData>): SST_DefinedTableOptions<TData> => {
   const generatedId = useId();
   id = id ?? generatedId;
-  icons = useMemo(() => ({ ...SST_Default_Icons, ...icons }), [icons]);
-  localization = useMemo(
+  const icons = useMemo(() => ({ ...SST_Default_Icons, ...iconsInput }), [iconsInput]);
+
+  const localization = useMemo(
     () => ({
       ...SST_Localization_EN,
-      ...localization,
+      ...localizationInput,
     }),
-    [localization],
+    [localizationInput],
   );
+
   // `theme` is the canonical input; `mrtTheme` remains as a deprecated alias.
   // The normalized options expose the resolved value on BOTH fields (same
   // reference) so legacy components reading `options.mrtTheme.<color>` keep
   // working.
   const resolvedTheme = useMemo(() => getSST_Theme(theme ?? mrtTheme), [theme, mrtTheme]);
+
   //Merge consumer-provided fn maps with built-ins, keeping the consumer input
   //in the dep list so the merge re-runs when an override changes.
   //
@@ -129,30 +132,40 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
   //Anything resolved by TanStack itself — `aggregationFn: '<name>'`, and the
   //`'auto'` defaults — reads the frozen copy, so an entry added after the first
   //render will not resolve there.
-  aggregationFns = useMemo(() => ({ ...SST_AggregationFns, ...aggregationFns }), [aggregationFns]);
-  filterFns = useMemo(() => ({ ...SST_FilterFns, ...filterFns }), [filterFns]);
-  sortFns = useMemo(() => ({ ...SST_SortingFns, ...sortFns }), [sortFns]);
-  defaultColumn = useMemo(() => ({ ...SST_DefaultColumn, ...defaultColumn }), [defaultColumn]);
-  defaultDisplayColumn = useMemo(
+  const aggregationFns = useMemo(
+    () => ({ ...SST_AggregationFns, ...aggregationFnsInput }),
+    [aggregationFnsInput],
+  );
+
+  const filterFns = useMemo(() => ({ ...SST_FilterFns, ...filterFnsInput }), [filterFnsInput]);
+  const sortFns = useMemo(() => ({ ...SST_SortingFns, ...sortFnsInput }), [sortFnsInput]);
+
+  const defaultColumn = useMemo(
+    () => ({ ...SST_DefaultColumn, ...defaultColumnInput }),
+    [defaultColumnInput],
+  );
+
+  const defaultDisplayColumn = useMemo(
     () => ({
       ...SST_DefaultDisplayColumn,
-      ...defaultDisplayColumn,
+      ...defaultDisplayColumnInput,
     }),
-    [defaultDisplayColumn],
+    [defaultDisplayColumnInput],
   );
+
   //Virtualization mode is captured at mount and intentionally cannot
   //change afterwards: TanStack Virtual measures DOM nodes in layout
   //effects and switching between virtualized/non-virtualized rendering
   //mid-life breaks ref-based measurement (and would require unmounting
   //the table body entirely). We pin the boolean to its first-render
-  //value via a ref so the empty dep array isn't load-bearing for
-  //correctness.
-  const virtualizationModeRef = useRef<{ col: boolean | undefined; row: boolean | undefined }>({
-    col: enableColumnVirtualization,
-    row: enableRowVirtualization,
-  });
-  enableColumnVirtualization = virtualizationModeRef.current.col;
-  enableRowVirtualization = virtualizationModeRef.current.row;
+  //value in initial React state.
+  const [virtualizationMode] = useState(() => ({
+    column: !!enableColumnVirtualization,
+    row: !!enableRowVirtualization,
+  }));
+
+  enableColumnVirtualization = virtualizationMode.column;
+  enableRowVirtualization = virtualizationMode.row;
 
   if (!columnResizeDirection) {
     // TODO: theme-aware styling moved to CSS vars in _ui/styles.css
@@ -161,6 +174,7 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
   }
 
   layoutMode = layoutMode || (enableColumnResizing ? 'grid-no-grow' : 'semantic');
+
   if (layoutMode === 'semantic' && (enableRowVirtualization || enableColumnVirtualization)) {
     layoutMode = 'grid';
   }
@@ -186,13 +200,13 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
   //freezing that slice. Consumers spreading partially-built option objects
   //hit this, so strip explicit-undefined handler keys before they reach the
   //table.
-  for (const key of Object.keys(rest)) {
-    if (
-      key.startsWith('on') &&
-      key.endsWith('Change') &&
-      (rest as Record<string, unknown>)[key] === undefined
-    ) {
-      delete (rest as Record<string, unknown>)[key];
+  for (const [key, value] of Object.entries(rest)) {
+    if (key.startsWith('on') && key.endsWith('Change') && value === undefined) {
+      if (!Reflect.deleteProperty(rest, key)) {
+        throw new Error(
+          `Cannot remove undefined table option ${key}: the copied property is not configurable.`,
+        );
+      }
     }
   }
 
@@ -291,7 +305,6 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
     //silently do nothing. `SST_ExpandButton` already treats a detail panel as
     //making a row expandable; this states the same rule to the table.
     getRowCanExpand: rest.getRowCanExpand ?? (rest.renderDetailPanel ? () => true : undefined),
-    getSubRows: (row) => row?.subRows,
     icons,
     id,
     layoutMode,
@@ -315,5 +328,5 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
     selectAllMode,
     sortFns,
     ...rest,
-  } as SST_DefinedTableOptions<TData>;
+  };
 };

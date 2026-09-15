@@ -29,7 +29,9 @@ export const SST_TableHeadCellGrabHandle = <TData extends SST_RowData>({
     setDraggingColumn,
     setHoveredColumn,
   } = table;
+
   const { columnDef } = column;
+
   const { columnOrder, draggingColumn, hoveredColumn } = useSST_TableState(table, (s) => ({
     columnOrder: s.columnOrder,
     draggingColumn: s.draggingColumn,
@@ -48,8 +50,9 @@ export const SST_TableHeadCellGrabHandle = <TData extends SST_RowData>({
   const handleDragStart = (event: DragEvent<HTMLButtonElement>) => {
     iconButtonProps?.onDragStart?.(event);
     setDraggingColumn(column);
+
     try {
-      event.dataTransfer.setDragImage(tableHeadCellRef.current as HTMLElement, 0, 0);
+      if (tableHeadCellRef.current) event.dataTransfer.setDragImage(tableHeadCellRef.current, 0, 0);
     } catch (e) {
       console.error(e);
     }
@@ -61,24 +64,22 @@ export const SST_TableHeadCellGrabHandle = <TData extends SST_RowData>({
     //no subscriber sees a reordered column list with stale pinning or a
     //half-cleared drag state
     batchTableStateUpdates(table, () => {
-      if (hoveredColumn?.id === 'drop-zone') {
+      if (hoveredColumn?.kind === 'drop-zone') {
         column.toggleGrouping();
       } else if (
         enableColumnOrdering &&
-        hoveredColumn &&
-        hoveredColumn?.id !== draggingColumn?.id
+        hoveredColumn?.kind === 'column' &&
+        hoveredColumn.column.id !== draggingColumn?.id
       ) {
-        const reorderedColumns = reorderColumn(
-          column,
-          hoveredColumn as SST_Column<TData>,
-          columnOrder,
-        );
+        const reorderedColumns = reorderColumn(column, hoveredColumn.column, columnOrder);
+
         setColumnOrder(reorderedColumns);
         setColumnPinning(({ end = [], start = [] }) => ({
           end: reorderedColumns.filter((header) => end.includes(header)),
           start: reorderedColumns.filter((header) => start.includes(header)),
         }));
       }
+
       setDraggingColumn(null);
       setHoveredColumn(null);
     });

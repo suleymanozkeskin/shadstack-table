@@ -1,39 +1,42 @@
-import { type ReactNode, type JSX } from 'react';
 import {
   constructRow as _createRow,
+  isFunction,
+  type Table,
+  type DeepKeys,
+  type AccessorFn,
+  type Row,
   flexRender as _flexRender,
-  type Renderable,
 } from '@tanstack/react-table';
 import {
   type SST_ColumnHelper,
-  type SST_DisplayColumnDef,
-  type SST_GroupColumnDef,
+  type SST_AccessorValue,
   type SST_Row,
   type SST_RowData,
   type SST_TableInstance,
 } from '../types';
-import { getAllLeafColumnDefs, getColumnId } from './column.utils';
+import { type SST_Features } from '../features';
 
-export const flexRender = _flexRender as (
-  Comp: Renderable<any>,
-  props: any,
-) => JSX.Element | ReactNode;
+export const flexRender = _flexRender;
 
 export function createSSTColumnHelper<TData extends SST_RowData>(): SST_ColumnHelper<TData> {
   return {
     accessor: (accessor, column) => {
-      return typeof accessor === 'function'
-        ? ({
+      type TValue = SST_AccessorValue<TData, typeof accessor>;
+
+      // SAFETY: The helper signature derives TValue from this accessor's return type.
+      return isFunction(accessor)
+        ? {
             ...column,
-            accessorFn: accessor,
-          } as any)
+            accessorFn: accessor as AccessorFn<TData, TValue>,
+          }
         : {
             ...column,
-            accessorKey: accessor,
+            // SAFETY: The non-function branch is constrained to DeepKeys<TData>.
+            accessorKey: accessor as DeepKeys<TData>,
           };
     },
-    display: (column) => column as SST_DisplayColumnDef<TData>,
-    group: (column) => column as SST_GroupColumnDef<TData>,
+    display: (column) => column,
+    group: (column) => column,
   };
 }
 
@@ -45,25 +48,21 @@ export const createMRTColumnHelper = createSSTColumnHelper;
 
 export const createRow = <TData extends SST_RowData>(
   table: SST_TableInstance<TData>,
-  originalRow?: TData,
+  originalRow: TData,
   rowIndex = -1,
   depth = 0,
   subRows?: SST_Row<TData>[],
   parentId?: string,
 ): SST_Row<TData> =>
+  // SAFETY: The facade wraps this TanStack table; construction preserves TData and row APIs.
   _createRow(
-    table as any,
+    table as Table<SST_Features, TData>,
     'sst-row-create',
-    originalRow ??
-      Object.assign(
-        {},
-        ...getAllLeafColumnDefs(table.options.columns).map((col) => ({
-          [getColumnId(col)]: '',
-        })),
-      ),
+    originalRow,
     rowIndex,
     depth,
-    subRows as any,
+    // SAFETY: These rows use the same features; their column definitions are prepared.
+    subRows as Row<SST_Features, TData>[] | undefined,
     parentId,
   ) as SST_Row<TData>;
 
@@ -78,8 +77,6 @@ export const batchTableStateUpdates = <TData extends SST_RowData>(
   table: SST_TableInstance<TData>,
   fn: () => void,
 ): void => {
-  const reactivity = (table as unknown as { _reactivity?: { batch?: (fn: () => void) => void } })
-    // oxlint-disable-next-line no-underscore-dangle -- `_reactivity` is the table-core reactivity-bindings slot; there is no public accessor for `batch`
-    ._reactivity;
-  (reactivity?.batch ?? ((run: () => void) => run()))(fn);
+  // oxlint-disable-next-line no-underscore-dangle -- TanStack exposes batching through _reactivity.
+  table._reactivity.batch(fn);
 };

@@ -30,14 +30,9 @@ export function useSST_TableState<TData extends SST_RowData, TSelected>(
   table: SST_TableInstance<TData>,
   selector?: (state: SST_TableState<TData>) => TSelected,
 ): SST_TableState<TData> | TSelected {
-  const store = (
-    table as unknown as {
-      store: {
-        get: () => SST_TableState<TData>;
-        subscribe: (fn: (value: SST_TableState<TData>) => void) => { unsubscribe: () => void };
-      };
-    }
-  ).store;
+  const select: (state: SST_TableState<TData>) => SST_TableState<TData> | TSelected =
+    selector ?? ((state) => state);
+
   // oxlint-disable-next-line react-hooks/rules-of-hooks -- single unconditional call; the overloads only affect typing
-  return useSelector(store, selector as never, { compare: shallow });
+  return useSelector(table.store, select, { compare: shallow });
 }

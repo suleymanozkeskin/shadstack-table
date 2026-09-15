@@ -7,12 +7,17 @@ import { cn } from '../../lib/utils';
 
 function coerceDate(v: Date | number | string | null | undefined): Date | undefined {
   if (v === undefined || v === null || v === '') return undefined;
+
   if (v instanceof Date) return Number.isNaN(v.getTime()) ? undefined : v;
   const parsed = new Date(v);
+
   return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 }
 
-export interface SST_DateFilterProps {
+export interface SST_DateFilterProps extends Pick<
+  React.ComponentProps<typeof Button>,
+  'leadingSpace' | 'trailingSpace'
+> {
   ariaLabel?: string;
   calendarIcon?: React.ReactNode;
   className?: string;
@@ -30,6 +35,8 @@ export const SST_DateFilter = ({
   className,
   disabled,
   inputRef,
+  leadingSpace,
+  trailingSpace,
   onChange,
   placeholder,
   title,
@@ -46,17 +53,16 @@ export const SST_DateFilter = ({
           ref={inputRef}
           type="button"
           variant="outline"
+          purpose="field"
+          leadingSpace={leadingSpace}
+          trailingSpace={trailingSpace}
           disabled={disabled}
           data-empty={!date}
           title={title ?? placeholder}
           aria-label={ariaLabel ?? placeholder}
           onKeyDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
-          className={cn(
-            'h-9 w-full justify-start gap-2 text-left font-normal',
-            'data-[empty=true]:text-muted-foreground',
-            className,
-          )}
+          className={cn('w-full', className)}
         >
           {calendarIcon}
           <span className="truncate">{label || placeholder}</span>
@@ -68,6 +74,7 @@ export const SST_DateFilter = ({
           selected={date}
           onSelect={(d) => {
             onChange(d ?? undefined);
+
             if (d) setOpen(false);
           }}
         />

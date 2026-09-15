@@ -1,11 +1,22 @@
+import { createEditingApi } from '../utils/editing';
+import { type ReadonlyStore } from '@tanstack/react-store';
+import { createTableStateSetters } from '../utils/state-setters';
 import { useMemo, useRef } from 'react';
-import { useTable } from '@tanstack/react-table';
-import { SST_STATE_DEFAULTS } from '../features';
+import {
+  useTable,
+  getInitialTableState,
+  type TableOptions,
+  type TableState,
+} from '@tanstack/react-table';
+import { SST_STATE_DEFAULTS, type SST_Features } from '../features';
 import {
   type SST_ColumnDef,
   type SST_DefinedTableOptions,
+  type SST_FilterControl,
   type SST_RowData,
   type SST_StatefulTableOptions,
+  type SST_StateAtoms,
+  type SST_StateBaseAtoms,
   type SST_TableInstance,
   type SST_TableState,
 } from '../types';
@@ -36,6 +47,24 @@ import { getSST_RowSelectColumnDef } from './display-columns/getSST_RowSelectCol
 import { getSST_RowSpacerColumnDef } from './display-columns/getSST_RowSpacerColumnDef';
 import { useSST_Effects } from './useSST_Effects';
 
+const selectHostState = <TData extends SST_RowData>(rawState: TableState<SST_Features>) => {
+  // SAFETY: The registered core feature seeds every shadstack state slice.
+  const s = rawState as SST_TableState<TData>;
+  const showSkeletonData = !!(s.isLoading || s.showSkeletons);
+
+  return {
+    columnFilterFns: s.columnFilterFns,
+    creatingRow: s.creatingRow,
+    globalFilterFn: s.globalFilterFn,
+    grouping: s.grouping,
+    isDraggingColumn: !!s.draggingColumn,
+    isDraggingRow: !!s.draggingRow,
+    isResizingColumn: !!s.columnResizing.isResizingColumn,
+    showSkeletonData,
+    skeletonPageSize: showSkeletonData ? s.pagination.pageSize : 0,
+  };
+};
+
 /**
  * The MRT hook that wraps the TanStack useTable hook and adds additional functionality
  *
@@ -55,8 +84,8 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
   const lastSelectedRowId = useRef<null | string>(null);
   const actionCellRef = useRef<HTMLTableCellElement>(null);
   const bottomToolbarRef = useRef<HTMLDivElement>(null);
-  const editInputRefs = useRef<Record<string, HTMLInputElement>>({});
-  const filterInputRefs = useRef<Record<string, HTMLInputElement>>({});
+  const editInputRefs = useRef<Record<string, HTMLInputElement | HTMLButtonElement>>({});
+  const filterInputRefs = useRef<Record<string, SST_FilterControl>>({});
   const searchInputRef = useRef<HTMLInputElement>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const tableHeadCellRefs = useRef<Record<string, HTMLTableCellElement>>({});
@@ -75,6 +104,7 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
     const initState: Partial<SST_TableState<TData>> = {
       ...(definedTableOptions.initialState ?? {}),
     };
+
     initState.columnOrder =
       initState.columnOrder ??
       getDefaultColumnOrderIds({
@@ -83,13 +113,13 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
           ...definedTableOptions.initialState,
           ...definedTableOptions.state,
         },
-      } as SST_StatefulTableOptions<TData>);
+      });
     initState.globalFilterFn = definedTableOptions.globalFilterFn ?? 'fuzzy';
     //seed the per-column filter-fn map from the column defs (previously the
     //useState initializer's job)
     initState.columnFilterFns = Object.assign(
       {},
-      ...getAllLeafColumnDefs(definedTableOptions.columns as SST_ColumnDef<TData>[]).map((col) => ({
+      ...getAllLeafColumnDefs(definedTableOptions.columns).map((col) => ({
         [getColumnId(col)]:
           col.filterFn instanceof Function
             ? (col.filterFn.name ?? 'custom')
@@ -98,6 +128,7 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
               getDefaultColumnFilterFn(col)),
       })),
     );
+
     return initState;
     // initialState is intentionally captured once at mount — re-deriving
     // it on every render would defeat the "initial state" contract.
@@ -110,16 +141,17 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
   //same freshness the deleted useState calls provided. On the first render
   //no table exists yet, so fall back to the seeded initial state.
   const tableRef = useRef<SST_TableInstance<TData> | null>(null);
+  const editingApi = useMemo(() => createEditingApi<TData>(), []);
+  const stateSetters = useMemo(() => createTableStateSetters(() => tableRef.current!), []);
+
   const currentState: SST_TableState<TData> = tableRef.current
     ? tableRef.current.getState()
-    : ({
+    : {
+        ...getInitialTableState(definedTableOptions.features),
         ...SST_STATE_DEFAULTS,
-        columnResizing: {},
-        grouping: [],
-        pagination: { pageIndex: 0, pageSize: 10 },
         ...initialState,
         ...definedTableOptions.state,
-      } as unknown as SST_TableState<TData>);
+      };
 
   //The stateful view of the options: `state` is the full current snapshot.
   //This object feeds the display-column factories, `prepareColumns`, and the
@@ -130,13 +162,14 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
     ...definedTableOptions,
     initialState,
     state: currentState,
-  } as SST_StatefulTableOptions<TData>;
+  };
 
   //don't recompute columnDefs while resizing column or dragging column/row
   const columnDefsRef = useRef<SST_ColumnDef<TData>[]>([]);
   //WeakMap cache that preserves enriched column-def identity across
   //renders so TanStack's column-def-keyed memoization stays warm.
   const prepareColumnsCacheRef = useRef<PrepareColumnsCache<TData>>(createPrepareColumnsCache());
+
   const preparedColumns =
     statefulTableOptions.state.columnResizing.isResizingColumn ||
     statefulTableOptions.state.draggingColumn ||
@@ -145,7 +178,7 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
       : prepareColumns({
           cache: prepareColumnsCacheRef.current,
           columnDefs: [
-            ...([
+            ...[
               showRowPinningColumn(statefulTableOptions) &&
                 getSST_RowPinningColumnDef(statefulTableOptions),
               showRowDragColumn(statefulTableOptions) &&
@@ -158,15 +191,16 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
                 getSST_RowSelectColumnDef(statefulTableOptions),
               showRowNumbersColumn(statefulTableOptions) &&
                 getSST_RowNumbersColumnDef(statefulTableOptions),
-            ].filter(Boolean) as SST_ColumnDef<TData>[]),
+            ].filter((column) => column !== false),
             ...statefulTableOptions.columns,
-            ...([
+            ...[
               showRowSpacerColumn(statefulTableOptions) &&
                 getSST_RowSpacerColumnDef(statefulTableOptions),
-            ].filter(Boolean) as SST_ColumnDef<TData>[]),
+            ].filter((column) => column !== false),
           ],
           tableOptions: statefulTableOptions,
         });
+
   columnDefsRef.current = preparedColumns;
 
   //if loading, generate blank rows to show skeleton loaders
@@ -215,28 +249,49 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
   //re-renders. Hover, selection, editing, sorting, pagination, per-mousemove
   //resize deltas: none of them re-render the host; components consume them
   //through their own narrowed subscriptions.
-  const wrapper = useTable(
+  // SAFETY: Prepared columns resolve shadstack definitions to the registered TanStack features.
+  const selectedTable = useTable<SST_Features, TData, ReturnType<typeof selectHostState<TData>>>(
     {
       ...statefulTableOptions,
       state: definedTableOptions.state,
       globalFilterFn: statefulTableOptions.filterFns?.[currentState.globalFilterFn ?? 'fuzzy'],
-    } as any,
-    (rawState: unknown) => {
-      const s = rawState as SST_TableState<TData>;
-      const showSkeletonData = !!(s.isLoading || s.showSkeletons);
-      return {
-        columnFilterFns: s.columnFilterFns,
-        creatingRow: s.creatingRow,
-        globalFilterFn: s.globalFilterFn,
-        grouping: s.grouping,
-        isDraggingColumn: !!s.draggingColumn,
-        isDraggingRow: !!s.draggingRow,
-        isResizingColumn: !!s.columnResizing.isResizingColumn,
-        showSkeletonData,
-        skeletonPageSize: showSkeletonData ? s.pagination.pageSize : 0,
-      };
+    } as TableOptions<SST_Features, TData>,
+    selectHostState<TData>,
+  );
+
+  const { store: sourceStore } = selectedTable;
+  // SAFETY: The registered core feature seeds every public state slice in this store.
+  const fullStore = sourceStore as ReadonlyStore<SST_TableState<TData>>;
+
+  // SAFETY: Prepared columns, typed state adapters, refs, and setters form the public facade.
+  const wrapper = {
+    ...selectedTable,
+    ...stateSetters,
+    ...editingApi,
+    get state() {
+      return fullStore.get();
     },
-  ) as unknown as SST_TableInstance<TData>;
+    store: fullStore,
+    // SAFETY: Every default state key has a derived atom created by TanStack.
+    atoms: selectedTable.atoms as SST_StateAtoms<TData>,
+    // SAFETY: Every default state key has a writable atom created by TanStack.
+    baseAtoms: selectedTable.baseAtoms as SST_StateBaseAtoms<TData>,
+    getState: fullStore.get,
+    refs: {
+      actionCellRef,
+      bottomToolbarRef,
+      editInputRefs,
+      filterInputRefs,
+      lastSelectedRowId,
+      searchInputRef,
+      tableContainerRef,
+      tableFooterRef,
+      tableHeadCellRefs,
+      tableHeadRef,
+      tablePaperRef,
+      topToolbarRef,
+    },
+  } as SST_TableInstance<TData>;
 
   //The public instance is referentially STABLE: created once, refreshed with
   //the latest useTable result every render. useTable itself returns a new
@@ -247,12 +302,12 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
   //object gives every holder the newest contents. Side effect, recorded in
   //the changelog: consumer effects keyed on `[table]` now fire once instead
   //of every render.
-  const isFirstConstruction = tableRef.current === null;
-  if (isFirstConstruction) {
-    tableRef.current = {} as SST_TableInstance<TData>;
+  if (tableRef.current === null) {
+    tableRef.current = wrapper;
   }
+
   const table = tableRef.current!;
-  Object.assign(table, wrapper);
+  Object.defineProperties(table, Object.getOwnPropertyDescriptors(wrapper));
 
   //getState() remains shadstack's single read surface; it reads the live
   //store snapshot, which applies the derived atoms' controlled-state
@@ -263,11 +318,8 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
   //snapshot can change: any store write (covers reads after writes inside
   //one event handler) and the start of a render pass (covers new controlled
   //state arriving through options before its post-commit publication).
-  const store = (
-    table as unknown as {
-      store: { get: () => unknown; subscribe: (fn: () => void) => { unsubscribe: () => void } };
-    }
-  ).store;
+  const { store } = table;
+
   const snapshotCacheRef = useRef<SST_TableState<TData> | null>(null);
   snapshotCacheRef.current = null;
   //The invalidator is registered during render, keyed on STORE identity —
@@ -279,34 +331,18 @@ export const useSST_TableInstance = <TData extends SST_RowData>(
   //effect would be purer but opens a mount-only window where a child effect
   //writes before the parent's effect has registered the invalidator. The
   //store dies with the component, so no cleanup.
-  const cacheInvalidatorStoreRef = useRef<unknown>(null);
+  const cacheInvalidatorStoreRef = useRef<SST_TableInstance<TData>['store'] | null>(null);
+
   if (cacheInvalidatorStoreRef.current !== store) {
     cacheInvalidatorStoreRef.current = store;
     store.subscribe(() => {
       snapshotCacheRef.current = null;
     });
   }
-  table.getState = () => (snapshotCacheRef.current ??= store.get() as SST_TableState<TData>);
 
-  table.refs = {
-    actionCellRef,
-    bottomToolbarRef,
-    editInputRefs,
-    filterInputRefs,
-    lastSelectedRowId,
-    searchInputRef,
-    tableContainerRef,
-    tableFooterRef,
-    tableHeadCellRefs,
-    tableHeadRef,
-    tablePaperRef,
-    topToolbarRef,
-  };
+  table.getState = () => (snapshotCacheRef.current ??= store.get());
 
-  //The public setters (setDensity, setEditingRow, …) are attached by
-  //`shadstackCoreFeature.constructTableAPIs` and read the live options, so
-  //the per-render `options.onXChange ?? setState` wiring that used to live
-  //here is gone.
+  // Setters read this stable facade so callbacks always use current options.
 
   useSST_Effects(table);
 

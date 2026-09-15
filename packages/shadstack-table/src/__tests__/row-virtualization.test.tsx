@@ -1,7 +1,8 @@
-import { render } from '@testing-library/react';
+import { createRef } from 'react';
+import { act, render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { ShadStackTable } from '../components/ShadStackTable';
-import { type SST_ColumnDef } from '../types';
+import { type SST_RowVirtualizer, type SST_ColumnDef } from '../types';
 
 type Item = { id: string; firstName: string; lastName: string };
 
@@ -59,5 +60,43 @@ describe('ShadStackTable — row virtualization', () => {
     // hard if virtualization breaks and we accidentally render all 200.
     expect(bodyRows.length).toBeLessThan(50);
     expect(bodyRows.length).toBeLessThan(data.length);
+  });
+
+  it('keeps old geometry snapshots unchanged after scrolling', () => {
+    const virtualizerRef = createRef<SST_RowVirtualizer>();
+    let onScroll: ((offset: number, isScrolling: boolean) => void) | undefined;
+    render(
+      <ShadStackTable
+        columns={columns}
+        data={data}
+        enablePagination={false}
+        enableRowVirtualization
+        rowVirtualizerInstanceRef={virtualizerRef}
+        rowVirtualizerOptions={{
+          measureElement: () => 58,
+          observeElementRect: (_instance, callback) => {
+            callback({ width: 800, height: 300 });
+          },
+          observeElementOffset: (_instance, callback) => {
+            onScroll = callback;
+            callback(0, false);
+          },
+        }}
+      />,
+    );
+    const before = virtualizerRef.current!;
+    const oldItems = before.getVirtualItems();
+    expect(oldItems.length).toBeGreaterThan(0);
+    expect(Object.isFrozen(before)).toBe(true);
+    expect(Object.isFrozen(oldItems)).toBe(true);
+
+    if (!onScroll) throw new Error('The virtualizer did not register its scroll observer.');
+    const scroll = onScroll;
+    act(() => scroll(1500, true));
+    const after = virtualizerRef.current!;
+    expect(after).not.toBe(before);
+    expect(after.getVirtualItems()[0].index).toBeGreaterThan(oldItems[0].index);
+    expect(before.getVirtualItems()).toBe(oldItems);
+    expect(oldItems[0].index).toBe(0);
   });
 });

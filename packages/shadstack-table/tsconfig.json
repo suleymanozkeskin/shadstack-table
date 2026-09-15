@@ -6,7 +6,8 @@
     "declaration": true,
     "declarationMap": true,
     "noEmit": true,
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "stripInternal": true
   },
   "include": ["src"]
 }

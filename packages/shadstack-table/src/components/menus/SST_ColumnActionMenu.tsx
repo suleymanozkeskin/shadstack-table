@@ -65,8 +65,10 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
     setColumnResizing,
     setShowColumnFilters,
   } = table;
+
   const { column } = header;
   const { columnDef } = column;
+
   const { columnSizing, columnVisibility, density, showColumnFilters } = useSST_TableState(
     table,
     (s) => ({
@@ -81,8 +83,10 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
       sorting: s.sorting,
     }),
   );
+
   const columnFilterValue = column.getFilterValue();
-  const virtualRef = React.useMemo<React.RefObject<HTMLElement | null> | undefined>(
+
+  const virtualRef = React.useMemo<React.RefObject<HTMLElement> | undefined>(
     () => (anchorEl ? { current: anchorEl } : undefined),
     [anchorEl],
   );
@@ -129,6 +133,7 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
   const handleClearFilter = () => {
     column.setFilterValue(undefined);
     setAnchorEl(null);
+
     // oxlint-disable-next-line no-underscore-dangle -- _filterFn is the canonical internal property carried over from upstream MRT/TanStack column def shape
     if (['empty', 'notEmpty'].includes(columnDef._filterFn)) {
       setColumnFilterFns((prev) => ({
@@ -148,6 +153,7 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
     for (const col of getAllLeafColumns()) {
       if (col.columnDef.enableHiding !== false) col.toggleVisibility(true);
     }
+
     setAnchorEl(null);
   };
 
@@ -177,6 +183,7 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
     columnDef.enableFilterByColumnMenuItem !== false &&
     columnFilterDisplayMode === 'subheader';
 
+  // SAFETY: Every entry uses a catalog key below; filtering removes disabled entries.
   const internalColumnMenuItems = [
     ...(enableSorting && column.getCanSort()
       ? [
@@ -331,7 +338,7 @@ export const SST_ColumnActionMenu = <TData extends SST_RowData>({
         if (!open) setAnchorEl(null);
       }}
     >
-      {virtualRef && <PopoverAnchor virtualRef={virtualRef as any} />}
+      {virtualRef && <PopoverAnchor virtualRef={virtualRef} />}
       <PopoverContent
         align="start"
         sideOffset={4}

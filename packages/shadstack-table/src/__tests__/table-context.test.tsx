@@ -1,3 +1,4 @@
+import { useLayoutEffect } from 'react';
 import { memo } from 'react';
 import { act, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -5,16 +6,20 @@ import { ShadStackTable } from '../components/ShadStackTable';
 import { useSST_TableContext } from '../hooks/useSST_TableContext';
 import { useSST_TableState } from '../hooks/useSST_TableState';
 import { useShadStackTable } from '../hooks/useShadStackTable';
-import { type SST_TableInstance } from '../types';
+import { type SST_ColumnDef, type SST_TableInstance } from '../types';
 import { people, personColumns, type Person } from './fixtures';
 
 let capturedTable: SST_TableInstance<Person>;
+
 const identities: SST_TableInstance<Person>[] = [];
 
 const Harness = ({ children }: { children?: React.ReactNode }) => {
   const table = useShadStackTable<Person>({ columns: personColumns, data: people });
-  capturedTable = table;
+  useLayoutEffect(() => {
+    capturedTable = table;
+  });
   identities.push(table);
+
   return (
     <>
       <ShadStackTable table={table} />
@@ -34,27 +39,31 @@ describe('stable table identity and context', () => {
     act(() => capturedTable.setDensity('compact'));
 
     expect(identities.length).toBeGreaterThan(1);
+
     for (const identity of identities) {
       expect(identity).toBe(identities[0]);
     }
+
     //and the stable instance exposes the freshest state — including slices
     //whose writes never re-rendered the host
     expect(identities[0]!.getState().density).toBe('compact');
   });
 
   it('useSST_TableContext reaches the table from a consumer-rendered cell', () => {
-    const columns = [
+    const columns: SST_ColumnDef<Person>[] = [
       {
         accessorKey: 'firstName',
         header: 'First Name',
         Cell: () => {
           const table = useSST_TableContext<Person>();
           const { density } = useSST_TableState(table);
+
           return <span data-testid="ctx-probe">{density}</span>;
         },
       },
     ];
-    render(<ShadStackTable columns={columns as never} data={people.slice(0, 1)} />);
+
+    render(<ShadStackTable columns={columns} data={people.slice(0, 1)} />);
     expect(screen.getAllByTestId('ctx-probe')[0]).toHaveTextContent('comfortable');
   });
 
@@ -68,6 +77,7 @@ describe('stable table identity and context', () => {
         const { density } = useSST_TableState(table, (s) => ({ density: s.density }));
         //options must also be readable live off the stable instance
         const { enableSorting } = table.options;
+
         return (
           <span data-testid="frozen-probe">
             {density}:{String(enableSorting)}
@@ -86,6 +96,7 @@ describe('stable table identity and context', () => {
         data={people}
         renderTopToolbarCustomActions={({ table }) => {
           slotTable = table;
+
           return <Frozen />;
         }}
       />,

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useSyncExternalStore } from 'react';
 import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Button } from '../../_ui/button';
 import { Label } from '../../_ui/label';
@@ -10,24 +10,36 @@ import { parseFromValuesOrFunc } from '../../utils/utils';
 
 const defaultRowsPerPage = [5, 10, 15, 20, 25, 30, 50, 100];
 
-function useDirection() {
-  const [dir, setDir] = React.useState<'ltr' | 'rtl'>('ltr');
-  React.useEffect(() => {
-    if (typeof document === 'undefined') return;
-    setDir(document.documentElement.dir === 'rtl' ? 'rtl' : 'ltr');
-  }, []);
-  return dir;
+function subscribeDirection(onChange: () => void) {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['dir'] });
+
+  return () => observer.disconnect();
+}
+
+const readDirection = () => (document.documentElement.dir === 'rtl' ? 'rtl' : 'ltr');
+
+const readServerDirection = () => 'ltr' as const;
+
+type PageSizeOption = Readonly<{ label: string; value: number }>;
+
+function isPageSizeOption(option: number | PageSizeOption): option is PageSizeOption {
+  return typeof option === 'object';
 }
 
 function getPageRange(currentPage: number, totalPages: number, siblings = 1) {
   const pages: (number | 'ellipsis')[] = [];
   const left = Math.max(1, currentPage - siblings);
   const right = Math.min(totalPages, currentPage + siblings);
+
   if (left > 2) pages.push(1, 'ellipsis');
   else for (let i = 1; i < left; i++) pages.push(i);
+
   for (let i = left; i <= right; i++) pages.push(i);
+
   if (right < totalPages - 1) pages.push('ellipsis', totalPages);
   else for (let i = right + 1; i <= totalPages; i++) pages.push(i);
+
   return pages;
 }
 
@@ -41,7 +53,7 @@ export const SST_TablePagination = <TData extends SST_RowData>({
   table,
   ...rest
 }: SST_TablePaginationProps<TData>) => {
-  const dir = useDirection();
+  const dir = useSyncExternalStore(subscribeDirection, readDirection, readServerDirection);
   const flipStyle = dir === 'rtl' ? { transform: 'scaleX(-1)' } : undefined;
 
   const {
@@ -54,6 +66,7 @@ export const SST_TablePagination = <TData extends SST_RowData>({
       slotProps,
     },
   } = table;
+
   //re-render on pagination itself and whenever the displayed totals change
   //(filtering shrinks the row count without touching `pagination`)
   const {
@@ -80,7 +93,7 @@ export const SST_TablePagination = <TData extends SST_RowData>({
     disabled = false,
     rowsPerPageOptions = defaultRowsPerPage,
     showRowsPerPage = true,
-  } = (paginationProps as any) ?? {};
+  } = paginationProps;
 
   const disableBack = pageIndex <= 0 || disabled;
   const disableNext = lastRowIndex >= totalRowCount || disabled;
@@ -111,9 +124,10 @@ export const SST_TablePagination = <TData extends SST_RowData>({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {rowsPerPageOptions.map((option: any) => {
-                const value = typeof option !== 'number' ? option.value : option;
-                const label = typeof option !== 'number' ? option.label : `${option}`;
+              {rowsPerPageOptions.map((option) => {
+                const value = isPageSizeOption(option) ? option.value : option;
+                const label = isPageSizeOption(option) ? option.label : `${option}`;
+
                 return (
                   <SelectItem key={value} value={String(value)}>
                     {label}

@@ -21,6 +21,7 @@ export const SST_ToggleFiltersButton = <TData extends SST_RowData>({
     },
     setShowColumnFilters,
   } = table;
+
   const { showColumnFilters } = useSST_TableState(table, (s) => ({
     showColumnFilters: s.showColumnFilters,
   }));

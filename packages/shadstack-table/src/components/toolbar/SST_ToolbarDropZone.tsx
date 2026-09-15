@@ -32,7 +32,7 @@ export const SST_ToolbarDropZone = <TData extends SST_RowData>({
   );
 
   const handleDragEnter = (_event: DragEvent<HTMLDivElement>) => {
-    setHoveredColumn({ id: 'drop-zone' });
+    setHoveredColumn({ kind: 'drop-zone' });
   };
 
   const handleDragOver = (e: DragEvent) => {
@@ -62,7 +62,7 @@ export const SST_ToolbarDropZone = <TData extends SST_RowData>({
       className={cn(
         'SST-ToolbarDropZone absolute inset-0 z-[4] flex items-center justify-center backdrop-blur-sm border-2 border-dashed border-primary',
         'animate-in fade-in-0',
-        hoveredColumn?.id === 'drop-zone' ? 'bg-primary/20' : 'bg-primary/10',
+        hoveredColumn?.kind === 'drop-zone' ? 'bg-primary/20' : 'bg-primary/10',
         className,
       )}
       onDragEnter={handleDragEnter}

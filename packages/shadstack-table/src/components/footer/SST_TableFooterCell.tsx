@@ -22,16 +22,20 @@ export const SST_TableFooterCell = <TData extends SST_RowData>({
   ...rest
 }: SST_TableFooterCellProps<TData>) => {
   const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
+
   const {
     options: { enableColumnPinning, enableKeyboardShortcuts, slotProps },
   } = table;
+
   const { density } = useSST_TableState(table, (s) => ({
     density: s.density,
     //getCommonMRTCellStyles reads these for this column's styling
     isDraggingThisColumn: s.draggingColumn?.id === footer.column.id,
-    isHoveredThisColumn: s.hoveredColumn?.id === footer.column.id,
+    isHoveredThisColumn:
+      s.hoveredColumn?.kind === 'column' && s.hoveredColumn.column.id === footer.column.id,
     isColumnPinned: footer.column.getIsPinned(),
   }));
+
   const { column } = footer;
   const { columnDef } = column;
   const { columnDefType } = columnDef;
@@ -40,6 +44,7 @@ export const SST_TableFooterCell = <TData extends SST_RowData>({
     enableColumnPinning && columnDef.columnDefType !== 'group' && column.getIsPinned();
 
   const args = { column, table };
+
   const tableCellProps = {
     ...parseFromValuesOrFunc(slotProps?.tableFooterCell, args),
     ...parseFromValuesOrFunc(columnDef.slotProps?.tableFooterCell, args),
@@ -72,12 +77,12 @@ export const SST_TableFooterCell = <TData extends SST_RowData>({
         fontWeight: 'bold',
         padding,
         verticalAlign: 'top',
-        ...(getCommonMRTCellStyles({
+        ...getCommonMRTCellStyles({
           column,
           header: footer,
           table,
           tableCellProps,
-        }) as React.CSSProperties),
+        }),
         ...tableCellProps?.style,
       }}
       className={cn(className, tableCellProps?.className)}

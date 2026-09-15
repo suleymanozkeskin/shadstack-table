@@ -1,18 +1,17 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 
-const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8')) as {
-  version: string;
-};
+import pkg from './package.json' with { type: 'json' };
 
 const localeEntries = Object.fromEntries(
   readdirSync(resolve(__dirname, 'src/locales'))
     .filter((f) => f.endsWith('.ts'))
     .map((f) => {
       const name = f.replace(/\.ts$/, '');
+
       return [`locales/${name}`, resolve(__dirname, `src/locales/${f}`)];
     }),
 );
@@ -69,6 +68,8 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         external,
         output: {
+          // Declarations and source maps retain API docs. Keep licenses and tree-shaking annotations in JS.
+          comments: { legal: true, annotation: true, jsdoc: false },
           globals: {
             react: 'React',
             'react-dom': 'ReactDOM',

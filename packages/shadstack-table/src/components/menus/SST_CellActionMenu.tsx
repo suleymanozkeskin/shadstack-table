@@ -4,7 +4,7 @@ import { Popover, PopoverAnchor, PopoverContent } from '../../_ui/popover';
 import { SST_ActionMenuItem } from './SST_ActionMenuItem';
 import { cn } from '../../lib/utils';
 import { type SST_RowData, type SST_TableInstance } from '../../types';
-import { openEditingCell } from '../../utils/cell.utils';
+import { openEditingCell, closeCellActionMenu } from '../../utils/cell.utils';
 import { copyToClipboard } from '../../utils/clipboard.utils';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 
@@ -31,21 +31,28 @@ export const SST_CellActionMenu = <TData extends SST_RowData>({
     },
     refs: { actionCellRef },
   } = table;
+
   const { actionCell, density } = useSST_TableState(table, (s) => ({
     actionCell: s.actionCell,
     density: s.density,
   }));
-  const cell = actionCell!;
-  // Invariant: actionCellRef is already a stable RefObject from useSST_TableInstance;
-  // Radix's PopoverAnchor reads `.current` lazily during positioning, so we can hand
-  // the ref through directly instead of synthesizing a wrapper object in a useMemo
-  // whose ref.current dep never triggers React invalidation anyway.
-  const virtualRef = actionCellRef;
 
-  const handleClose = (event?: any) => {
+  const cell = actionCell!;
+
+  // Radix reads the current cell rectangle when it positions the menu.
+  const virtualRef = React.useMemo(
+    () => ({
+      current: {
+        getBoundingClientRect: () =>
+          actionCellRef.current?.getBoundingClientRect() ?? new DOMRect(),
+      },
+    }),
+    [actionCellRef],
+  );
+
+  const handleClose = (event?: React.SyntheticEvent) => {
     event?.stopPropagation();
-    table.setActionCell(null);
-    actionCellRef.current = null;
+    closeCellActionMenu(table);
   };
 
   if (!cell) return null;
@@ -110,7 +117,7 @@ export const SST_CellActionMenu = <TData extends SST_RowData>({
         if (!open) handleClose();
       }}
     >
-      <PopoverAnchor virtualRef={virtualRef as any} />
+      <PopoverAnchor virtualRef={virtualRef} />
       <PopoverContent
         align="start"
         sideOffset={8}

@@ -1,7 +1,7 @@
+import { type SST_EditValues } from './editing';
 import { type ReactNode, type RefObject } from 'react';
 import {
-  type AggregationFnDef,
-  type DeepKeys,
+  type CustomAggregationFns,
   type FilterFn,
   type OnChangeFn,
   type SortFn,
@@ -24,7 +24,7 @@ import { type SST_Localization } from './localization';
 import { type LiteralUnion, type SST_DensityState } from './primitives';
 import { type SST_Row, type SST_RowData } from './row';
 import { type SST_TableSlotProps } from './slots';
-import { type SST_TableState } from './state';
+import { type SST_TableState, type SST_HoveredColumn } from './state';
 import { type SST_Theme } from './theme';
 import { type SST_ColumnVirtualizer, type SST_RowVirtualizer } from './virtualization';
 
@@ -32,6 +32,7 @@ export type SST_DefinedTableOptions<TData extends SST_RowData> = Omit<
   SST_TableOptions<TData>,
   'icons' | 'localization' | 'mrtTheme' | 'theme'
 > & {
+  features: SST_Features;
   icons: SST_Icons;
   localization: SST_Localization;
   theme: Required<SST_Theme>;
@@ -81,7 +82,9 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
   | 'columns'
   | 'data'
   | 'defaultColumn'
+  | 'enableRowPinning'
   | 'enableRowSelection'
+  | 'features'
   | 'expandRowsFn'
   | 'getRowId'
   | 'globalFilterFn'
@@ -97,7 +100,7 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
    * shadstack: entries provided here are merged into the feature set that backs
    * this table.
    */
-  aggregationFns?: Record<string, AggregationFnDef<any, any, any, any>>;
+  aggregationFns?: CustomAggregationFns<SST_Features, TData>;
   columnFilterDisplayMode?: 'custom' | 'popover' | 'subheader';
   columnFilterModeOptions?: Array<LiteralUnion<string & SST_FilterOption>> | null;
   /**
@@ -201,6 +204,7 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
   enableRowDragging?: boolean;
   enableRowNumbers?: boolean;
   enableRowOrdering?: boolean;
+  enableRowPinning?: boolean | ((row: SST_Row<TData>) => boolean);
   enableRowSelection?: ((row: SST_Row<TData>) => boolean) | boolean;
   enableRowVirtualization?: boolean;
   enableSelectAll?: boolean;
@@ -244,12 +248,12 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
    * returning one) — unspecified keys fall back to the shadcn-neutral defaults.
    */
   // TODO: theme-aware styling moved to CSS vars in _ui/styles.css
-  theme?: ((theme: unknown) => Partial<SST_Theme>) | Partial<SST_Theme>;
+  theme?: ((theme: Readonly<SST_Theme>) => Partial<SST_Theme>) | Partial<SST_Theme>;
   /**
    * @deprecated Use `theme` instead. This MRT-era alias is kept for migration
    * compatibility and will be removed in a future major.
    */
-  mrtTheme?: ((theme: unknown) => Partial<SST_Theme>) | Partial<SST_Theme>;
+  mrtTheme?: ((theme: Readonly<SST_Theme>) => Partial<SST_Theme>) | Partial<SST_Theme>;
   slotProps?: SST_TableSlotProps<TData>;
   onActionCellChange?: OnChangeFn<SST_Cell<TData> | null>;
   onColumnFilterFnsChange?: OnChangeFn<{ [key: string]: SST_FilterOption }>;
@@ -278,7 +282,7 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
     exitCreatingMode: () => void;
     row: SST_Row<TData>;
     table: SST_TableInstance<TData>;
-    values: Record<LiteralUnion<string & DeepKeys<TData>>, any>;
+    values: SST_EditValues;
   }) => Promise<void> | void;
   onDensityChange?: OnChangeFn<SST_DensityState>;
   onDraggingColumnChange?: OnChangeFn<SST_Column<TData> | null>;
@@ -290,11 +294,11 @@ export interface SST_TableOptions<TData extends SST_RowData> extends Omit<
     exitEditingMode: () => void;
     row: SST_Row<TData>;
     table: SST_TableInstance<TData>;
-    values: Record<LiteralUnion<string & DeepKeys<TData>>, any>;
+    values: SST_EditValues;
   }) => Promise<void> | void;
   onGlobalFilterFnChange?: OnChangeFn<SST_FilterOption>;
-  onHoveredColumnChange?: OnChangeFn<Partial<SST_Column<TData>> | null>;
-  onHoveredRowChange?: OnChangeFn<Partial<SST_Row<TData>> | null>;
+  onHoveredColumnChange?: OnChangeFn<SST_HoveredColumn<TData>>;
+  onHoveredRowChange?: OnChangeFn<SST_Row<TData> | null>;
   onIsFullScreenChange?: OnChangeFn<boolean>;
   onShowAlertBannerChange?: OnChangeFn<boolean>;
   onShowColumnFiltersChange?: OnChangeFn<boolean>;

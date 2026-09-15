@@ -28,6 +28,7 @@ export const SST_ExpandAllButton = <TData extends SST_RowData>({
     },
     toggleAllRowsExpanded,
   } = table;
+
   const { density, isLoading } = useSST_TableState(table, (s) => ({
     density: s.density,
     isLoading: s.isLoading,
@@ -52,14 +53,10 @@ export const SST_ExpandAllButton = <TData extends SST_RowData>({
             aria-label={localization.expandAll}
             disabled={isLoading || (!renderDetailPanel && !getCanSomeRowsExpand())}
             onClick={() => toggleAllRowsExpanded(!isAllRowsExpanded)}
-            size="icon"
+            size={density === 'compact' ? 'icon-sm' : 'icon-lg'}
             variant="ghost"
             {...iconButtonProps}
-            className={cn(
-              density === 'compact' ? 'h-7 w-7' : 'h-9 w-9',
-              density !== 'compact' && '-mt-1',
-              iconButtonProps?.className,
-            )}
+            className={cn(density !== 'compact' && '-mt-1', iconButtonProps?.className)}
             title={undefined}
           >
             {iconButtonProps?.children ?? (

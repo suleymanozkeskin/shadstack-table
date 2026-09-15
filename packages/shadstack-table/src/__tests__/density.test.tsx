@@ -8,6 +8,7 @@ import { people, personColumns } from './fixtures';
 
 function Harness({ initialDensity }: { initialDensity: SST_DensityState }) {
   const [density, setDensity] = useState<SST_DensityState>(initialDensity);
+
   return (
     <>
       <ShadStackTable

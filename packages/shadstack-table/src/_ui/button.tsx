@@ -22,6 +22,36 @@ const buttonVariants = cva(
         sm: 'h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5',
         lg: 'h-10 rounded-md px-6 has-[>svg]:px-4',
         icon: 'size-8',
+        'icon-xs': 'size-6',
+        'icon-sm': 'size-7',
+        'icon-lg': 'size-9',
+        action: 'h-9 min-w-[100px] px-4 py-2 has-[>svg]:px-3',
+      },
+      purpose: {
+        default: '',
+        'row-action': 'opacity-60 transition-opacity duration-150 hover:opacity-100',
+        'column-action': 'opacity-50 transition-opacity duration-150 hover:opacity-100',
+        'filter-indicator': 'h-4 w-4 p-2 transition-all duration-150 ease-in-out scale-75',
+        field:
+          'h-9 justify-start gap-2 text-left font-normal data-[empty=true]:text-muted-foreground',
+        'range-field':
+          'flex h-9 items-center justify-between gap-2 px-3 font-normal data-[empty=true]:text-muted-foreground',
+        grip: 'cursor-grab active:cursor-grabbing transition-all duration-150 ease-in-out p-0.5 hover:bg-transparent',
+        copy: 'h-auto min-w-0 px-1 py-0 bg-transparent border-none text-inherit font-[inherit] text-[length:inherit] tracking-[inherit] text-left normal-case cursor-copy hover:bg-transparent',
+      },
+      emphasis: {
+        normal: '',
+        faint: 'opacity-30',
+        subtle: 'opacity-50 hover:opacity-100',
+      },
+      leadingSpace: {
+        none: '',
+        reserved: 'pl-9',
+      },
+      trailingSpace: {
+        none: '',
+        clear: 'pr-9',
+        'select-clear': 'pr-14',
       },
     },
     defaultVariants: {
@@ -35,6 +65,10 @@ function Button({
   className,
   variant,
   size,
+  purpose,
+  emphasis,
+  leadingSpace,
+  trailingSpace,
   asChild = false,
   ...props
 }: React.ComponentProps<'button'> &
@@ -46,7 +80,17 @@ function Button({
   return (
     <Comp
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(
+        buttonVariants({
+          variant,
+          size,
+          purpose,
+          emphasis,
+          leadingSpace,
+          trailingSpace,
+          className,
+        }),
+      )}
       {...props}
     />
   );

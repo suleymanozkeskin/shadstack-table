@@ -1,3 +1,5 @@
+import { getDefaultCellValue } from '../../utils/cell-display';
+import { flexRender } from '../../utils/tanstack.helpers';
 import * as React from 'react';
 import {
   type DragEvent,
@@ -42,6 +44,7 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
   ...rest
 }: SST_TableBodyCellProps<TData>) => {
   const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
+
   const {
     options: {
       columnResizeDirection,
@@ -60,6 +63,7 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
     },
     setHoveredColumn,
   } = table;
+
   //Per-cell projections: the cell re-renders only when a value that affects
   //THIS cell changes. Dragging, hovering, resizing, or editing elsewhere in
   //the table leaves it untouched. Event handlers below read table.getState()
@@ -86,17 +90,20 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
     isDraggingThisRow: s.draggingRow?.id === cell.row.id,
     isEditingThisCell: s.editingCell?.id === cell.id,
     isEditingThisRow: s.editingRow?.id === cell.row.id,
-    isHoveredThisColumn: s.hoveredColumn?.id === cell.column.id,
+    isHoveredThisColumn:
+      s.hoveredColumn?.kind === 'column' && s.hoveredColumn.column.id === cell.column.id,
     isHoveredThisRow: s.hoveredRow?.id === cell.row.id,
     isLoading: s.isLoading,
     isResizingThisColumn: s.columnResizing.isResizingColumn === cell.column.id,
     showSkeletons: s.showSkeletons,
   }));
+
   const { column, row } = cell;
   const { columnDef } = column;
   const { columnDefType } = columnDef;
 
   const args = { cell, column, row, table };
+
   const tableCellProps = {
     ...parseFromValuesOrFunc(slotProps?.tableBodyCell, args),
     ...parseFromValuesOrFunc(columnDef.slotProps?.tableBodyCell, args),
@@ -186,7 +193,7 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
 
   const isEditing =
     isEditable &&
-    !['custom', 'modal'].includes(editDisplayMode as string) &&
+    !['custom', 'modal'].includes(editDisplayMode ?? '') &&
     (editDisplayMode === 'table' || isEditingThisRow || isEditingThisCell) &&
     !row.getIsGrouped();
 
@@ -219,11 +226,15 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
     //live reads: a drag can pass over this cell without any of its
     //subscribed projections having changed since its last render
     const { draggingColumn, hoveredColumn } = table.getState();
-    if (enableGrouping && hoveredColumn?.id === 'drop-zone') {
+
+    if (enableGrouping && hoveredColumn?.kind === 'drop-zone') {
       setHoveredColumn(null);
     }
+
     if (enableColumnOrdering && draggingColumn) {
-      setHoveredColumn(columnDef.enableColumnOrdering !== false ? column : null);
+      setHoveredColumn(
+        columnDef.enableColumnOrdering !== false ? { kind: 'column', column } : null,
+      );
     }
   };
 
@@ -235,6 +246,7 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
 
   const handleContextMenu = (e: MouseEvent<HTMLTableCellElement>) => {
     tableCellProps?.onContextMenu?.(e);
+
     if (isRightClickable) {
       e.preventDefault();
       table.setActionCell(cell);
@@ -292,11 +304,11 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
         padding,
         textOverflow: columnDefType !== 'display' ? 'ellipsis' : undefined,
         whiteSpace: row.getIsPinned() || density === 'compact' ? 'nowrap' : 'normal',
-        ...(getCommonMRTCellStyles({
+        ...getCommonMRTCellStyles({
           column,
           table,
           tableCellProps,
-        }) as React.CSSProperties),
+        }),
         ...draggingBorders,
         ...tableCellProps?.style,
       }}
@@ -316,10 +328,10 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
           ) : columnDefType === 'display' &&
             (['sst-row-expand', 'sst-row-numbers', 'sst-row-select'].includes(column.id) ||
               !row.getIsGrouped()) ? (
-            columnDef.Cell?.({
+            flexRender(columnDef.Cell, {
               cell,
               column,
-              renderedCellValue: cell.renderValue() as any,
+              renderedCellValue: getDefaultCellValue(cell.renderValue()),
               row,
               rowRef,
               staticColumnIndex,
@@ -342,6 +354,7 @@ export const SST_TableBodyCell = <TData extends SST_RowData>({
   );
 };
 
+// SAFETY: React.memo preserves the wrapped component props and its row-data generic.
 export const Memo_SST_TableBodyCell = memo(
   SST_TableBodyCell,
   (prev, next) => next.cell === prev.cell,

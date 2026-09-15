@@ -1,3 +1,4 @@
+import { useSST_ElementWidth } from '../../hooks/useSST_ElementWidth';
 import * as React from 'react';
 import { Fragment, useMemo } from 'react';
 import { useSST_TableState } from '../../hooks/useSST_TableState';
@@ -39,6 +40,7 @@ export const SST_ToolbarAlertBanner = <TData extends SST_RowData>({
     },
     refs: { tablePaperRef },
   } = table;
+
   const { density, grouping, rowSelection, showAlertBanner } = useSST_TableState(table, (s) => ({
     density: s.density,
     grouping: s.grouping,
@@ -121,15 +123,15 @@ export const SST_ToolbarAlertBanner = <TData extends SST_RowData>({
           ? '0.5rem 0.75rem'
           : '0.25rem 0.5rem';
 
+  const paperWidth = useSST_ElementWidth(tablePaperRef);
+
   return (
     <Collapsible open={open}>
       <CollapsibleContent>
         <Alert
           {...alertProps}
           style={{
-            maxWidth: tablePaperRef.current?.clientWidth
-              ? `calc(${tablePaperRef.current.clientWidth}px - 1rem)`
-              : undefined,
+            maxWidth: paperWidth ? `calc(${paperWidth}px - 1rem)` : undefined,
             ...alertProps?.style,
           }}
           className={cn(
@@ -145,9 +147,9 @@ export const SST_ToolbarAlertBanner = <TData extends SST_RowData>({
             table,
           }) ?? (
             <>
-              {alertProps?.title && <AlertTitle>{alertProps.title as React.ReactNode}</AlertTitle>}
+              {alertProps?.title && <AlertTitle>{alertProps.title}</AlertTitle>}
               <div className="col-start-1 col-end-[-1] flex flex-col min-w-0" style={{ padding }}>
-                {alertProps?.children as React.ReactNode}
+                {alertProps?.children}
                 {alertProps?.children && (selectedAlert || groupedAlert) && <br />}
                 <div className="flex items-center min-w-0">
                   {enableRowSelection &&

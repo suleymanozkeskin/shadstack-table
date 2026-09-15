@@ -3,7 +3,31 @@
 # Mirrors uv's `exclude-newer` / Dependabot's `cooldown.default-days`.
 # 7 days = 7 * 24 * 60 * 60 seconds.
 minimumReleaseAge = 604800
-# Scoped exception for the TanStack Table v9 port. `table-core` is an exact
-# pin from `react-table`, so both must be listed for the resolution to
-# complete. Remove both entries once the pinned version clears the cooldown.
-minimumReleaseAgeExcludes = ["@tanstack/react-table", "@tanstack/table-core"]
+# Package-specific exceptions for the selected Table and lint versions.
+# Other packages keep the seven-day cooldown.
+minimumReleaseAgeExcludes = [
+  "@tanstack/react-table",
+  "@tanstack/table-core",
+  "@shadcn/lint",
+  "oxlint",
+  "@oxlint/plugins",
+  "@oxlint/binding-darwin-x64",
+  "@oxlint/binding-freebsd-x64",
+  "@oxlint/binding-darwin-arm64",
+  "@oxlint/binding-android-arm64",
+  "@oxlint/binding-linux-x64-gnu",
+  "@oxlint/binding-linux-x64-musl",
+  "@oxlint/binding-win32-x64-msvc",
+  "@oxlint/binding-linux-arm64-gnu",
+  "@oxlint/binding-linux-ppc64-gnu",
+  "@oxlint/binding-linux-s390x-gnu",
+  "@oxlint/binding-win32-ia32-msvc",
+  "@oxlint/binding-android-arm-eabi",
+  "@oxlint/binding-linux-arm64-musl",
+  "@oxlint/binding-win32-arm64-msvc",
+  "@oxlint/binding-linux-riscv64-gnu",
+  "@oxlint/binding-openharmony-arm64",
+  "@oxlint/binding-linux-riscv64-musl",
+  "@oxlint/binding-linux-arm-gnueabihf",
+  "@oxlint/binding-linux-arm-musleabihf",
+]

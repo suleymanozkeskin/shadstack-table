@@ -10,6 +10,7 @@ export const useSST_Rows = <TData extends SST_RowData>(
     getRowModel,
     options: { data, enableGlobalFilterRankedResults, positionCreatingRow },
   } = table;
+
   const { creatingRow, expanded, globalFilter, pagination, rowPinning, sorting } =
     useSST_TableState(table, (s) => ({
       creatingRow: s.creatingRow,

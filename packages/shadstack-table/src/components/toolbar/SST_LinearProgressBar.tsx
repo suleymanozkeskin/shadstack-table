@@ -22,6 +22,7 @@ export const SST_LinearProgressBar = <TData extends SST_RowData>({
   const {
     options: { slotProps },
   } = table;
+
   const { isSaving, showProgressBars } = useSST_TableState(table, (s) => ({
     isSaving: s.isSaving,
     showProgressBars: s.showProgressBars,

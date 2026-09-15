@@ -12,9 +12,11 @@ import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
 const here = dirname(fileURLToPath(import.meta.url));
+
 const requireFn = createRequire(import.meta.url);
 
 const failures = [];
+
 const check = (label, fn) => {
   try {
     fn();
@@ -36,10 +38,12 @@ const checkAsync = async (label, fn) => {
 };
 
 let checkCount = 0;
+
 const counted = (label, fn) => {
   checkCount += 1;
   check(label, fn);
 };
+
 const countedAsync = async (label, fn) => {
   checkCount += 1;
   await checkAsync(label, fn);
@@ -92,10 +96,7 @@ for (const { path, exportName, language } of localeCases) {
     );
     const locale = mod[exportName];
     assert.equal(locale.language, language, 'language mismatch');
-    assert.ok(
-      typeof locale.actions === 'string' && locale.actions.length > 0,
-      `expected non-empty 'actions' string`,
-    );
+    assert.match(locale.actions, /./s, "expected a non-empty 'actions' string");
   });
 }
 
@@ -133,6 +134,7 @@ counted('tsc --noEmit (types condition + bundler resolution)', () => {
     cwd: here,
     encoding: 'utf-8',
   });
+
   if (result.status !== 0) {
     throw new Error(
       `tsc exited ${result.status}\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
@@ -160,6 +162,7 @@ counted('npm pack --dry-run shape', () => {
     ],
     { encoding: 'utf-8' },
   );
+
   if (result.status !== 0) {
     throw new Error(`npm pack failed: ${result.stderr}`);
   }
@@ -208,9 +211,13 @@ const gzipLen = (path) => gzipSync(readFileSync(path)).length;
 // across 46 components). The headroom above the current ~60.0k is kept
 // deliberately tight so accidental bloat still trips the gate.
 const ESM_GZIP_BUDGET = 61_000;
+
 const CJS_GZIP_BUDGET = 63_000;
+
 const CSS_GZIP_BUDGET = 3_000;
+
 const LOCALE_GZIP_BUDGET = 3_000;
+
 const LOCALE_DIR_RAW_BUDGET = 220_000;
 
 counted(`dist/index.js gzip <= ${ESM_GZIP_BUDGET} bytes`, () => {
@@ -242,12 +249,15 @@ counted(`dist/locales/*.js per-file gzip <= ${LOCALE_GZIP_BUDGET} bytes`, () => 
   const files = readdirSync(localesDir).filter((f) => f.endsWith('.js'));
   assert.ok(files.length >= 39, `expected >=39 locale .js files, got ${files.length}`);
   let worst = { file: '', size: 0 };
+
   for (const file of files) {
     const size = gzipLen(joinPath(localesDir, file));
+
     if (size > worst.size) {
       worst = { file, size };
     }
   }
+
   assert.ok(
     worst.size <= LOCALE_GZIP_BUDGET,
     `${worst.file} is ${worst.size} bytes gzip; per-locale budget is ${LOCALE_GZIP_BUDGET}`,
@@ -258,9 +268,11 @@ counted(`dist/locales/*.js total raw size <= ${LOCALE_DIR_RAW_BUDGET} bytes`, ()
   const localesDir = joinPath(distRoot, 'locales');
   const files = readdirSync(localesDir).filter((f) => f.endsWith('.js'));
   let total = 0;
+
   for (const file of files) {
     total += statSync(joinPath(localesDir, file)).size;
   }
+
   assert.ok(
     total <= LOCALE_DIR_RAW_BUDGET,
     `dist/locales/*.js total is ${total} raw bytes; budget is ${LOCALE_DIR_RAW_BUDGET}`,
@@ -270,8 +282,10 @@ counted(`dist/locales/*.js total raw size <= ${LOCALE_DIR_RAW_BUDGET} bytes`, ()
 // --- summary -----------------------------------------------------------------
 
 console.log('');
+
 if (failures.length > 0) {
   console.error(`FAILED: ${failures.length} of ${checkCount} check(s) failed`);
   process.exit(1);
 }
+
 console.log(`PASSED: ${checkCount} check(s)`);

@@ -3,11 +3,9 @@ import { SST_TableFooterCell } from './SST_TableFooterCell';
 import { cn } from '../../lib/utils';
 import {
   type SST_ColumnVirtualizer,
-  type SST_Header,
   type SST_HeaderGroup,
   type SST_RowData,
   type SST_TableInstance,
-  type SST_VirtualItem,
 } from '../../types';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 
@@ -38,9 +36,7 @@ export const SST_TableFooterRow = <TData extends SST_RowData>({
 
   if (
     !footerGroup.headers?.some(
-      (header) =>
-        (typeof header.column.columnDef.footer === 'string' && !!header.column.columnDef.footer) ||
-        header.column.columnDef.Footer,
+      (header) => !!header.column.columnDef.footer || header.column.columnDef.Footer,
     )
   ) {
     return null;
@@ -66,13 +62,14 @@ export const SST_TableFooterRow = <TData extends SST_RowData>({
       }}
       className={cn('relative', isGrid && 'flex', className, tableRowProps?.className)}
     >
-      {virtualPaddingLeft ? <th style={{ display: 'flex', width: virtualPaddingLeft }} /> : null}
-      {(virtualColumns ?? footerGroup.headers).map((footerOrVirtualFooter, staticColumnIndex) => {
-        let footer = footerOrVirtualFooter as SST_Header<TData>;
-        if (columnVirtualizer) {
-          staticColumnIndex = (footerOrVirtualFooter as SST_VirtualItem).index;
-          footer = footerGroup.headers[staticColumnIndex];
-        }
+      {virtualPaddingLeft ? (
+        <th aria-hidden="true" style={{ display: 'flex', width: virtualPaddingLeft }} />
+      ) : null}
+      {(
+        virtualColumns?.map((column) => column.index) ??
+        footerGroup.headers.map((_, index) => index)
+      ).map((staticColumnIndex) => {
+        const footer = footerGroup.headers[staticColumnIndex];
 
         return footer ? (
           <SST_TableFooterCell
@@ -83,7 +80,9 @@ export const SST_TableFooterRow = <TData extends SST_RowData>({
           />
         ) : null;
       })}
-      {virtualPaddingRight ? <th style={{ display: 'flex', width: virtualPaddingRight }} /> : null}
+      {virtualPaddingRight ? (
+        <th aria-hidden="true" style={{ display: 'flex', width: virtualPaddingRight }} />
+      ) : null}
     </tr>
   );
 };

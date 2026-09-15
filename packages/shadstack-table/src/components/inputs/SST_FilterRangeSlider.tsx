@@ -1,5 +1,9 @@
+import { setElementRef } from '../../utils/refs';
+import { getFilterLabel } from '../../utils/filter-labels';
 import * as React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
+import { composeRefs } from '@radix-ui/react-compose-refs';
+import { isNumericFilterRange } from '../../utils/filter-input';
 import { Slider } from '../../_ui/slider';
 import { cn } from '../../lib/utils';
 import { type SST_Header, type SST_RowData, type SST_TableInstance } from '../../types';
@@ -22,6 +26,7 @@ export const SST_FilterRangeSlider = <TData extends SST_RowData>({
     options: { enableColumnFilterModes, localization, slotProps },
     refs: { filterInputRefs },
   } = table;
+
   const { column } = header;
   const { columnDef } = column;
 
@@ -37,21 +42,24 @@ export const SST_FilterRangeSlider = <TData extends SST_RowData>({
     ...rest,
   };
 
-  let [min, max] =
+  const [min, max] =
     sliderProps.min !== undefined && sliderProps.max !== undefined
       ? [sliderProps.min, sliderProps.max]
       : (column.getFacetedMinMaxValues() ?? [0, 1]);
 
-  //fix potential TanStack Table bugs where min or max is an array
-  if (Array.isArray(min)) min = min[0];
-  if (Array.isArray(max)) max = max[0];
-  if (min === null) min = 0;
-  if (max === null) max = 1;
-
-  const [filterValues, setFilterValues] = useState<number[]>([min, max]);
   const columnFilterValue = column.getFilterValue();
+  const supported = columnFilterValue === undefined || isNumericFilterRange(columnFilterValue);
 
-  const isMounted = useRef(false);
+  const [filterValues, setFilterValues] = useState<number[]>(() =>
+    isNumericFilterRange(columnFilterValue) ? columnFilterValue : [min, max],
+  );
+
+  const [previous, setPrevious] = useState({ value: columnFilterValue, min, max });
+
+  if (previous.value !== columnFilterValue || previous.min !== min || previous.max !== max) {
+    setPrevious({ value: columnFilterValue, min, max });
+    setFilterValues(isNumericFilterRange(columnFilterValue) ? columnFilterValue : [min, max]);
+  }
 
   // prevent moving the focus to the next/prev cell when using the arrow keys
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -60,25 +68,22 @@ export const SST_FilterRangeSlider = <TData extends SST_RowData>({
     }
   };
 
-  useEffect(() => {
-    if (isMounted.current) {
-      if (columnFilterValue === undefined) {
-        setFilterValues([min, max]);
-      } else if (Array.isArray(columnFilterValue)) {
-        setFilterValues(columnFilterValue);
-      }
-    }
-    isMounted.current = true;
-  }, [columnFilterValue, min, max]);
-
   const handleValueCommit = (value: number[]) => {
     if (value[0] <= min && value[1] >= max) {
       // entire range selected → clear filter
       column.setFilterValue(undefined);
     } else {
-      column.setFilterValue(value as [number, number]);
+      column.setFilterValue(value);
     }
   };
+
+  if (!supported) {
+    return (
+      <p role="alert">
+        The range slider requires two finite numbers. Use a custom Filter for this value.
+      </p>
+    );
+  }
 
   return (
     <div className="flex flex-col">
@@ -89,14 +94,11 @@ export const SST_FilterRangeSlider = <TData extends SST_RowData>({
         onKeyDown={handleKeyDown}
         onValueChange={(values) => setFilterValues(values)}
         onValueCommit={handleValueCommit}
-        ref={(node) => {
-          if (node) {
-            // Radix Slider Root is a span; we keep a reference for focus management
-            filterInputRefs.current![`${column.id}-0`] = node as unknown as HTMLInputElement;
-          }
-        }}
         value={filterValues}
         {...sliderProps}
+        ref={composeRefs(sliderProps.ref, (node) => {
+          setElementRef(filterInputRefs, `${column.id}-0`, node);
+        })}
         className={cn(
           'mx-auto px-1',
           showChangeModeButton ? 'mt-1.5' : 'mt-2.5',
@@ -113,11 +115,7 @@ export const SST_FilterRangeSlider = <TData extends SST_RowData>({
         <p className="text-xs leading-[0.8rem] m-[-3px_-6px] whitespace-nowrap text-muted-foreground">
           {localization.filterMode.replace(
             '{filterType}',
-            localization[
-              `filter${
-                currentFilterOption?.charAt(0)?.toUpperCase() + currentFilterOption?.slice(1)
-              }` as keyof typeof localization
-            ] ?? '',
+            getFilterLabel(localization, currentFilterOption) ?? '',
           )}
         </p>
       ) : null}

@@ -36,16 +36,14 @@ export const SST_GrabHandleButton = <TData extends SST_RowData>({
           draggable="true"
           size="icon"
           variant="ghost"
+          purpose="grip"
+          emphasis={location === 'row' ? 'normal' : 'subtle'}
           {...rest}
           onClick={(e) => {
             e.stopPropagation();
             rest?.onClick?.(e);
           }}
-          className={cn(
-            'cursor-grab active:cursor-grabbing transition-all duration-150 ease-in-out -mx-0.5 p-0.5 hover:bg-transparent',
-            location === 'row' ? 'opacity-100' : 'opacity-50 hover:opacity-100',
-            className,
-          )}
+          className={cn('-mx-0.5', className)}
           title={undefined}
         >
           <DragHandleIcon />

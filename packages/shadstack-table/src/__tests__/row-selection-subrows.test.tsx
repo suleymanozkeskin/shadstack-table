@@ -6,22 +6,16 @@ import { ShadStackTable } from '../components/ShadStackTable';
 import { type SST_RowSelectionState } from '../types';
 import { type NestedPerson, nestedPeople, personColumns } from './fixtures';
 
-/**
- * Sub-row selection cascade.
- *
- * The cascade itself lives in TanStack — `toggleSelected` applies it when
- * `opts.selectChildren` is unset, which shadstack never passes — while
- * `utils/row.utils.ts` separately clears children when all of them were
- * selected. These tests pin the observable result of that pairing, which no
- * other test in the suite exercises.
- */
+/** TanStack applies parent selection changes to selectable children. */
 function Harness({ selectAllMode }: { selectAllMode?: 'all' | 'page' } = {}) {
   const [rowSelection, setRowSelection] = useState<SST_RowSelectionState>({});
+
   return (
     <>
       <ShadStackTable<NestedPerson>
         columns={personColumns}
         data={nestedPeople}
+        getSubRows={(row) => row.subRows}
         enableExpanding
         enableRowSelection
         getRowId={(row) => row.id}
@@ -42,6 +36,27 @@ describe('ShadStackTable — sub-row selection', () => {
     render(<Harness />);
     // 2 parents + 4 children
     expect(screen.getAllByRole('checkbox', { name: /toggle select row/i })).toHaveLength(6);
+  });
+
+  it('selects and clears an uncontrolled parent and its children', async () => {
+    const user = userEvent.setup();
+    render(
+      <ShadStackTable<NestedPerson>
+        columns={personColumns}
+        data={nestedPeople}
+        getSubRows={(row) => row.subRows}
+        enableExpanding
+        enableRowSelection
+        initialState={{ expanded: true }}
+      />,
+    );
+    const boxes = screen.getAllByRole('checkbox', { name: /toggle select row/i });
+    await user.click(boxes[0]);
+
+    for (const box of boxes.slice(0, 3)) expect(box).toHaveAttribute('data-state', 'checked');
+    await user.click(boxes[0]);
+
+    for (const box of boxes.slice(0, 3)) expect(box).toHaveAttribute('data-state', 'unchecked');
   });
 
   it('selecting a parent also selects its children', async () => {
@@ -71,6 +86,7 @@ describe('ShadStackTable — sub-row selection', () => {
     await user.click(rowCheckboxes[0]);
 
     const state = selectionState();
+
     for (const id of ['n001', 'n001a', 'n001b']) {
       expect(state === '{}' || !state.includes(`"${id}":true`)).toBe(true);
     }
@@ -97,6 +113,7 @@ describe('ShadStackTable — sub-row selection', () => {
     await user.click(screen.getByRole('checkbox', { name: /toggle select all/i }));
 
     const state = selectionState();
+
     for (const id of ['n001', 'n001a', 'n001b', 'n002', 'n002a', 'n002b']) {
       expect(state).toContain(`"${id}":true`);
     }

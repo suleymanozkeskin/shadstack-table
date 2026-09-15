@@ -5,19 +5,20 @@ export const parseFromValuesOrFunc = <T, U>(
   arg: U,
 ): T | undefined => (fn instanceof Function ? fn(arg) : fn);
 
-export const getValueAndLabel = (
-  option?: DropdownOption | null,
-): { label: string; value: string } => {
-  let label: string = '';
-  let value: string = '';
-  if (option) {
-    if (typeof option !== 'object') {
-      label = option;
-      value = option;
-    } else {
-      label = option.label ?? option.value;
-      value = option.value ?? label;
-    }
+type DropdownValue = Readonly<{ label: string; value: string }>;
+
+const isDropdownRecord = (option: DropdownOption): option is Exclude<DropdownOption, string> =>
+  typeof option === 'object';
+
+/** Converts a dropdown option to the strings required by a Select control. */
+export const getValueAndLabel = (option?: DropdownOption | null): DropdownValue => {
+  if (!option) return { label: '', value: '' };
+
+  if (isDropdownRecord(option)) {
+    const value = String(option.value);
+
+    return { label: option.label ?? value, value };
   }
-  return { label, value };
+
+  return { label: option, value: option };
 };

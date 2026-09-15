@@ -1,3 +1,4 @@
+import { composeRefs } from '@radix-ui/react-compose-refs';
 import * as React from 'react';
 import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { SST_TableHeadRow } from './SST_TableHeadRow';
@@ -23,6 +24,7 @@ export const SST_TableHead = <TData extends SST_RowData>({
     options: { enableStickyHeader, layoutMode, positionToolbarAlertBanner, slotProps },
     refs: { tableHeadRef },
   } = table;
+
   //getHeaderGroups() derives from column order/pinning/visibility/grouping;
   //nothing above the head subscribes to columnOrder or columnPinning, so the
   //head owns them
@@ -48,10 +50,7 @@ export const SST_TableHead = <TData extends SST_RowData>({
   return (
     <thead
       {...tableHeadProps}
-      ref={(ref: HTMLTableSectionElement | null) => {
-        tableHeadRef.current = ref!;
-        if (typeof tableHeadProps?.ref === 'function') tableHeadProps.ref(ref!);
-      }}
+      ref={composeRefs(tableHeadRef, tableHeadProps.ref)}
       className={cn(
         'bg-card',
         isGrid && 'grid',
@@ -76,7 +75,7 @@ export const SST_TableHead = <TData extends SST_RowData>({
           .map((headerGroup) => (
             <SST_TableHeadRow
               columnVirtualizer={columnVirtualizer}
-              headerGroup={headerGroup as any}
+              headerGroup={headerGroup}
               key={headerGroup.id}
               table={table}
             />

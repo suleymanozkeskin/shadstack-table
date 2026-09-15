@@ -12,31 +12,33 @@ afterEach(() => {
 // happy-dom lacks IntersectionObserver — SST_* virtualization paths
 // touch it indirectly. A no-op stub is enough for unit tests; the real
 // virtualization behavior belongs in a Playwright pass.
-class IntersectionObserverMock {
+class IntersectionObserverMock implements IntersectionObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
-  takeRecords() {
+  takeRecords(): IntersectionObserverEntry[] {
     return [];
   }
   root = null;
   rootMargin = '';
+  scrollMargin = '';
+  delay = 0;
+  trackVisibility = false;
   thresholds = [];
 }
 
 if (typeof globalThis.IntersectionObserver === 'undefined') {
-  globalThis.IntersectionObserver =
-    IntersectionObserverMock as unknown as typeof IntersectionObserver;
+  globalThis.IntersectionObserver = IntersectionObserverMock;
 }
 
 // happy-dom lacks ResizeObserver — needed by Radix popovers/menus used in
 // column-actions, density toggle, and filter menus.
-class ResizeObserverMock {
+class ResizeObserverMock implements ResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
 }
 
 if (typeof globalThis.ResizeObserver === 'undefined') {
-  globalThis.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
+  globalThis.ResizeObserver = ResizeObserverMock;
 }

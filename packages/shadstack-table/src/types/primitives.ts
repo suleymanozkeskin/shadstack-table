@@ -11,7 +11,7 @@ export type Xor<A, B> =
 export type DropdownOption =
   | {
       label?: string;
-      value: any;
+      value: string | number;
     }
   | string;
 

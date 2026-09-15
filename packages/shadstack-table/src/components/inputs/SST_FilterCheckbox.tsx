@@ -23,6 +23,7 @@ export const SST_FilterCheckbox = <TData extends SST_RowData>({
   const {
     options: { localization, slotProps },
   } = table;
+
   const { density } = useSST_TableState(table, (s) => ({ density: s.density }));
   const { columnDef } = column;
 
@@ -41,6 +42,7 @@ export const SST_FilterCheckbox = <TData extends SST_RowData>({
   const filterLabel = localization.filterByColumn?.replace('{column}', columnDef.header);
 
   const filterValue = column.getFilterValue();
+
   const checked: boolean | 'indeterminate' =
     filterValue === undefined ? 'indeterminate' : filterValue === 'true';
 

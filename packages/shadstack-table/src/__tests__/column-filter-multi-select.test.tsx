@@ -96,7 +96,7 @@ describe('ShadStackTable — multi-select filter', () => {
     // Each filterable column renders its own "Clear filter" button; only the
     // one for the multi-select column is enabled because it has a value.
     const clearButtons = screen.getAllByRole('button', { name: /clear filter/i });
-    const enabledClear = clearButtons.find((b) => !(b as HTMLButtonElement).disabled);
+    const enabledClear = clearButtons.find((b) => !b.hasAttribute('disabled'));
     expect(enabledClear).toBeDefined();
     await user.click(enabledClear!);
 

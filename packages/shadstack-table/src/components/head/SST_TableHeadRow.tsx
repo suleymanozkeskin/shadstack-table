@@ -3,11 +3,9 @@ import { SST_TableHeadCell } from './SST_TableHeadCell';
 import { cn } from '../../lib/utils';
 import {
   type SST_ColumnVirtualizer,
-  type SST_Header,
   type SST_HeaderGroup,
   type SST_RowData,
   type SST_TableInstance,
-  type SST_VirtualItem,
 } from '../../types';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 
@@ -63,13 +61,14 @@ export const SST_TableHeadRow = <TData extends SST_RowData>({
         tableRowProps?.className,
       )}
     >
-      {virtualPaddingLeft ? <th style={{ display: 'flex', width: virtualPaddingLeft }} /> : null}
-      {(virtualColumns ?? headerGroup.headers).map((headerOrVirtualHeader, staticColumnIndex) => {
-        let header = headerOrVirtualHeader as SST_Header<TData>;
-        if (columnVirtualizer) {
-          staticColumnIndex = (headerOrVirtualHeader as SST_VirtualItem).index;
-          header = headerGroup.headers[staticColumnIndex];
-        }
+      {virtualPaddingLeft ? (
+        <th aria-hidden="true" style={{ display: 'flex', width: virtualPaddingLeft }} />
+      ) : null}
+      {(
+        virtualColumns?.map((column) => column.index) ??
+        headerGroup.headers.map((_, index) => index)
+      ).map((staticColumnIndex) => {
+        const header = headerGroup.headers[staticColumnIndex];
 
         return header ? (
           <SST_TableHeadCell
@@ -81,7 +80,9 @@ export const SST_TableHeadRow = <TData extends SST_RowData>({
           />
         ) : null;
       })}
-      {virtualPaddingRight ? <th style={{ display: 'flex', width: virtualPaddingRight }} /> : null}
+      {virtualPaddingRight ? (
+        <th aria-hidden="true" style={{ display: 'flex', width: virtualPaddingRight }} />
+      ) : null}
     </tr>
   );
 };

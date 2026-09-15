@@ -1,17 +1,12 @@
+import { useSST_ElementWidth } from '../../hooks/useSST_ElementWidth';
 import * as React from 'react';
 import { memo, useMemo } from 'react';
-import { type VirtualItem } from '@tanstack/react-virtual';
 import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { SST_TableBodyRow, Memo_SST_TableBodyRow } from './SST_TableBodyRow';
 import { useSST_RowVirtualizer } from '../../hooks/useSST_RowVirtualizer';
 import { useSST_Rows } from '../../hooks/useSST_Rows';
 import { cn } from '../../lib/utils';
-import {
-  type SST_ColumnVirtualizer,
-  type SST_Row,
-  type SST_RowData,
-  type SST_TableInstance,
-} from '../../types';
+import { type SST_ColumnVirtualizer, type SST_RowData, type SST_TableInstance } from '../../types';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 
 export interface SST_TableBodyProps<
@@ -45,6 +40,7 @@ export const SST_TableBody = <TData extends SST_RowData>({
     },
     refs: { tableFooterRef, tableHeadRef, tablePaperRef },
   } = table;
+
   //the body owns the row list: every slice the row models derive from (or
   //that changes which/how rows render) must be here, plus columnOrder and
   //columnPinning so per-row visible-cell order and pinned styling refresh —
@@ -68,14 +64,17 @@ export const SST_TableBody = <TData extends SST_RowData>({
 
   const tableHeadHeight =
     ((enableStickyHeader || isFullScreen) && tableHeadRef.current?.clientHeight) || 0;
+
   const tableFooterHeight = (enableStickyFooter && tableFooterRef.current?.clientHeight) || 0;
 
   const pinnedRowIds = useMemo(() => {
     if (!rowPinning.bottom?.length && !rowPinning.top?.length) return [];
     const ids: string[] = [];
+
     for (const row of getRowModel().rows) {
       if (row.getIsPinned()) ids.push(row.id);
     }
+
     return ids;
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: getRowModel() is a stable accessor from the TanStack table instance; using its `.rows` snapshot as a dep tracks row-model identity changes without retaining a getRowModel reference. FOLLOW-UP: extract `const rowModelRows = getRowModel().rows` to satisfy the complex-expression rule.
   }, [rowPinning, getRowModel().rows]);
@@ -91,6 +90,8 @@ export const SST_TableBody = <TData extends SST_RowData>({
     numRows: rows.length,
     table,
   };
+
+  const paperWidth = useSST_ElementWidth(tablePaperRef);
 
   return (
     <>
@@ -109,6 +110,7 @@ export const SST_TableBody = <TData extends SST_RowData>({
               row,
               staticRowIndex,
             };
+
             return memoMode === 'rows' ? (
               <Memo_SST_TableBodyRow key={row.id} {...props} />
             ) : (
@@ -137,11 +139,7 @@ export const SST_TableBody = <TData extends SST_RowData>({
                   <p
                     className="text-muted-foreground italic py-8 text-center w-full"
                     style={{
-                      maxWidth: `min(100vw, ${
-                        tablePaperRef.current?.clientWidth
-                          ? tablePaperRef.current?.clientWidth + 'px'
-                          : '100%'
-                      })`,
+                      maxWidth: `min(100vw, ${paperWidth ? paperWidth + 'px' : '100%'})`,
                     }}
                   >
                     {globalFilter || columnFilters.length
@@ -153,29 +151,26 @@ export const SST_TableBody = <TData extends SST_RowData>({
             </tr>
           ) : (
             <>
-              {(virtualRows ?? rows).map((rowOrVirtualRow, staticRowIndex) => {
-                let row = rowOrVirtualRow as SST_Row<TData>;
-                if (rowVirtualizer) {
-                  if (renderDetailPanel) {
-                    if (rowOrVirtualRow.index % 2 === 1) {
-                      return null;
-                    } else {
-                      staticRowIndex = rowOrVirtualRow.index / 2;
-                    }
-                  } else {
-                    staticRowIndex = rowOrVirtualRow.index;
-                  }
-                  row = rows[staticRowIndex];
-                }
+              {(
+                virtualRows?.map((virtualRow) => ({ index: virtualRow.index, virtualRow })) ??
+                rows.map((_, index) => ({ index, virtualRow: undefined }))
+              ).map(({ index, virtualRow }) => {
+                if (virtualRow && renderDetailPanel && index % 2 === 1) return null;
+
+                const staticRowIndex = virtualRow && renderDetailPanel ? index / 2 : index;
+                const row = rows[staticRowIndex];
+
                 const props = {
                   ...commonRowProps,
                   pinnedRowIds,
                   row,
                   rowVirtualizer,
                   staticRowIndex,
-                  virtualRow: rowVirtualizer ? (rowOrVirtualRow as VirtualItem) : undefined,
+                  virtualRow,
                 };
+
                 const key = `${row.id}-${row.index}`;
+
                 return memoMode === 'rows' ? (
                   <Memo_SST_TableBodyRow key={key} {...props} />
                 ) : (
@@ -200,6 +195,7 @@ export const SST_TableBody = <TData extends SST_RowData>({
               row,
               staticRowIndex,
             };
+
             return memoMode === 'rows' ? (
               <Memo_SST_TableBodyRow key={row.id} {...props} />
             ) : (
@@ -218,6 +214,7 @@ export const SST_TableBody = <TData extends SST_RowData>({
 // didn't change identity. Now the memo skips *only* while the user is
 // actively dragging a column resize handle — every other state change
 // flows through unimpeded.
+// SAFETY: React.memo preserves the wrapped component props and its row-data generic.
 export const Memo_SST_TableBody = memo(
   SST_TableBody,
   (_prev, next) => !!next.table.getState().columnResizing.isResizingColumn,

@@ -6,6 +6,7 @@ import { defineConfig } from 'astro/config';
 // Site URL is read from STARLIGHT_SITE so the same config works for
 // GitHub Pages, Cloudflare Pages, or anywhere else without a code change.
 const site = process.env.STARLIGHT_SITE || 'https://example.com';
+
 const base = process.env.STARLIGHT_BASE || undefined;
 
 export default defineConfig({
@@ -43,6 +44,7 @@ export default defineConfig({
             { label: 'Memoize components', slug: 'guides/memoize-components' },
             { label: 'Migrating from material-react-table', slug: 'guides/migrating-from-mrt' },
             { label: 'API stability', slug: 'guides/api-stability' },
+            { label: 'Typed rows and creation', slug: 'guides/typed-rows' },
           ],
         },
       ],

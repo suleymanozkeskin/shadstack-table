@@ -101,8 +101,11 @@ export const mrtFilterOptions = (localization: SST_Localization): SST_InternalFi
 ];
 
 const rangeModes = ['between', 'betweenInclusive', 'inNumberRange'];
+
 const emptyModes = ['empty', 'notEmpty'];
+
 const arrModes = ['arrIncludesSome', 'arrIncludesAll', 'arrIncludes'];
+
 const rangeVariants = ['range-slider', 'date-range', 'datetime-range', 'range'];
 
 export interface SST_FilterOptionMenuProps<TData extends SST_RowData> extends React.ComponentProps<
@@ -112,7 +115,7 @@ export interface SST_FilterOptionMenuProps<TData extends SST_RowData> extends Re
   header?: SST_Header<TData>;
   onSelect?: () => void;
   setAnchorEl: (anchorEl: HTMLElement | null) => void;
-  setFilterValue?: (filterValue: any) => void;
+  setFilterValue?: (filterValue: string | string[]) => void;
   table: SST_TableInstance<TData>;
 }
 
@@ -139,22 +142,25 @@ export const SST_FilterOptionMenu = <TData extends SST_RowData>({
     setColumnFilterFns,
     setGlobalFilterFn,
   } = table;
+
   const { density, globalFilterFn } = useSST_TableState(table, (s) => ({
     density: s.density,
     globalFilterFn: s.globalFilterFn,
     columnFilterFns: s.columnFilterFns,
   }));
+
   const { column } = header ?? {};
   const { columnDef } = column ?? {};
   const currentFilterValue = column?.getFilterValue();
-  const virtualRef = useMemo<React.RefObject<HTMLElement | null> | undefined>(
+
+  const virtualRef = useMemo<React.RefObject<HTMLElement> | undefined>(
     () => (anchorEl ? { current: anchorEl } : undefined),
     [anchorEl],
   );
 
   let allowedColumnFilterOptions = columnDef?.columnFilterModeOptions ?? columnFilterModeOptions;
 
-  if (rangeVariants.includes(columnDef?.filterVariant as string)) {
+  if (rangeVariants.includes(columnDef?.filterVariant ?? '')) {
     allowedColumnFilterOptions = [...rangeModes, ...(allowedColumnFilterOptions ?? [])].filter(
       (option) => rangeModes.includes(option),
     );
@@ -186,12 +192,13 @@ export const SST_FilterOptionMenu = <TData extends SST_RowData>({
   const handleSelectFilterMode = (option: SST_FilterOption) => {
     // oxlint-disable-next-line no-underscore-dangle -- _filterFn is the canonical internal property carried over from upstream MRT/TanStack column def shape
     const prevFilterMode = columnDef?._filterFn ?? '';
+
     if (!header || !column) {
       // global filter mode
       setGlobalFilterFn(option);
     } else if (option !== prevFilterMode) {
       // column filter mode
-      setColumnFilterFns((prev: { [key: string]: any }) => ({
+      setColumnFilterFns((prev) => ({
         ...prev,
         [header.id]: option,
       }));
@@ -204,26 +211,22 @@ export const SST_FilterOptionMenu = <TData extends SST_RowData>({
         } else if (currentFilterValue) {
           column.setFilterValue(currentFilterValue); // perform new filter render
         }
-      } else if (
-        columnDef?.filterVariant === 'multi-select' ||
-        arrModes.includes(option as string)
-      ) {
+      } else if (columnDef?.filterVariant === 'multi-select' || arrModes.includes(option)) {
         // will now be array filter mode
-        if (currentFilterValue instanceof String || (currentFilterValue as Array<any>)?.length) {
+        if (
+          !!currentFilterValue &&
+          (!Array.isArray(currentFilterValue) || currentFilterValue.length > 0)
+        ) {
           column.setFilterValue([]);
           setFilterValue?.([]);
         } else if (currentFilterValue) {
           column.setFilterValue(currentFilterValue); // perform new filter render
         }
-      } else if (
-        columnDef?.filterVariant?.includes('range') ||
-        rangeModes.includes(option as SST_FilterOption)
-      ) {
+      } else if (columnDef?.filterVariant?.includes('range') || rangeModes.includes(option)) {
         // will now be range filter mode
         if (
           !Array.isArray(currentFilterValue) ||
-          (!(currentFilterValue as Array<any>)?.every((v) => v === '') &&
-            !rangeModes.includes(prevFilterMode))
+          (!currentFilterValue.every((v) => v === '') && !rangeModes.includes(prevFilterMode))
         ) {
           column.setFilterValue(['', '']);
           setFilterValue?.('');
@@ -242,6 +245,7 @@ export const SST_FilterOptionMenu = <TData extends SST_RowData>({
         }
       }
     }
+
     setAnchorEl(null);
     onSelect?.();
   };
@@ -256,7 +260,7 @@ export const SST_FilterOptionMenu = <TData extends SST_RowData>({
         if (!open) setAnchorEl(null);
       }}
     >
-      {virtualRef && <PopoverAnchor virtualRef={virtualRef as any} />}
+      {virtualRef && <PopoverAnchor virtualRef={virtualRef} />}
       <PopoverContent
         side="right"
         align="center"
@@ -267,13 +271,13 @@ export const SST_FilterOptionMenu = <TData extends SST_RowData>({
       >
         {(header && column && columnDef
           ? (columnDef.renderColumnFilterModeMenuItems?.({
-              column: column as any,
+              column,
               internalFilterOptions,
               onSelectFilterMode: handleSelectFilterMode,
               table,
             }) ??
             renderColumnFilterModeMenuItems?.({
-              column: column as any,
+              column,
               internalFilterOptions,
               onSelectFilterMode: handleSelectFilterMode,
               table,
@@ -289,7 +293,7 @@ export const SST_FilterOptionMenu = <TData extends SST_RowData>({
               icon={symbol}
               key={option}
               label={label}
-              onClick={() => handleSelectFilterMode(option as SST_FilterOption)}
+              onClick={() => handleSelectFilterMode(option)}
               selected={option === filterOption}
               table={table}
               value={option}

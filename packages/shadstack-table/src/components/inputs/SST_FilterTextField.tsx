@@ -1,5 +1,15 @@
+import { flexRender } from '../../utils/tanstack.helpers';
+import { setElementRef } from '../../utils/refs';
+import { composeRefs } from '@radix-ui/react-compose-refs';
+import {
+  type FilterInputValue,
+  type FilterRangeValue,
+  isFilterInputValue,
+  isFilterRangeValue,
+} from '../../utils/filter-input';
+import { getFilterLabel } from '../../utils/filter-labels';
 import * as React from 'react';
-import { type ChangeEvent, type MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { type ChangeEvent, type MouseEvent, useEffect, useMemo, useState } from 'react';
 import { Badge } from '../../_ui/badge';
 import { Button } from '../../_ui/button';
 import { Checkbox } from '../../_ui/checkbox';
@@ -42,6 +52,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
     refs: { filterInputRefs },
     setColumnFilterFns,
   } = table;
+
   const { column } = header;
   const { columnDef } = column;
   const { filterVariant } = columnDef;
@@ -58,10 +69,12 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
     ...parseFromValuesOrFunc(slotProps?.filterDatePicker, args),
     ...parseFromValuesOrFunc(columnDef.slotProps?.filterDatePicker, args),
   };
+
   const dateTimePickerProps = {
     ...parseFromValuesOrFunc(slotProps?.filterDateTimePicker, args),
     ...parseFromValuesOrFunc(columnDef.slotProps?.filterDateTimePicker, args),
   };
+
   const timePickerProps = {
     ...parseFromValuesOrFunc(slotProps?.filterTimePicker, args),
     ...parseFromValuesOrFunc(columnDef.slotProps?.filterTimePicker, args),
@@ -81,20 +94,18 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
 
   const dropdownOptions = useDropdownOptions({ header, table });
 
-  if (isAutocompleteFilter && !warnedAutocomplete) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      '[shadstack-table] Autocomplete filter is not implemented; falling back to text input. Provide a custom Filter cell to override.',
-    );
-    warnedAutocomplete = true;
-  }
+  useEffect(() => {
+    if (isAutocompleteFilter && !warnedAutocomplete) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[shadstack-table] Autocomplete filter is not implemented; falling back to text input. Provide a custom Filter cell to override.',
+      );
+      warnedAutocomplete = true;
+    }
+  }, [isAutocompleteFilter]);
 
   const filterChipLabel = ['empty', 'notEmpty'].includes(currentFilterOption)
-    ? localization[
-        `filter${
-          currentFilterOption?.charAt?.(0)?.toUpperCase() + currentFilterOption?.slice(1)
-        }` as keyof typeof localization
-      ]
+    ? getFilterLabel(localization, currentFilterOption)
     : '';
 
   const filterPlaceholder = !isRangeFilter
@@ -115,34 +126,53 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
     columnDef.enableColumnFilterModes !== false &&
     (allowedColumnFilterOptions === undefined || !!allowedColumnFilterOptions?.length)
   );
+
   const showChangeModeButton = reserveModeButtonSpace && !rangeFilterIndex;
 
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [filterValue, setFilterValue] = useState<string | string[]>(() =>
-    isMultiSelectFilter
-      ? (column.getFilterValue() as string[]) || []
-      : isRangeFilter
-        ? (column.getFilterValue() as [string, string])?.[rangeFilterIndex as number] || ''
-        : ((column.getFilterValue() as string) ?? ''),
+
+  const externalValue = column.getFilterValue();
+  const boundIndex = rangeFilterIndex ?? 0;
+
+  const inputValue =
+    isRangeFilter && Array.isArray(externalValue) ? externalValue[boundIndex] : externalValue;
+
+  const inputSupported =
+    isFilterInputValue(inputValue) &&
+    (!isRangeFilter ||
+      externalValue === undefined ||
+      externalValue === null ||
+      isFilterRangeValue(externalValue));
+
+  const [filterValue, setFilterValue] = useState<FilterInputValue>(() =>
+    inputSupported ? inputValue : undefined,
   );
 
-  // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: useCallback wraps a debounce() factory so the debounced timer survives renders. Passing an inline function as the rule suggests would re-bind the timer every render and defeat the purpose.
-  const handleChangeDebounced = useCallback(
-    debounce(
-      (newValue: any) => {
-        if (isRangeFilter) {
-          column.setFilterValue((old: Array<Date | null | number | string>) => {
-            const next = [...(old ?? ['', ''])];
-            next[rangeFilterIndex as number] = newValue ?? undefined;
+  const [previousExternalValue, setPreviousExternalValue] = useState(() => externalValue);
+
+  if (externalValue !== previousExternalValue) {
+    setPreviousExternalValue(externalValue);
+    setFilterValue(inputSupported ? inputValue : undefined);
+  }
+
+  const rangeInput = !!isRangeFilter;
+  const filterDelayMs = isTextboxFilter ? (manualFiltering ? 400 : 200) : 1;
+
+  const handleChangeDebounced = useMemo(
+    () =>
+      debounce((newValue: FilterInputValue) => {
+        if (rangeInput) {
+          column.setFilterValue((old: FilterRangeValue) => {
+            const next: FilterRangeValue = isFilterRangeValue(old) ? [...old] : ['', ''];
+            next[boundIndex] = Array.isArray(newValue) ? undefined : newValue;
+
             return next;
           });
         } else {
           column.setFilterValue(newValue ?? undefined);
         }
-      },
-      isTextboxFilter ? (manualFiltering ? 400 : 200) : 1,
-    ),
-    [],
+      }, filterDelayMs),
+    [column, rangeInput, boundIndex, filterDelayMs],
   );
 
   // Clear any pending debounced filter update when the cell unmounts so the
@@ -150,7 +180,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
   // table instance.
   useEffect(() => () => handleChangeDebounced.cancel(), [handleChangeDebounced]);
 
-  const handleChange = (newValue: any) => {
+  const handleChange = (newValue: FilterInputValue) => {
     setFilterValue(newValue ?? '');
     handleChangeDebounced(newValue);
   };
@@ -160,8 +190,11 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
       event.target.type === 'date'
         ? event.target.valueAsDate
         : event.target.type === 'number'
-          ? event.target.valueAsNumber
+          ? Number.isFinite(event.target.valueAsNumber)
+            ? event.target.valueAsNumber
+            : undefined
           : event.target.value;
+
     handleChange(newValue);
     textFieldProps?.onChange?.(event);
   };
@@ -174,7 +207,8 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
       setFilterValue('');
       column.setFilterValue((old: [string | undefined, string | undefined]) => {
         const next = [...(Array.isArray(old) ? old : ['', ''])];
-        next[rangeFilterIndex as number] = undefined;
+        next[boundIndex] = undefined;
+
         return next;
       });
     } else {
@@ -196,32 +230,23 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
     setAnchorEl(event.currentTarget);
   };
 
-  const isMounted = useRef(false);
-
-  useEffect(() => {
-    if (isMounted.current) {
-      // oxlint-disable-next-line no-shadow -- intentional re-binding: the outer filterValue is local state; this snapshot reads the latest column value to reconcile against
-      const filterValue = column.getFilterValue();
-      if (filterValue === undefined) {
-        handleClear();
-      } else if (isRangeFilter && rangeFilterIndex !== undefined) {
-        setFilterValue((filterValue as [string, string])[rangeFilterIndex]);
-      } else {
-        setFilterValue(filterValue as string);
-      }
-    }
-    isMounted.current = true;
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: track column.getFilterValue() identity as the sole reconciliation trigger; handleClear/isRangeFilter/rangeFilterIndex/column are stable per cell-lifetime. FOLLOW-UP: extract the call into a `const externalFilterValue = column.getFilterValue();` to satisfy the complex-expression check.
-  }, [column.getFilterValue()]);
-
   if (columnDef.Filter) {
-    return <>{columnDef.Filter?.({ column, header, rangeFilterIndex, table })}</>;
+    return <>{flexRender(columnDef.Filter, { column, header, rangeFilterIndex, table })}</>;
+  }
+
+  if (!inputSupported) {
+    return (
+      <p role="alert">
+        Unsupported filter value for {column.id}. Supply text, numbers, dates, or string selections.
+      </p>
+    );
   }
 
   // `date` and `date-range` use a shadcn Popover + Calendar (built below).
   // `datetime`/`time` variants still fall back to native input types — shadcn
   // has no canonical time picker, so the native input remains in v1.
   const isCalendarFilter = filterVariant === 'date' || filterVariant === 'date-range';
+
   const dateInputType = filterVariant?.startsWith('datetime')
     ? 'datetime-local'
     : filterVariant?.startsWith('time')
@@ -232,11 +257,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
     <p className="text-muted-foreground mt-2 text-xs leading-tight whitespace-nowrap">
       {localization.filterMode.replace(
         '{filterType}',
-        localization[
-          `filter${
-            currentFilterOption?.charAt(0)?.toUpperCase() + currentFilterOption?.slice(1)
-          }` as keyof typeof localization
-        ] ?? '',
+        getFilterLabel(localization, currentFilterOption) ?? '',
       )}
     </p>
   ) : null;
@@ -245,19 +266,24 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
   // date filters do not, so we render our own clear button for them.
   const isNativeDateFilter = isDateFilter && !isCalendarFilter;
   const showClearButton = !isAutocompleteFilter && !isNativeDateFilter && !filterChipLabel;
-  const clearVisible = isCalendarFilter
-    ? !!filterValue
-    : (typeof filterValue === 'string' || Array.isArray(filterValue) ? filterValue.length : 0) > 0;
+
+  const clearVisible =
+    filterValue !== undefined &&
+    filterValue !== null &&
+    filterValue !== '' &&
+    (!Array.isArray(filterValue) || filterValue.length > 0);
+
+  const textValue = filterValue instanceof Date ? filterValue.toISOString() : (filterValue ?? '');
 
   const startAdornment = showChangeModeButton ? (
     <span className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-1">
       <Button
         aria-label={localization.changeFilterMode}
         onClick={handleFilterMenuOpen}
-        size="icon"
+        size="icon-sm"
         variant="ghost"
         title={localization.changeFilterMode}
-        className="pointer-events-auto h-7 w-7"
+        className="pointer-events-auto"
       >
         <FilterListIcon />
       </Button>
@@ -288,10 +314,10 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
         aria-label={localization.clearFilter}
         disabled={!filterValue?.toString()?.length}
         onClick={handleClear}
-        size="icon"
+        size="icon-sm"
         variant="ghost"
         title={localization.clearFilter}
-        className="pointer-events-auto h-7 w-7"
+        className="pointer-events-auto"
       >
         <CloseIcon className="size-3.5" />
       </Button>
@@ -328,27 +354,29 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
   );
 
   const inputRefFn = (inputRef: HTMLInputElement | null) => {
-    filterInputRefs.current![`${column.id}-${rangeFilterIndex ?? 0}`] = inputRef!;
-    if (typeof textFieldProps.ref === 'function') textFieldProps.ref(inputRef);
+    setElementRef(filterInputRefs, `${column.id}-${rangeFilterIndex ?? 0}`, inputRef);
   };
 
   const onSelectChange = (newValue: string) => handleChange(newValue);
 
   const multiSelectArray = Array.isArray(filterValue) ? filterValue : [];
+
   const toggleMultiSelectValue = (value: string, checked: boolean) => {
     const next = checked
       ? multiSelectArray.includes(value)
         ? multiSelectArray
         : [...multiSelectArray, value]
       : multiSelectArray.filter((v) => v !== value);
+
     setFilterValue(next);
     column.setFilterValue(next.length === 0 ? undefined : next);
   };
+
   const multiSelectTriggerLabel =
     multiSelectArray.length === 0 ? filterPlaceholder : `${multiSelectArray.length} selected`;
 
   const buttonRefFn = (el: HTMLButtonElement | null) => {
-    filterInputRefs.current![`${column.id}-${rangeFilterIndex ?? 0}`] = el as any;
+    setElementRef(filterInputRefs, `${column.id}-${rangeFilterIndex ?? 0}`, el);
   };
 
   const filterField = isCalendarFilter ? (
@@ -357,13 +385,15 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
       <SST_DateFilter
         ariaLabel={filterPlaceholder}
         calendarIcon={<CalendarIcon className="size-3.5 opacity-60" />}
-        className={cn(reserveModeButtonSpace && 'pl-9', showClearButton && 'pr-9', className)}
+        className={className}
+        leadingSpace={reserveModeButtonSpace ? 'reserved' : 'none'}
+        trailingSpace={showClearButton ? 'clear' : 'none'}
         disabled={!!filterChipLabel}
         inputRef={buttonRefFn}
         onChange={handleChange}
         placeholder={filterChipLabel ? undefined : filterPlaceholder}
         title={filterPlaceholder}
-        value={filterValue as Date | string | undefined}
+        value={Array.isArray(filterValue) ? undefined : filterValue}
       />
       {endAdornment}
     </div>
@@ -376,7 +406,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
         placeholder={filterPlaceholder}
         type={dateInputType}
         title={filterPlaceholder}
-        value={(filterValue as string) ?? ''}
+        value={textValue}
         {...(filterVariant?.startsWith('time')
           ? timePickerProps
           : filterVariant?.startsWith('datetime')
@@ -388,7 +418,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
           textFieldProps.onKeyDown?.(e);
         }}
         onClick={(e: MouseEvent<HTMLInputElement>) => e.stopPropagation()}
-        ref={inputRefFn}
+        ref={composeRefs(inputRefFn, textFieldProps.ref)}
         className={inputClass}
       />
       {endAdornment}
@@ -399,16 +429,16 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
       <Popover>
         <PopoverTrigger asChild>
           <Button
-            ref={buttonRefFn as any}
+            ref={buttonRefFn}
             type="button"
             variant="outline"
+            purpose="field"
+            data-empty={multiSelectArray.length === 0}
+            leadingSpace={reserveModeButtonSpace ? 'reserved' : 'none'}
+            trailingSpace={showClearButton ? 'select-clear' : 'none'}
             aria-label={filterPlaceholder}
             title={filterPlaceholder}
-            className={cn(
-              inputClass,
-              'h-9 justify-start font-normal',
-              multiSelectArray.length === 0 && 'text-muted-foreground',
-            )}
+            className={cn('w-full', className, textFieldProps?.className)}
           >
             <span className="truncate">{multiSelectTriggerLabel}</span>
           </Button>
@@ -422,6 +452,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
               const { label, value } = getValueAndLabel(option);
               const checked = multiSelectArray.includes(value);
               const itemId = `${column.id}-multi-${value}`;
+
               return (
                 <div
                   key={value}
@@ -451,9 +482,9 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
   ) : isSelectFilter ? (
     <div className={wrapperClass}>
       {startAdornment}
-      <Select value={(filterValue as string) ?? ''} onValueChange={onSelectChange}>
+      <Select value={String(textValue)} onValueChange={onSelectChange}>
         <SelectTrigger
-          ref={inputRefFn as any}
+          ref={buttonRefFn}
           className={inputClass}
           aria-label={filterPlaceholder}
           title={filterPlaceholder}
@@ -463,6 +494,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
         <SelectContent>
           {dropdownOptions?.map((option) => {
             const { label, value } = getValueAndLabel(option);
+
             return (
               <SelectItem key={value} value={value}>
                 <span className="flex items-center gap-2">
@@ -485,7 +517,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
         disabled={!!filterChipLabel}
         placeholder={filterChipLabel ? undefined : filterPlaceholder}
         title={filterPlaceholder}
-        value={(filterValue as string) ?? ''}
+        value={textValue}
         {...textFieldProps}
         onChange={handleTextFieldChange}
         onClick={(e: MouseEvent<HTMLInputElement>) => e.stopPropagation()}
@@ -493,7 +525,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
           e.stopPropagation();
           textFieldProps.onKeyDown?.(e);
         }}
-        ref={inputRefFn}
+        ref={composeRefs(inputRefFn, textFieldProps.ref)}
         className={inputClass}
       />
       {endAdornment}
@@ -508,7 +540,7 @@ export const SST_FilterTextField = <TData extends SST_RowData>({
         anchorEl={anchorEl}
         header={header}
         setAnchorEl={setAnchorEl}
-        setFilterValue={setFilterValue as (filterValue: any) => void}
+        setFilterValue={setFilterValue}
         table={table}
       />
     </>

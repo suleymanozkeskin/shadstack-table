@@ -49,6 +49,7 @@ test.describe('global filter focus ring', () => {
 
     const style = await clip.evaluate((el) => {
       const computed = getComputedStyle(el);
+
       return {
         overflow: computed.overflow,
         paddingLeft: parseFloat(computed.paddingLeft),

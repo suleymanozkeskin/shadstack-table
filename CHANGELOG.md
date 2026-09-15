@@ -4,6 +4,35 @@ All notable changes to `shadstack-table` are recorded here. The format is based 
 
 ## [Unreleased]
 
+### Added
+
+- Button contracts through `@shadcn/lint` 0.1.0 and all generic anti-slop rules. Oxlint and `@oxlint/plugins` are pinned to 1.83.0.
+- Typed editor draft methods: `getEditValues`, `getEditedValue`, `setEditValue`, and `clearEditValues`.
+- Published declaration checks for generic accessor inference, typed row creation, and state atom subscriptions.
+
+### Changed
+
+- **Breaking:** `createRow` requires initial application data. `setCreatingRow` accepts a row, `null`, or an updater returning either. The `true` shortcut is removed. There is no factory option.
+- **Breaking:** save callbacks receive readonly text drafts keyed by column ID. Editors no longer write strings into TanStack's value cache. Row data remains typed as `TData`.
+- **Breaking:** nested tables must provide `getSubRows`.
+- **Breaking:** hovered columns use `null`, a `column` variant with the full column, or a `drop-zone` variant. Hovered rows require a full row.
+- **Breaking:** `SST_TableContext` exposes a typed Provider. Use `useSST_TableContext` instead of raw React context consumers.
+- **Breaking:** virtualizer refs expose readonly geometry snapshots and live measurement and scrolling commands. Raw TanStack instance fields are no longer exposed. Refs update after commit and clear on unmount.
+- Cell, edit, filter, grouped-cell, and aggregated-cell renderers run as React components. Keep their function identities stable.
+- Non-primitive default cell values use their text conversion. Use a custom renderer for application-specific formatting.
+- Built JavaScript omits JSDoc. Declarations and source maps retain it. Licenses and tree-shaking annotations remain in JavaScript. Size budgets are unchanged.
+
+### Fixed
+
+- Generic row types no longer require an untyped index signature. Column helpers derive value types from their accessors.
+- Public state, atom subscriptions, DOM refs, theme callbacks, and row and column members match runtime behavior. Internal row caches are omitted from declarations.
+- Aggregation arrays accept both named and inline definitions.
+- Built-in filters check external values and cancel pending work on unmount. Pinned-row timers are also cleared on unmount.
+- Virtualization starts after the ancestor scroll-container ref is attached.
+- Built-in display-cell renderers keep stable identities during controlled updates. Parent selection uses TanStack's child-selection behavior.
+
+See [Typed rows and creation](apps/docs/src/content/docs/guides/typed-rows.mdx) for migration details.
+
 ## [0.3.1] — 2026-08-12
 
 ### Fixed

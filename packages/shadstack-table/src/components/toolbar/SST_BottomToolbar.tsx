@@ -1,3 +1,4 @@
+import { composeRefs } from '@radix-ui/react-compose-refs';
 import * as React from 'react';
 import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { SST_LinearProgressBar } from './SST_LinearProgressBar';
@@ -16,8 +17,10 @@ function useMediaQuery(query: string): boolean {
     const handler = () => setMatches(mql.matches);
     handler();
     mql.addEventListener('change', handler);
+
     return () => mql.removeEventListener('change', handler);
   }, [query]);
+
   return matches;
 }
 
@@ -43,6 +46,7 @@ export const SST_BottomToolbar = <TData extends SST_RowData>({
     },
     refs: { bottomToolbarRef },
   } = table;
+
   const { isFullScreen } = useSST_TableState(table, (s) => ({ isFullScreen: s.isFullScreen }));
 
   const isMobile = useMediaQuery('(max-width:720px)');
@@ -57,12 +61,7 @@ export const SST_BottomToolbar = <TData extends SST_RowData>({
   return (
     <div
       {...toolbarProps}
-      ref={(node: HTMLDivElement | null) => {
-        if (node) {
-          bottomToolbarRef.current = node;
-          if (typeof toolbarProps?.ref === 'function') toolbarProps.ref(node);
-        }
-      }}
+      ref={composeRefs(bottomToolbarRef, toolbarProps.ref)}
       style={{
         backgroundColor: table.options.mrtTheme.baseBackgroundColor,
         bottom: isFullScreen ? '0' : undefined,

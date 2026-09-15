@@ -7,31 +7,37 @@
 // `act(...)` call logs a noisy warning about the testing environment not
 // being configured — the renders still happen, but the bench output gets
 // drowned in warnings.
-(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+Object.defineProperty(globalThis, 'IS_REACT_ACT_ENVIRONMENT', {
+  value: true,
+  configurable: true,
+  writable: true,
+});
 
-class IntersectionObserverMock {
+class IntersectionObserverMock implements IntersectionObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
-  takeRecords() {
+  takeRecords(): IntersectionObserverEntry[] {
     return [];
   }
   root = null;
   rootMargin = '';
+  scrollMargin = '';
+  delay = 0;
+  trackVisibility = false;
   thresholds = [];
 }
 
 if (typeof globalThis.IntersectionObserver === 'undefined') {
-  globalThis.IntersectionObserver =
-    IntersectionObserverMock as unknown as typeof IntersectionObserver;
+  globalThis.IntersectionObserver = IntersectionObserverMock;
 }
 
-class ResizeObserverMock {
+class ResizeObserverMock implements ResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
 }
 
 if (typeof globalThis.ResizeObserver === 'undefined') {
-  globalThis.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
+  globalThis.ResizeObserver = ResizeObserverMock;
 }

@@ -1,0 +1,110 @@
+---
+title: Typed rows and creation
+description: Migrate to typed initial rows, text drafts, and corrected public contracts.
+---
+
+This guide covers the next release. These changes require caller updates.
+
+## Keep application row types
+
+Rows remain generic objects. They can contain numbers, dates, nested objects, and custom accessor values. No index signature or closed set of cell values is required.
+
+Use `createSSTColumnHelper<TData>()` to infer an accessor's value type. An accessor function receives the row and its index. Built-in cells render primitive values and React elements directly. Other values use `String(value)`. Supply a `Cell` renderer when a value needs specific formatting or has no usable text conversion.
+
+## Supply initial data when creating a row
+
+`createRow(table, initialData)` requires a complete `TData` value. The library does not insert empty strings into required number, date, or object fields.
+
+```tsx
+import { createRow, type SST_TableInstance } from 'shadstack-table';
+
+type Person = {
+  name: string;
+  age: number;
+  joinedAt: Date;
+  address: { city: string };
+};
+
+function startCreation(table: SST_TableInstance<Person>) {
+  const initial: Person = {
+    name: '',
+    age: 0,
+    joinedAt: new Date(),
+    address: { city: '' },
+  };
+
+  table.setCreatingRow(createRow(table, initial));
+}
+```
+
+`setCreatingRow` accepts a row, `null`, or an updater that returns either value. Replace `setCreatingRow(true)` with an explicit `createRow` call. There is no table-level factory option. Put shared application defaults in an application function when multiple controls need them.
+
+The initial data must satisfy the row type. It does not have to satisfy every business rule for a saved record. Validate those rules before saving.
+
+## Treat editor values as text
+
+`onCreatingRowSave` and `onEditingRowSave` receive `values: SST_EditValues`. This is a readonly set of text values keyed by data-column ID. A missing key returns `undefined`. The keys can be computed-column IDs and do not necessarily match object property names.
+
+The callback also receives `row.original` with its original `TData` type. Parse and validate the text before constructing application data. For example, an age editor supplies `'42'`; the caller must construct and validate the number `42` before saving it.
+
+Editors no longer write text into TanStack's accessor cache. `row.getValue()` and `row.original` retain the original typed values until the application supplies updated data. The default cell display can show an edited text draft.
+
+Use these methods in custom editors:
+
+| Method                                    | Result or effect                                 |
+| ----------------------------------------- | ------------------------------------------------ |
+| `table.getEditValues(row)`                | Frozen text snapshot for the row's data columns. |
+| `table.getEditedValue(row, columnId)`     | Edited text, or `undefined` if no draft exists.  |
+| `table.setEditValue(row, columnId, text)` | Stores a draft without changing row data.        |
+| `table.clearEditValues(row)`              | Removes the row's drafts.                        |
+
+Cancel clears drafts. Save callbacks control persistence and exit from edit mode. Clear drafts after a successful save when the application keeps the same row object. `_valuesCache` is internal and is absent from the public row declaration.
+
+## Nested rows
+
+Supply `getSubRows` when using nested rows. The library no longer guesses a `subRows` property on arbitrary application objects.
+
+```tsx
+type Node = { name: string; children?: Node[] };
+
+const getSubRows = (row: Node) => row.children;
+```
+
+Pass this function as the table's `getSubRows` option.
+
+## Other corrected contracts
+
+- `table.state` and `table.getState()` expose the complete table state. Use `useSST_TableState` to subscribe during render.
+- State atoms use TanStack's `ReadonlyAtom` type, including its observer subscription form.
+- Theme callbacks receive the frozen default theme.
+- Refs describe the actual DOM elements. Select controls use button refs. Filter controls can be inputs, buttons, or slider spans.
+- `row.getParentRow()` returns `undefined` when there is no parent. `row.subRows` and `column.columns` are arrays.
+- Use `column.columnDef.header` and `column.columnDef.footer`. The column object has no direct `header` or `footer` member. The row object has no `getRow()` method.
+- Aggregation arrays can combine registered names with inline aggregation definitions.
+- The library owns the TanStack feature set. The inherited `features` option is no longer exposed. Register custom filter, sort, and aggregation functions through the corresponding table options.
+
+`hoveredColumn` has three states: `null`, `{ kind: 'column', column }`, and `{ kind: 'drop-zone' }`. Replace fake column IDs and partial-column objects with the correct state. `hoveredRow` accepts a full row or `null`.
+
+## Context
+
+Use `useSST_TableContext<Person>()` under the matching table provider. The type argument must match the provider's row type. React context does not verify this relationship at runtime.
+
+`SST_TableContext.Provider` accepts a typed table. `SST_TableContext` is now a provider object, not a raw React context. Replace direct `useContext(SST_TableContext)`, `use(SST_TableContext)`, and `.Consumer` calls with `useSST_TableContext`.
+
+## Custom renderers
+
+`Cell`, `Edit`, `Filter`, `GroupedCell`, and `AggregatedCell` render through React. Their functions can use hooks. Define them outside the parent component or give them stable identities. A new function identity replaces the rendered component and resets its local state.
+
+Built-in text and date filters check external values. Unsupported values show an alert. A range slider requires exactly two finite numbers. Use a custom `Filter` for other value types.
+
+## Virtualizers
+
+Row and column virtualizer refs receive a readonly snapshot after React commits. `getVirtualItems()`, `getTotalSize()`, `virtualRows`, `virtualColumns`, and padding values belong to that snapshot. An old snapshot does not change after scrolling. Read the current ref for the latest snapshot.
+
+The following methods still act on the live virtualizer:
+
+- `measure` and `measureElement`.
+- `resizeItem`.
+- `scrollBy`, `scrollToIndex`, and `scrollToOffset`.
+
+Raw TanStack instance fields and other methods are no longer part of the public ref type. Use the snapshot reads, live commands, and existing virtualizer options. Row items use table-row elements. Column items use table-cell elements. A ref becomes `null` when virtualization is disabled or the component unmounts.

@@ -1,3 +1,4 @@
+import { getFilterLabel } from '../../utils/filter-labels';
 import * as React from 'react';
 import { type MouseEvent, useState } from 'react';
 import { Button } from '../../_ui/button';
@@ -31,13 +32,15 @@ export const SST_TableHeadCellFilterLabel = <TData extends SST_RowData = {}>({
     refs: { filterInputRefs },
     setShowColumnFilters,
   } = table;
+
   const { column } = header;
   const { columnDef } = column;
 
-  const filterValue = column.getFilterValue() as [string, string] | string;
+  const filterValue = column.getFilterValue();
 
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const virtualRef = React.useMemo<React.RefObject<HTMLElement | null> | undefined>(
+
+  const virtualRef = React.useMemo<React.RefObject<HTMLElement> | undefined>(
     () => (anchorEl ? { current: anchorEl } : undefined),
     [anchorEl],
   );
@@ -52,7 +55,7 @@ export const SST_TableHeadCellFilterLabel = <TData extends SST_RowData = {}>({
       dropdownOptions?.find(
         (option) =>
           getValueAndLabel(option).value ===
-          (index !== undefined ? filterValue[index] : filterValue),
+          (index !== undefined && Array.isArray(filterValue) ? filterValue[index] : filterValue),
       ),
     ).label;
 
@@ -67,24 +70,18 @@ export const SST_TableHeadCellFilterLabel = <TData extends SST_RowData = {}>({
           .replace('{column}', String(columnDef.header))
           .replace(
             '{filterType}',
-            currentFilterOption
-              ? (localization[
-                  `filter${
-                    currentFilterOption.charAt(0).toUpperCase() + currentFilterOption.slice(1)
-                  }` as keyof typeof localization
-                ] ?? '')
-              : '',
+            currentFilterOption ? (getFilterLabel(localization, currentFilterOption) ?? '') : '',
           )
           .replace(
             '{filterValue}',
             `"${
               Array.isArray(filterValue)
-                ? (filterValue as [string, string])
+                ? filterValue
                     .map((value, index) => (isMultiSelectFilter ? getSelectLabel(index) : value))
                     .join(`" ${isRangeFilter ? localization.and : localization.or} "`)
                 : isSelectFilter
                   ? getSelectLabel()
-                  : (filterValue as string)
+                  : String(filterValue ?? '')
             }"`,
           )
           .replace('" "', '');
@@ -92,7 +89,7 @@ export const SST_TableHeadCellFilterLabel = <TData extends SST_RowData = {}>({
   const isVisible =
     columnFilterDisplayMode === 'popover' ||
     (!!filterValue && !isRangeFilter) ||
-    (isRangeFilter && (!!filterValue?.[0] || !!filterValue?.[1]));
+    (isRangeFilter && Array.isArray(filterValue) && (!!filterValue[0] || !!filterValue[1]));
 
   if (!isVisible) return null;
 
@@ -108,20 +105,21 @@ export const SST_TableHeadCellFilterLabel = <TData extends SST_RowData = {}>({
                 } else {
                   setShowColumnFilters(true);
                 }
+
                 queueMicrotask(() => {
-                  filterInputRefs.current?.[`${column.id}-0`]?.focus?.();
-                  filterInputRefs.current?.[`${column.id}-0`]?.select?.();
+                  const control = filterInputRefs.current?.[`${column.id}-0`];
+                  control?.focus();
+
+                  if (control && 'select' in control) control.select();
                 });
                 event.stopPropagation();
               }}
               size="icon"
+              purpose="filter-indicator"
+              emphasis={isFilterActive ? 'normal' : 'faint'}
               variant="ghost"
               {...rest}
-              className={cn(
-                'h-4 w-4 ml-1 p-2 transition-all duration-150 ease-in-out scale-75',
-                isFilterActive ? 'opacity-100' : 'opacity-30',
-                className,
-              )}
+              className={cn('ml-1', className)}
             >
               <FilterAltIcon />
             </Button>
@@ -136,7 +134,7 @@ export const SST_TableHeadCellFilterLabel = <TData extends SST_RowData = {}>({
             if (!open) setAnchorEl(null);
           }}
         >
-          {virtualRef && <PopoverAnchor virtualRef={virtualRef as any} />}
+          {virtualRef && <PopoverAnchor virtualRef={virtualRef} />}
           <PopoverContent
             align="center"
             side="bottom"

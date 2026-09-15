@@ -34,6 +34,7 @@ export const SST_EditActionButtons = <TData extends SST_RowData>({
     setCreatingRow,
     setEditingRow,
   } = table;
+
   const { creatingRow, editingRow, isSaving } = useSST_TableState(table, (s) => ({
     creatingRow: s.creatingRow,
     editingRow: s.editingRow,
@@ -51,36 +52,29 @@ export const SST_EditActionButtons = <TData extends SST_RowData>({
       onEditingRowCancel?.({ row, table });
       setEditingRow(null);
     }
-    // oxlint-disable-next-line no-underscore-dangle -- _valuesCache is the documented internal property on TanStack Row used by upstream MRT for the same purpose
-    row._valuesCache = {} as any; //reset values cache
+
+    table.clearEditValues(row);
   };
 
   const handleSubmitRow = () => {
-    //look for auto-filled input values
-    for (const input of Object.values(editInputRefs.current ?? {})) {
-      if (row.id !== input?.name?.split('_')?.[0]) continue;
-      // oxlint-disable-next-line no-underscore-dangle -- _valuesCache is the documented internal property on TanStack Row used by upstream MRT for the same purpose
-      if (input.value !== undefined && Object.hasOwn(row?._valuesCache as object, input.name)) {
-        // @ts-expect-error -- TanStack Row exposes _valuesCache as an internal mutable cache; public types intentionally hide it but writing here syncs auto-filled inputs before commit
-        // oxlint-disable-next-line no-underscore-dangle -- see comment on the surrounding _valuesCache reads
-        row._valuesCache[input.name] = input.value;
-      }
+    // Read native text fields again so browser autofill is included.
+    for (const [columnId, input] of Object.entries(editInputRefs.current ?? {})) {
+      if (input instanceof HTMLInputElement) table.setEditValue(row, columnId, input.value);
     }
+
     if (isCreating)
       onCreatingRowSave?.({
         exitCreatingMode: () => setCreatingRow(null),
         row,
         table,
-        // oxlint-disable-next-line no-underscore-dangle -- _valuesCache is the documented internal property on TanStack Row used by upstream MRT for the same purpose
-        values: row._valuesCache,
+        values: table.getEditValues(row),
       });
     else if (isEditing) {
       onEditingRowSave?.({
         exitEditingMode: () => setEditingRow(null),
         row,
         table,
-        // oxlint-disable-next-line no-underscore-dangle -- _valuesCache is the documented internal property on TanStack Row used by upstream MRT for the same purpose
-        values: row?._valuesCache,
+        values: table.getEditValues(row),
       });
     }
   };
@@ -122,10 +116,10 @@ export const SST_EditActionButtons = <TData extends SST_RowData>({
         </>
       ) : (
         <>
-          <Button onClick={handleCancel} variant="outline" className="min-w-[100px]">
+          <Button onClick={handleCancel} variant="outline" size="action">
             {localization.cancel}
           </Button>
-          <Button disabled={isSaving} onClick={handleSubmitRow} className="min-w-[100px]">
+          <Button disabled={isSaving} onClick={handleSubmitRow} size="action">
             {isSaving && <Spinner size={18} />}
             {localization.save}
           </Button>

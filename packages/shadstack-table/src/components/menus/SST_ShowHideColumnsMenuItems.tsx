@@ -42,11 +42,13 @@ export const SST_ShowHideColumnsMenuItems = <TData extends SST_RowData>({
     setColumnOrder,
     setColumnPinning,
   } = table;
+
   const { columnOrder } = useSST_TableState(table, (s) => ({
     columnOrder: s.columnOrder,
     columnPinning: s.columnPinning,
     columnVisibility: s.columnVisibility,
   }));
+
   const { columnDef } = column;
   const { columnDefType } = columnDef;
 
@@ -69,8 +71,9 @@ export const SST_ShowHideColumnsMenuItems = <TData extends SST_RowData>({
 
   const handleDragStart = (e: DragEvent<HTMLButtonElement>) => {
     setIsDragging(true);
+
     try {
-      e.dataTransfer.setDragImage(menuItemRef.current as HTMLElement, 0, 0);
+      if (menuItemRef.current) e.dataTransfer.setDragImage(menuItemRef.current, 0, 0);
       // oxlint-disable-next-line no-shadow -- catch binding intentionally reuses `e` for brevity
     } catch (e) {
       console.error(e);
@@ -80,6 +83,7 @@ export const SST_ShowHideColumnsMenuItems = <TData extends SST_RowData>({
   const handleDragEnd = (_e: DragEvent<HTMLButtonElement>) => {
     setIsDragging(false);
     setHoveredColumn(null);
+
     if (hoveredColumn) {
       const reorderedColumns = reorderColumn(column, hoveredColumn, columnOrder);
       setColumnOrder(reorderedColumns);

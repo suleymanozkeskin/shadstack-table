@@ -23,18 +23,21 @@ export const SST_CopyButton = <TData extends SST_RowData>({
   const {
     options: { localization, slotProps },
   } = table;
+
   const { column, row } = cell;
   const { columnDef } = column;
 
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = async (event: MouseEvent, text: unknown) => {
+  const handleCopy = async (event: MouseEvent) => {
     event.stopPropagation();
+
     const ok = await copyToClipboard(table, {
-      value: String(text ?? ''),
+      value: String(cell.getValue() ?? ''),
       cell,
       source: 'button',
     });
+
     if (ok) {
       setCopied(true);
       setTimeout(() => setCopied(false), 4000);
@@ -61,16 +64,13 @@ export const SST_CopyButton = <TData extends SST_RowData>({
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
-          onClick={(e) => handleCopy(e, cell.getValue())}
+          onClick={(e) => handleCopy(e)}
           size="sm"
+          purpose="copy"
           type="button"
           variant="ghost"
           {...buttonProps}
-          className={cn(
-            'h-auto -m-1 min-w-0 px-1 py-0 bg-transparent border-none text-inherit font-[inherit] text-[length:inherit] tracking-[inherit] text-left normal-case cursor-copy hover:bg-transparent',
-            className,
-            buttonProps?.className,
-          )}
+          className={cn('-m-1', className, buttonProps?.className)}
           title={undefined}
         />
       </TooltipTrigger>

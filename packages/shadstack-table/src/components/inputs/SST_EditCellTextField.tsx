@@ -1,3 +1,6 @@
+import { flexRender } from '../../utils/tanstack.helpers';
+import { setElementRef } from '../../utils/refs';
+import { composeRefs } from '@radix-ui/react-compose-refs';
 import * as React from 'react';
 import { type ChangeEvent, type FocusEvent, type KeyboardEvent, useRef, useState } from 'react';
 import { useSST_TableState } from '../../hooks/useSST_TableState';
@@ -28,18 +31,24 @@ export const SST_EditCellTextField = <TData extends SST_RowData>({
     setEditingCell,
     setEditingRow,
   } = table;
+
   const { column, row } = cell;
   const { columnDef } = column;
+
   const { creatingRow, editingRow } = useSST_TableState(table, (s) => ({
     creatingRow: s.creatingRow,
     editingRow: s.editingRow,
   }));
+
   const { editSelectOptions, editVariant } = columnDef;
 
   const isCreating = creatingRow?.id === row.id;
   const isEditing = editingRow?.id === row.id;
 
-  const [value, setValue] = useState(() => cell.getValue<string>());
+  const [value, setValue] = useState(
+    () => table.getEditedValue(row, column.id) ?? String(cell.getValue() ?? ''),
+  );
+
   const completesCompositionRef = useRef(true);
 
   const inputProps = {
@@ -66,14 +75,14 @@ export const SST_EditCellTextField = <TData extends SST_RowData>({
   });
 
   const isSelectEdit = editVariant === 'select';
+
   const showLabel = ['custom', 'modal'].includes(
-    (isCreating ? createDisplayMode : editDisplayMode) as string,
+    (isCreating ? createDisplayMode : editDisplayMode) ?? '',
   );
 
-  const saveInputValueToRowCache = (newValue: string) => {
-    // @ts-expect-error -- TanStack Row exposes _valuesCache as an internal mutable cache; the public types intentionally hide it but writing here keeps cell rendering in sync before a commit
-    // oxlint-disable-next-line no-underscore-dangle -- _valuesCache is the documented internal property on TanStack Row used by upstream MRT for the same purpose
-    row._valuesCache[column.id] = newValue;
+  const saveEditValue = (newValue: string) => {
+    table.setEditValue(row, column.id, newValue);
+
     if (isCreating) {
       setCreatingRow(row);
     } else if (isEditing) {
@@ -88,12 +97,13 @@ export const SST_EditCellTextField = <TData extends SST_RowData>({
 
   const commitEditOnBlur = (event: FocusEvent<HTMLInputElement>) => {
     inputProps.onBlur?.(event);
-    saveInputValueToRowCache(value);
+    saveEditValue(value);
     setEditingCell(null);
   };
 
   const handleEnterKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     inputProps.onKeyDown?.(event);
+
     if (event.key === 'Enter' && !event.shiftKey && completesCompositionRef.current) {
       editInputRefs.current?.[column.id]?.blur();
     }
@@ -101,11 +111,11 @@ export const SST_EditCellTextField = <TData extends SST_RowData>({
 
   const handleSelectChange = (newValue: string) => {
     setValue(newValue);
-    saveInputValueToRowCache(newValue);
+    saveEditValue(newValue);
   };
 
   if (columnDef.Edit) {
-    return <>{columnDef.Edit?.({ cell, column, row, table })}</>;
+    return <>{flexRender(columnDef.Edit, { cell, column, row, table })}</>;
   }
 
   const labelEl = showLabel ? (
@@ -122,7 +132,7 @@ export const SST_EditCellTextField = <TData extends SST_RowData>({
           <SelectTrigger
             className={cn('w-full', className)}
             ref={(node) => {
-              if (node) editInputRefs.current![column.id] = node as unknown as HTMLInputElement;
+              setElementRef(editInputRefs, column.id, node);
             }}
           >
             <SelectValue placeholder={columnDef.header} />
@@ -130,6 +140,7 @@ export const SST_EditCellTextField = <TData extends SST_RowData>({
           <SelectContent>
             {selectOptions?.map((option) => {
               const { label, value: optionValue } = getValueAndLabel(option);
+
               return (
                 <SelectItem key={optionValue} value={optionValue}>
                   {label}
@@ -153,12 +164,9 @@ export const SST_EditCellTextField = <TData extends SST_RowData>({
         placeholder={!showLabel ? columnDef.header : undefined}
         value={value ?? ''}
         {...inputProps}
-        ref={(node) => {
-          if (node) {
-            editInputRefs.current![column.id] = node;
-            if (typeof inputProps.ref === 'function') inputProps.ref(node);
-          }
-        }}
+        ref={composeRefs((node) => {
+          setElementRef(editInputRefs, column.id, node);
+        }, inputProps.ref)}
         onBlur={commitEditOnBlur}
         onChange={updateInputValue}
         onClick={(e) => {

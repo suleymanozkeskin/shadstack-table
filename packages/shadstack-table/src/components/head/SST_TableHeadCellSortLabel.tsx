@@ -23,15 +23,18 @@ export const SST_TableHeadCellSortLabel = <TData extends SST_RowData>({
       localization,
     },
   } = table;
+
   const { column } = header;
   const { columnDef } = column;
+
   const { isLoading, showSkeletons, sorting } = useSST_TableState(table, (s) => ({
     isLoading: s.isLoading,
     showSkeletons: s.showSkeletons,
     sorting: s.sorting,
   }));
 
-  const isSorted = !!column.getIsSorted();
+  const sortDirection = column.getIsSorted();
+  const isSorted = !!sortDirection;
 
   const sortTooltip =
     isLoading || showSkeletons
@@ -44,7 +47,7 @@ export const SST_TableHeadCellSortLabel = <TData extends SST_RowData>({
           ? localization.sortByColumnDesc.replace('{column}', columnDef.header)
           : localization.sortByColumnAsc.replace('{column}', columnDef.header);
 
-  const direction = isSorted ? (column.getIsSorted() as 'asc' | 'desc') : undefined;
+  const direction = sortDirection || undefined;
 
   const sortIndex = sorting.length > 1 ? column.getSortIndex() + 1 : 0;
 
@@ -58,7 +61,7 @@ export const SST_TableHeadCellSortLabel = <TData extends SST_RowData>({
           aria-label={sortTooltip}
           onClick={(e) => {
             e.stopPropagation();
-            header.column.getToggleSortingHandler()?.(e as any);
+            header.column.getToggleSortingHandler()?.(e);
           }}
           {...rest}
           className={cn(

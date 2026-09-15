@@ -34,7 +34,9 @@ export const copyToClipboard = async <TData extends SST_RowData>(
     if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
       throw new Error('Clipboard API unavailable');
     }
+
     await navigator.clipboard.writeText(ctx.value);
+
     return true;
   } catch (err) {
     const error = err instanceof Error ? err : new Error(String(err));
@@ -43,6 +45,7 @@ export const copyToClipboard = async <TData extends SST_RowData>(
       source: ctx.source,
       cell: ctx.cell,
     });
+
     return false;
   }
 };

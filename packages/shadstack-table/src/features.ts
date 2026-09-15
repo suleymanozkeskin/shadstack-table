@@ -1,3 +1,4 @@
+import { type SST_TableOptions, type SST_RowData } from './types';
 import { type RankingInfo } from '@tanstack/match-sorter-utils';
 import {
   columnFacetingFeature,
@@ -17,7 +18,6 @@ import {
   createPaginatedRowModel,
   createSortedRowModel,
   globalFilteringFeature,
-  makeStateUpdater,
   rowAggregationFeature,
   rowExpandingFeature,
   rowPaginationFeature,
@@ -30,7 +30,6 @@ import {
 import { SST_AggregationFns } from './fns/aggregationFns';
 import { SST_FilterFns } from './fns/filterFns';
 import { SST_SortingFns } from './fns/sortingFns';
-import { createRow } from './utils/tanstack.helpers';
 
 /**
  * Default values for every shadstack-owned state slice.
@@ -73,60 +72,9 @@ export const SST_STATE_DEFAULTS = {
   showToolbarDropZone: false,
 } as const;
 
-const onChangeKey = (sliceKey: string) =>
-  `on${sliceKey.charAt(0).toUpperCase()}${sliceKey.slice(1)}Change`;
-
-/**
- * The TanStack feature that owns shadstack's state slices.
- *
- * - `getInitialState` seeds every slice so its atoms exist (see
- *   {@link SST_STATE_DEFAULTS}); user-provided `initialState` values win.
- * - `getDefaultTableOptions` supplies a `makeStateUpdater` default for each
- *   `on<Slice>Change` option, so an uncontrolled slice writes its base atom. A
- *   consumer-provided handler replaces the default entirely — the same
- *   controlled-state contract as v8 and as TanStack's own slices.
- * - `constructTableAPIs` attaches the public setters. Each setter forwards the
- *   raw updater to the live `options.on<Slice>Change`, preserving the exact
- *   `options.onXChange ?? internalSetState` semantics the hook used to wire by
- *   hand: consumer handlers receive whatever the caller passed (value or
- *   function), not a wrapped updater.
- *
- * Upstream types `getInitialState`/`getDefaultTableOptions` over
- * `TableState_All`/`TableOptions_All`, which cannot know shadstack's keys, so
- * the casts below are the boundary between the two type worlds.
- */
+/** Seeds custom state so TanStack creates its base and derived atoms. */
 const shadstackCoreFeature: TableFeature = {
   getInitialState: (state) => ({ ...SST_STATE_DEFAULTS, ...state }),
-  getDefaultTableOptions: (table) =>
-    Object.fromEntries(
-      Object.keys(SST_STATE_DEFAULTS).map((sliceKey) => [
-        onChangeKey(sliceKey),
-        makeStateUpdater(sliceKey as never, table as never),
-      ]),
-    ),
-  constructTableAPIs: (table) => {
-    const options = () => table.options as Record<string, ((updater: unknown) => void) | undefined>;
-    const setter = (sliceKey: string) => (updater: unknown) =>
-      options()[onChangeKey(sliceKey)]?.(updater);
-    const t = table as unknown as Record<string, unknown>;
-    t.setActionCell = setter('actionCell');
-    t.setColumnFilterFns = setter('columnFilterFns');
-    t.setCreatingRow = (row: unknown) =>
-      options().onCreatingRowChange?.(row === true ? createRow(table as never) : row);
-    t.setDensity = setter('density');
-    t.setDraggingColumn = setter('draggingColumn');
-    t.setDraggingRow = setter('draggingRow');
-    t.setEditingCell = setter('editingCell');
-    t.setEditingRow = setter('editingRow');
-    t.setGlobalFilterFn = setter('globalFilterFn');
-    t.setHoveredColumn = setter('hoveredColumn');
-    t.setHoveredRow = setter('hoveredRow');
-    t.setIsFullScreen = setter('isFullScreen');
-    t.setShowAlertBanner = setter('showAlertBanner');
-    t.setShowColumnFilters = setter('showColumnFilters');
-    t.setShowGlobalFilter = setter('showGlobalFilter');
-    t.setShowToolbarDropZone = setter('showToolbarDropZone');
-  },
 };
 
 /**
@@ -182,26 +130,18 @@ const SST_stockFeatures = tableFeatures({
   sortFns: SST_SortingFns,
   // Type-only slot: the payload our `fuzzy` filter hands to `addMeta`, which
   // the `fuzzy` sorting function reads back off `row.columnFiltersMeta`.
+  // SAFETY: TanStack removes this type-only slot before constructing runtime features.
   filterMeta: {} as RankingInfo,
 });
 
-/**
- * The stock feature set plus {@link shadstackCoreFeature}.
- *
- * The extra key is added with a local cast rather than a global
- * `Plugins`/`TableState_FeatureMap` declaration merge: this is a published
- * library, and a global merge would leak into every consumer's own TanStack
- * usage. The cast is sound — `TableState<SST_Features>` is derived only from
- * keys TanStack's feature maps know, so the extra key does not change any
- * derived type (verified by a type-equality assertion in the state-ownership
- * tests).
- */
+/** Adds custom state defaults without global TanStack declaration merging. */
 export const SST_features = {
   ...SST_stockFeatures,
   shadstackCoreFeature,
-} as typeof SST_stockFeatures & { shadstackCoreFeature: TableFeature };
+};
 
-export type SST_Features = typeof SST_features;
+export type SST_Features = Omit<typeof SST_features, SST_RowModelSlot> &
+  Partial<Pick<typeof SST_features, SST_RowModelSlot>>;
 
 /** Row-model slots that {@link createSST_features} can switch off. */
 type SST_RowModelSlot =
@@ -213,6 +153,17 @@ type SST_RowModelSlot =
   | 'groupedRowModel'
   | 'paginatedRowModel'
   | 'sortedRowModel';
+
+const rowModelSlots = [
+  'expandedRowModel',
+  'facetedMinMaxValues',
+  'facetedRowModel',
+  'facetedUniqueValues',
+  'filteredRowModel',
+  'groupedRowModel',
+  'paginatedRowModel',
+  'sortedRowModel',
+] as const satisfies readonly SST_RowModelSlot[];
 
 /**
  * Builds the feature set backing one table.
@@ -232,26 +183,28 @@ type SST_RowModelSlot =
  * dropped. That matches v8, where the table type always carried every method
  * and only runtime behavior depended on the row models actually supplied.
  */
-export const createSST_features = ({
+export const createSST_features = <TData extends SST_RowData>({
   aggregationFns,
   enabledRowModels,
   filterFns,
   sortFns,
 }: {
-  aggregationFns?: Record<string, unknown>;
+  aggregationFns?: SST_TableOptions<TData>['aggregationFns'];
   enabledRowModels: Record<SST_RowModelSlot, boolean>;
-  filterFns?: Record<string, unknown>;
-  sortFns?: Record<string, unknown>;
+  filterFns?: SST_TableOptions<TData>['filterFns'];
+  sortFns?: SST_TableOptions<TData>['sortFns'];
 }): SST_Features => {
-  const features: Record<string, unknown> = { ...SST_features };
+  const features: SST_Features = { ...SST_features };
 
-  for (const [slot, enabled] of Object.entries(enabledRowModels)) {
-    if (!enabled) delete features[slot];
+  for (const slot of rowModelSlots) {
+    if (!enabledRowModels[slot]) delete features[slot];
   }
 
-  if (aggregationFns) features.aggregationFns = aggregationFns;
-  if (filterFns) features.filterFns = filterFns;
-  if (sortFns) features.sortFns = sortFns;
+  if (aggregationFns) features.aggregationFns = { ...features.aggregationFns, ...aggregationFns };
 
-  return features as SST_Features;
+  if (filterFns) features.filterFns = { ...features.filterFns, ...filterFns };
+
+  if (sortFns) features.sortFns = { ...features.sortFns, ...sortFns };
+
+  return features;
 };

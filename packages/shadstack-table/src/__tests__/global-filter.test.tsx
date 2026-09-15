@@ -64,9 +64,11 @@ describe('ShadStackTable — global filter', () => {
     });
 
     const cells = screen.getAllByRole('cell');
+
     const firstNamesInOrder = cells
       .map((c) => c.textContent ?? '')
       .filter((text) => ['Ada', 'Grace', 'Linus', 'Margaret', 'Edsger'].includes(text));
+
     expect(firstNamesInOrder).toEqual(['Ada', 'Grace', 'Linus', 'Margaret', 'Edsger']);
   });
 });

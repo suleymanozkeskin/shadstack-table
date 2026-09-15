@@ -146,8 +146,8 @@ export type SST_TableSlotProps<TData extends SST_RowData> = {
     | ((props: {
         row: SST_Row<TData>;
         table: SST_TableInstance<TData>;
-      }) => React.ComponentProps<'div'>)
-    | React.ComponentProps<'div'>;
+      }) => React.ComponentProps<'td'>)
+    | React.ComponentProps<'td'>;
   editInput?:
     | ((props: {
         cell: SST_Cell<TData>;

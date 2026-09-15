@@ -18,16 +18,18 @@ export type ShadStackTableProps<TData extends SST_RowData> = Xor<
 
 const isTableInstanceProp = <TData extends SST_RowData>(
   props: ShadStackTableProps<TData>,
-): props is TableInstanceProp<TData> => (props as TableInstanceProp<TData>).table !== undefined;
+): props is TableInstanceProp<TData> => props.table !== undefined;
 
-export const ShadStackTable = <TData extends SST_RowData>(props: ShadStackTableProps<TData>) => {
-  let table: SST_TableInstance<TData>;
-
-  if (isTableInstanceProp(props)) {
-    table = props.table;
-  } else {
-    table = useShadStackTable(props);
-  }
+const TableWithOptions = <TData extends SST_RowData>(props: SST_TableOptions<TData>) => {
+  const table = useShadStackTable(props);
 
   return <SST_TablePaper table={table} />;
+};
+
+export const ShadStackTable = <TData extends SST_RowData>(props: ShadStackTableProps<TData>) => {
+  if (isTableInstanceProp(props)) {
+    return <SST_TablePaper table={props.table} />;
+  }
+
+  return <TableWithOptions {...props} />;
 };

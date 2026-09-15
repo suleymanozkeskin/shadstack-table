@@ -1,3 +1,5 @@
+import { useLayoutEffect } from 'react';
+import { createRow } from '../utils/tanstack.helpers';
 import { StrictMode } from 'react';
 import { act, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
@@ -18,7 +20,9 @@ import { people, personColumns, type Person } from './fixtures';
 //the feature is added with a local cast precisely so consumer-visible
 //TanStack types stay untouched.
 type TanStackDerivedState = TableState<SST_Features>;
+
 const shadstackKeysStayOut: 'density' extends keyof TanStackDerivedState ? never : true = true;
+
 void shadstackKeysStayOut;
 
 const STOCK_SLICES = [
@@ -45,7 +49,11 @@ const Harness = (options: Partial<SST_TableOptions<Person>>) => {
     data: people,
     ...options,
   });
-  capturedTable = table;
+
+  useLayoutEffect(() => {
+    capturedTable = table;
+  });
+
   return <ShadStackTable table={table} />;
 };
 
@@ -53,18 +61,12 @@ describe('state ownership — every slice is atom-backed', () => {
   it('the store snapshot and atom maps carry every shadstack and stock slice', () => {
     render(<Harness />);
     const table = capturedTable;
-    const snapshot = table.getState() as unknown as Record<string, unknown>;
+    const snapshot = table.getState();
 
     for (const key of [...Object.keys(SST_STATE_DEFAULTS), ...STOCK_SLICES]) {
       expect(snapshot, `store snapshot is missing '${key}'`).toHaveProperty(key);
-      expect(
-        (table.atoms as Record<string, unknown>)[key],
-        `derived atom missing for '${key}'`,
-      ).toBeDefined();
-      expect(
-        (table.baseAtoms as Record<string, unknown>)[key],
-        `base atom missing for '${key}'`,
-      ).toBeDefined();
+      expect(table.atoms, `derived atom missing for '${key}'`).toHaveProperty(key);
+      expect(table.baseAtoms, `base atom missing for '${key}'`).toHaveProperty(key);
     }
   });
 
@@ -83,7 +85,7 @@ describe('state ownership — every slice is atom-backed', () => {
     const cell = row.getAllCells()[0]!;
     const column = table.getAllLeafColumns()[0]!;
 
-    const writes: Array<[string, () => void, () => unknown, unknown]> = [
+    const writes = [
       ['density', () => table.setDensity('compact'), () => table.getState().density, 'compact'],
       [
         'isFullScreen',
@@ -140,20 +142,21 @@ describe('state ownership — every slice is atom-backed', () => {
       ['hoveredRow', () => table.setHoveredRow(row), () => table.getState().hoveredRow, row],
       [
         'hoveredColumn',
-        () => table.setHoveredColumn(column),
-        () => table.getState().hoveredColumn,
+        () => table.setHoveredColumn({ kind: 'column', column }),
+        () => {
+          const hovered = table.getState().hoveredColumn;
+
+          return hovered?.kind === 'column' ? hovered.column : null;
+        },
         column,
       ],
-    ];
+    ] as const;
 
     for (const [key, write, read, expected] of writes) {
       let notified = 0;
-      const sub = (
-        table.atoms as Record<
-          string,
-          { subscribe: (fn: () => void) => { unsubscribe: () => void } }
-        >
-      )[key]!.subscribe(() => notified++);
+
+      const sub = table.store.subscribe(() => notified++);
+
       act(() => write());
       expect(read(), `'${key}' did not update through its setter`).toBe(expected);
       expect(notified, `'${key}' atom did not notify its subscriber`).toBeGreaterThan(0);
@@ -161,14 +164,18 @@ describe('state ownership — every slice is atom-backed', () => {
     }
   });
 
-  it('setCreatingRow(true) constructs a blank row through the feature setter', () => {
+  it('setCreatingRow stores a row with typed initial values', () => {
     render(<Harness />);
-    act(() => capturedTable.setCreatingRow(true));
+    act(() =>
+      capturedTable.setCreatingRow(
+        createRow(capturedTable, { id: '', firstName: '', lastName: '', age: 0 }),
+      ),
+    );
     const creatingRow = capturedTable.getState().creatingRow;
     expect(creatingRow).not.toBeNull();
     expect(creatingRow!.id).toBe('sst-row-create');
     //methods must be live — the row is a real constructed Row instance
-    expect(typeof creatingRow!.getAllCells).toBe('function');
+    expect(creatingRow!.getAllCells).toBeTypeOf('function');
   });
 
   it('a consumer on*Change handler intercepts the write and owns the slice', () => {

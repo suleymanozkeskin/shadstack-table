@@ -1,3 +1,4 @@
+import { type FilterScalar, isFilterRangeValue } from '../../utils/filter-input';
 import * as React from 'react';
 import { Button } from '../../_ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../../_ui/popover';
@@ -12,9 +13,11 @@ export interface SST_FilterRangePopoverProps<
   table: SST_TableInstance<TData>;
 }
 
-const formatBound = (value: unknown): string | null => {
+const formatBound = (value: FilterScalar): string | null => {
   if (value === undefined || value === null || value === '') return null;
+
   if (value instanceof Date) return value.toLocaleDateString();
+
   return String(value);
 };
 
@@ -30,11 +33,12 @@ export const SST_FilterRangePopover = <TData extends SST_RowData>({
       localization,
     },
   } = table;
+
   const { column } = header;
   const { columnDef } = column;
 
   const filterValue = column.getFilterValue();
-  const [rawMin, rawMax] = Array.isArray(filterValue) ? filterValue : [undefined, undefined];
+  const [rawMin, rawMax] = isFilterRangeValue(filterValue) ? filterValue : [undefined, undefined];
   const minLabel = formatBound(rawMin);
   const maxLabel = formatBound(rawMax);
   const hasValue = minLabel !== null || maxLabel !== null;
@@ -48,10 +52,9 @@ export const SST_FilterRangePopover = <TData extends SST_RowData>({
           <Button
             variant="outline"
             size="sm"
-            className={cn(
-              'flex h-9 w-full items-center justify-between gap-2 px-3 font-normal',
-              !hasValue && 'text-muted-foreground',
-            )}
+            purpose="range-field"
+            data-empty={!hasValue}
+            className="w-full"
             aria-label={columnLabel}
             title={columnLabel}
           >

@@ -1,3 +1,4 @@
+import { composeRefs } from '@radix-ui/react-compose-refs';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { useSST_TableState } from '../../hooks/useSST_TableState';
@@ -32,6 +33,7 @@ export const SST_TableContainer = <TData extends SST_RowData>({
     },
     refs: { bottomToolbarRef, tableContainerRef, topToolbarRef },
   } = table;
+
   const { actionCell, creatingRow, editingRow, isFullScreen, isLoading, showLoadingOverlay } =
     useSST_TableState(table, (s) => ({
       actionCell: s.actionCell,
@@ -77,7 +79,9 @@ export const SST_TableContainer = <TData extends SST_RowData>({
     if (typeof ResizeObserver === 'undefined') return;
 
     const ro = new ResizeObserver(measure);
+
     if (topToolbarRef.current) ro.observe(topToolbarRef.current);
+
     if (bottomToolbarRef?.current) ro.observe(bottomToolbarRef.current);
 
     return () => ro.disconnect();
@@ -93,18 +97,13 @@ export const SST_TableContainer = <TData extends SST_RowData>({
       aria-describedby={loading ? `sst-progress-${id}` : undefined}
       data-slot="sst-table-container"
       {...tableContainerProps}
-      ref={(node: HTMLDivElement | null) => {
-        if (node) {
-          tableContainerRef.current = node;
-          if (typeof tableContainerProps?.ref === 'function') tableContainerProps.ref(node);
-        }
-      }}
+      ref={composeRefs(tableContainerRef, tableContainerProps.ref)}
       style={{
         // Themable focus ring color for keyboard-navigated cells; consumed by
         // the `[data-slot='sst-table-container'] :focus-visible` rule in
         // _ui/styles.css. Cells used to set this via a nested selector inside
         // inline style, which React warns about and silently drops.
-        ['--sst-cell-outline-color' as string]: cellNavigationOutlineColor,
+        ...{ '--sst-cell-outline-color': cellNavigationOutlineColor },
         maxHeight: isFullScreen
           ? `calc(100vh - ${totalToolbarHeight}px)`
           : enableStickyHeader

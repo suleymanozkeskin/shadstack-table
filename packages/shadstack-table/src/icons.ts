@@ -1,4 +1,6 @@
+import { type ComponentType } from 'react';
 import {
+  type LucideProps,
   ArrowDown as ArrowDownwardIcon,
   ArrowLeftRight as SyncAltIcon,
   ArrowRight as ArrowRightIcon,
@@ -74,4 +76,4 @@ export const SST_Default_Icons = {
   VisibilityOffIcon,
 } as const;
 
-export type SST_Icons = Record<keyof typeof SST_Default_Icons, any>;
+export type SST_Icons = Record<keyof typeof SST_Default_Icons, ComponentType<LucideProps>>;

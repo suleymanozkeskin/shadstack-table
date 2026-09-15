@@ -25,7 +25,7 @@ export interface SST_TableDetailPanelProps<
 
 export const SST_TableDetailPanel = <TData extends SST_RowData>({
   className,
-  parentRowRef,
+  parentRowRef: _parentRowRef,
   row,
   rowVirtualizer,
   staticRowIndex,
@@ -42,6 +42,7 @@ export const SST_TableDetailPanel = <TData extends SST_RowData>({
       slotProps,
     },
   } = table;
+
   const { isLoading } = useSST_TableState(table, (s) => ({
     isLoading: s.isLoading,
     //re-render when this row expands/collapses
@@ -78,7 +79,7 @@ export const SST_TableDetailPanel = <TData extends SST_RowData>({
       {...tableRowProps}
       style={{
         position: virtualRow ? 'absolute' : undefined,
-        top: virtualRow ? `${parentRowRef.current?.getBoundingClientRect()?.height}px` : undefined,
+        top: virtualRow ? `${virtualRow.size}px` : undefined,
         transform: virtualRow ? `translateY(${virtualRow?.start}px)` : undefined,
         width: '100%',
         ...tableRowProps?.style,
@@ -93,7 +94,7 @@ export const SST_TableDetailPanel = <TData extends SST_RowData>({
           tableCellProps?.className,
         )}
         colSpan={getVisibleLeafColumns().length}
-        {...(tableCellProps as React.TdHTMLAttributes<HTMLTableCellElement>)}
+        {...tableCellProps}
         style={{
           backgroundColor: virtualRow ? baseBackgroundColor : undefined,
           paddingTop: !!DetailPanel && row.getIsExpanded() ? '1rem' : 0,

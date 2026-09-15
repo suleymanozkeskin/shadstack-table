@@ -8,12 +8,16 @@ const fuzzy = <TData extends SST_RowData>(
   columnId: string,
 ) => {
   let dir = 0;
+
   if (rowA.columnFiltersMeta[columnId]) {
     dir = compareItems(
+      // SAFETY: The fuzzy filter stores RankingInfo for each ranked column.
       rowA.columnFiltersMeta[columnId] as RankingInfo,
+      // SAFETY: The fuzzy filter stores RankingInfo for each ranked column.
       rowB.columnFiltersMeta[columnId] as RankingInfo,
     );
   }
+
   // Provide a fallback for when the item ranks are equal
   return dir === 0 ? sortFns.alphanumeric(rowA, rowB, columnId) : dir;
 };

@@ -21,8 +21,6 @@ describe('ShadStackTable — RTL pagination chevrons', () => {
       />,
     );
 
-    // useDirection runs in an effect after mount, so wait for the flipped
-    // transform to land on the chevron icons.
     const prevButton = await screen.findByRole('button', { name: /go to previous page/i });
     const nextButton = await screen.findByRole('button', { name: /go to next page/i });
 

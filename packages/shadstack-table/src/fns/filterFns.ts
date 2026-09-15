@@ -11,10 +11,12 @@ const fuzzy = <TData extends SST_RowData>(
   // this function to be assignable to the `filterFns` registry.
   addMeta?: (item: ExtractFilterMeta<any>) => void,
 ): boolean => {
-  const itemRank = rankItem(row.getValue<string | number | null>(columnId), filterValue as string, {
+  const itemRank = rankItem(row.getValue<string | number | null>(columnId), String(filterValue), {
     threshold: rankings.MATCHES,
   });
+
   addMeta?.(itemRank);
+
   return itemRank.passed;
 };
 
@@ -127,9 +129,12 @@ const between = <TData extends SST_RowData>(
   id: string,
   filterValues: [number | string, number | string],
 ): boolean =>
-  ((['', undefined] as any[]).includes(filterValues[0]) || greaterThan(row, id, filterValues[0])) &&
+  (filterValues[0] === '' ||
+    filterValues[0] === undefined ||
+    greaterThan(row, id, filterValues[0])) &&
   ((!isNaN(+filterValues[0]) && !isNaN(+filterValues[1]) && +filterValues[0] > +filterValues[1]) ||
-    (['', undefined] as any[]).includes(filterValues[1]) ||
+    filterValues[1] === '' ||
+    filterValues[1] === undefined ||
     lessThan(row, id, filterValues[1]));
 
 between.autoRemove = (val: any) => !val;
@@ -139,10 +144,12 @@ const betweenInclusive = <TData extends SST_RowData>(
   id: string,
   filterValues: [number | string, number | string],
 ): boolean =>
-  ((['', undefined] as any[]).includes(filterValues[0]) ||
+  (filterValues[0] === '' ||
+    filterValues[0] === undefined ||
     greaterThanOrEqualTo(row, id, filterValues[0])) &&
   ((!isNaN(+filterValues[0]) && !isNaN(+filterValues[1]) && +filterValues[0] > +filterValues[1]) ||
-    (['', undefined] as any[]).includes(filterValues[1]) ||
+    filterValues[1] === '' ||
+    filterValues[1] === undefined ||
     lessThanOrEqualTo(row, id, filterValues[1]));
 
 betweenInclusive.autoRemove = (val: any) => !val;
@@ -183,6 +190,7 @@ const arrIncludesSome = <TData extends SST_RowData>(
   filterValues: unknown[],
 ): boolean => {
   const value = row.getValue(id);
+
   return Array.isArray(value)
     ? filterValues.some((filterValue) => value.includes(filterValue))
     : filterValues.some((filterValue) => filterValue === value);

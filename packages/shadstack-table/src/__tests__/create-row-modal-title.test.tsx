@@ -1,15 +1,11 @@
+import { createRow } from '../utils/tanstack.helpers';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { ShadStackTable } from '../components/ShadStackTable';
 import { people, personColumns } from './fixtures';
 
-// The create flow is triggered via `table.setCreatingRow(true)` since the
-// library does not ship a built-in "Create" toolbar button — we mirror the
-// idiomatic consumer pattern (upstream MRT docs show the same) by exposing the
-// trigger through `renderTopToolbarCustomActions`. This keeps the test driving
-// the same code path real consumers do: button click -> setCreatingRow(true)
-// -> creatingRow state populated -> modal renders with the create title.
+// Creation uses an application-owned initial row from the toolbar action.
 describe('ShadStackTable — create vs edit row modal title', () => {
   it('renders the Edit title when the edit modal opens', async () => {
     const user = userEvent.setup();
@@ -42,7 +38,14 @@ describe('ShadStackTable — create vs edit row modal title', () => {
         createDisplayMode="modal"
         getRowId={(row) => row.id}
         renderTopToolbarCustomActions={({ table }) => (
-          <button type="button" onClick={() => table.setCreatingRow(true)}>
+          <button
+            type="button"
+            onClick={() =>
+              table.setCreatingRow(
+                createRow(table, { id: '', firstName: '', lastName: '', age: 0 }),
+              )
+            }
+          >
             New person
           </button>
         )}
@@ -67,7 +70,14 @@ describe('ShadStackTable — create vs edit row modal title', () => {
         getRowId={(row) => row.id}
         localization={{ create: 'Add' }}
         renderTopToolbarCustomActions={({ table }) => (
-          <button type="button" onClick={() => table.setCreatingRow(true)}>
+          <button
+            type="button"
+            onClick={() =>
+              table.setCreatingRow(
+                createRow(table, { id: '', firstName: '', lastName: '', age: 0 }),
+              )
+            }
+          >
             New person
           </button>
         )}

@@ -1,3 +1,4 @@
+import { functionalUpdate } from '@tanstack/react-table';
 import { useState } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -53,7 +54,7 @@ function Harness({ initialSorting }: { initialSorting: SST_SortingState }) {
         state={{ globalFilter, sorting }}
         onGlobalFilterChange={setGlobalFilter}
         onSortingChange={(updater) => {
-          setSorting((prev) => (typeof updater === 'function' ? updater(prev) : updater));
+          setSorting((prev) => functionalUpdate(updater, prev));
         }}
       />
     </>

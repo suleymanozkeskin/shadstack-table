@@ -1,5 +1,6 @@
-import { useCallback, useMemo } from 'react';
-import { type Range, useVirtualizer } from '@tanstack/react-virtual';
+import { useSST_Virtualizer } from './useSST_Virtualizer';
+import { useCallback, useMemo, useLayoutEffect } from 'react';
+import { type Range } from '@tanstack/react-virtual';
 import {
   type SST_Row,
   type SST_RowData,
@@ -10,14 +11,10 @@ import { useSST_TableState } from './useSST_TableState';
 import { parseFromValuesOrFunc } from '../utils/utils';
 import { extraIndexRangeExtractor } from '../utils/virtualization.utils';
 
-export const useSST_RowVirtualizer = <
-  TData extends SST_RowData,
-  TScrollElement extends Element | Window = HTMLDivElement,
-  TItemElement extends Element = HTMLTableRowElement,
->(
+export const useSST_RowVirtualizer = <TData extends SST_RowData>(
   table: SST_TableInstance<TData>,
   rows?: SST_Row<TData>[],
-): SST_RowVirtualizer<TScrollElement, TItemElement> | undefined => {
+): SST_RowVirtualizer | undefined => {
   const {
     getRowModel,
     options: {
@@ -28,19 +25,19 @@ export const useSST_RowVirtualizer = <
     },
     refs: { tableContainerRef },
   } = table;
+
   const { density, draggingRow, expanded } = useSST_TableState(table, (s) => ({
     density: s.density,
     draggingRow: s.draggingRow,
     expanded: s.expanded,
   }));
 
-  if (!enableRowVirtualization) return undefined;
-
   const rowVirtualizerProps = parseFromValuesOrFunc(rowVirtualizerOptions, {
     table,
   });
 
   const realRows = rows ?? getRowModel().rows;
+
   /**
    * when filtering, should find the correct index in filtered rows
    */
@@ -53,7 +50,7 @@ export const useSST_RowVirtualizer = <
 
   const normalRowHeight = density === 'compact' ? 37 : density === 'comfortable' ? 58 : 73;
 
-  const rowVirtualizer = useVirtualizer({
+  const instance = useSST_Virtualizer<HTMLDivElement, HTMLTableRowElement>({
     count: renderDetailPanel ? rowCount * 2 : rowCount,
     estimateSize: (index) =>
       renderDetailPanel && index % 2 === 1 ? (expanded === true ? 100 : 0) : normalRowHeight,
@@ -70,14 +67,19 @@ export const useSST_RowVirtualizer = <
       [draggingRowIndex],
     ),
     ...rowVirtualizerProps,
-  }) as unknown as SST_RowVirtualizer<TScrollElement, TItemElement>;
+    enabled: !!enableRowVirtualization,
+  });
 
-  rowVirtualizer.virtualRows = rowVirtualizer.getVirtualItems() as any;
+  const rowVirtualizer = Object.freeze({ ...instance, virtualRows: instance.getVirtualItems() });
 
-  if (rowVirtualizerInstanceRef) {
-    // @ts-expect-error -- rowVirtualizer is widened with .virtualRows; the public types don't yet model the augmentation
-    rowVirtualizerInstanceRef.current = rowVirtualizer;
-  }
+  useLayoutEffect(() => {
+    if (!rowVirtualizerInstanceRef) return;
+    rowVirtualizerInstanceRef.current = enableRowVirtualization ? rowVirtualizer : null;
 
-  return rowVirtualizer;
+    return () => {
+      rowVirtualizerInstanceRef.current = null;
+    };
+  }, [rowVirtualizerInstanceRef, enableRowVirtualization, rowVirtualizer]);
+
+  return enableRowVirtualization ? rowVirtualizer : undefined;
 };

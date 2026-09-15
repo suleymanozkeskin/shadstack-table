@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { AdvancedExample } from './AdvancedExample';
 import { BasicExample } from './BasicExample';
 import { applyTheme, clearTheme, themes } from './themes';
@@ -36,6 +36,7 @@ function ChipGroup<T extends string>({
       <div className="bg-muted/50 flex max-w-full items-center gap-1 overflow-x-auto rounded-md border p-0.5">
         {options.map((o) => {
           const active = o.key === value;
+
           return (
             <button
               key={o.key}
@@ -83,8 +84,18 @@ export interface PlaygroundProps {
 
 function readHostDark(): boolean {
   if (typeof document === 'undefined') return false;
+
   return document.documentElement.getAttribute('data-theme') === 'dark';
 }
+
+function subscribeHostTheme(onChange: () => void): () => void {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  return () => observer.disconnect();
+}
+
+const readServerDark = () => false;
 
 export function Playground({
   modeSource = 'self',
@@ -92,7 +103,9 @@ export function Playground({
   defaultThemeKey = 'northern-lights',
   defaultDark = true,
 }: PlaygroundProps = {}) {
-  const [dark, setDark] = useState(modeSource === 'host' ? readHostDark : defaultDark);
+  const [localDark, setDark] = useState(defaultDark);
+  const hostDark = useSyncExternalStore(subscribeHostTheme, readHostDark, readServerDark);
+  const dark = modeSource === 'host' ? hostDark : localDark;
   const [example, setExample] = useState<ExampleKey>(defaultExample);
   const [themeKey, setThemeKey] = useState<string>(defaultThemeKey);
   const current = examples.find((e) => e.key === example) ?? examples[0];
@@ -106,20 +119,9 @@ export function Playground({
     document.documentElement.classList.toggle('dark', dark);
   }, [dark, modeSource]);
 
-  // Host mode: subscribe to `<html data-theme>` changes (the user clicking
-  // Starlight's Light/Dark toggle) and mirror them into our `dark` state,
-  // which feeds the applyTheme effect below.
-  useEffect(() => {
-    if (modeSource !== 'host') return;
-    const html = document.documentElement;
-    setDark(readHostDark());
-    const observer = new MutationObserver(() => setDark(readHostDark()));
-    observer.observe(html, { attributes: true, attributeFilter: ['data-theme'] });
-    return () => observer.disconnect();
-  }, [modeSource]);
-
   useEffect(() => {
     applyTheme(preset, dark ? 'dark' : 'light');
+
     return () => clearTheme();
   }, [preset, dark]);
 

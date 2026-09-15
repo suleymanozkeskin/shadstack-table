@@ -33,14 +33,11 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
   const sourceColumnSignature = getAllLeafColumnDefs(table.options.columns)
     .map(getColumnId)
     .join('|');
+
   useEffect(() => {
     //`options.state` holds only consumer-controlled state, so build the
     //stateful view the column-order derivation expects from the live state
-    table.setColumnOrder(
-      getDefaultColumnOrderIds({ ...table.options, state: table.getState() } as Parameters<
-        typeof getDefaultColumnOrderIds<TData>
-      >[0]),
-    );
+    table.setColumnOrder(getDefaultColumnOrderIds({ ...table.options, state: table.getState() }));
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: only re-fire when the column-id signature changes; `table` is a stable instance and depending on it would cause this to fire on every state change.
   }, [sourceColumnSignature]);
 
@@ -51,6 +48,7 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
   const lastBoundsInputs = useRef<null | { count: number; enabled: boolean; loading: boolean }>(
     null,
   );
+
   const checkPageBounds = () => {
     const { enablePagination, rowCount } = table.options;
     const { isLoading, pagination, showSkeletons } = table.getState();
@@ -59,18 +57,22 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
     const count = rowCount ?? table.getPrePaginatedRowModel().rows.length;
     const prev = lastBoundsInputs.current;
     lastBoundsInputs.current = { count, enabled, loading };
+
     if (prev && prev.count === count && prev.enabled === enabled && prev.loading === loading) {
       return;
     }
+
     if (!enabled || loading) return;
 
     const { pageIndex, pageSize } = pagination;
     const totalPages: number = count > 0 ? Math.ceil(count / pageSize) : 1;
     const isOutOfBounds: boolean = pageIndex < 0 || pageIndex >= totalPages;
+
     if (isOutOfBounds) {
       table.setPageIndex(totalPages - 1);
     }
   };
+
   //covers data/options-driven changes: new data always re-renders the host
   // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: runs after every host render, self-guarded by the inputs ref above.
   useEffect(() => {
@@ -81,10 +83,11 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
   //restyle, and state-driven page bounds — all as subscriptions on the
   //stable table's atoms, registered once.
   const userIntendedSort = useRef<SST_SortingState>([]);
-  const prevGlobalFilter = useRef<unknown>(undefined);
+  const prevGlobalFilter = useRef(false);
   useEffect(() => {
     const applyFullscreen = (isFullScreen: boolean | undefined) => {
       if (typeof window === 'undefined') return;
+
       if (isFullScreen && !fullscreenAppliedRef.current) {
         fullscreenAppliedRef.current = true;
         previousTop.current = document.body.getBoundingClientRect().top; //save scroll position
@@ -92,6 +95,7 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
       } else if (!isFullScreen && fullscreenAppliedRef.current) {
         fullscreenAppliedRef.current = false;
         document.body.style.height = initialBodyHeight.current ?? '';
+
         if (!previousTop.current) return;
         //restore scroll position
         window.scrollTo({ behavior: 'instant', top: -1 * previousTop.current });
@@ -101,8 +105,11 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
     //turn off sort while the global filter is ranking results, and restore
     //the user's previous sort (including an intentionally cleared []) when
     //the filter is removed
-    const applyRankedSortDance = (globalFilter: unknown) => {
+    const applyRankedSortDance = () => {
       if (!getCanRankRows(table)) return;
+
+      const globalFilter = !!table.getState().globalFilter;
+
       if (globalFilter && !prevGlobalFilter.current) {
         //entering ranked-filter mode — snapshot the current sort to restore later
         userIntendedSort.current = table.getState().sorting;
@@ -111,21 +118,24 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
         //leaving ranked-filter mode — restore the snapshot exactly, including []
         table.setSorting(() => userIntendedSort.current);
       }
+
       prevGlobalFilter.current = globalFilter;
     };
+
+    const pinnedRowDelayMs = 150;
+    let pinnedRowTimer: ReturnType<typeof setTimeout> | undefined;
 
     //fix pinned row top style when density changes
     const applyPinnedRowRestyle = () => {
       if (table.options.enableRowPinning && table.getIsSomeRowsPinned()) {
-        setTimeout(() => {
-          rerender();
-        }, 150);
+        clearTimeout(pinnedRowTimer);
+        pinnedRowTimer = setTimeout(rerender, pinnedRowDelayMs);
       }
     };
 
     const initial = table.getState();
     userIntendedSort.current = initial.sorting;
-    prevGlobalFilter.current = initial.globalFilter;
+    prevGlobalFilter.current = !!initial.globalFilter;
     //a table mounted in full screen must apply the body styles immediately
     applyFullscreen(initial.isFullScreen);
 
@@ -134,14 +144,11 @@ export const useSST_Effects = <TData extends SST_RowData>(table: SST_TableInstan
       table.atoms.globalFilter.subscribe(applyRankedSortDance),
       table.atoms.density.subscribe(applyPinnedRowRestyle),
       //state-driven row-model changes (filters, grouping, …) re-check bounds
-      (
-        table as unknown as {
-          store: { subscribe: (fn: () => void) => { unsubscribe: () => void } };
-        }
-      ).store.subscribe(checkPageBounds),
+      table.store.subscribe(checkPageBounds),
     ];
 
     return () => {
+      clearTimeout(pinnedRowTimer);
       subscriptions.forEach((subscription) => subscription.unsubscribe());
       //leaving the page while in full screen must not leak the body height
       applyFullscreen(false);

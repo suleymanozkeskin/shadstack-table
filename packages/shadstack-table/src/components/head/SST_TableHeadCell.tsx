@@ -36,6 +36,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
   ...rest
 }: SST_TableHeadCellProps<TData>) => {
   const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
+
   const {
     options: {
       columnFilterDisplayMode,
@@ -55,6 +56,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
     refs: { tableHeadCellRefs },
     setHoveredColumn,
   } = table;
+
   //Per-column projections: this head cell re-renders only for changes that
   //affect THIS column. Drag/hover handlers read table.getState() live, since
   //they can fire while none of these projections have changed.
@@ -69,12 +71,14 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
     density: s.density,
     isDraggingThisColumn: s.draggingColumn?.id === header.column.id,
     isGroupedThisColumn: s.grouping.includes(header.column.id),
-    isHoveredThisColumn: s.hoveredColumn?.id === header.column.id,
+    isHoveredThisColumn:
+      s.hoveredColumn?.kind === 'column' && s.hoveredColumn.column.id === header.column.id,
     isResizingThisColumn: s.columnResizing.isResizingColumn === header.column.id,
     showColumnFilters: s.showColumnFilters,
     //aria-sort and the sort tooltip render from this column's sort state
     sortDirectionThisColumn: header.column.getIsSorted(),
   }));
+
   const { column } = header;
   const { columnDef } = column;
   const { columnDefType } = columnDef;
@@ -104,9 +108,13 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
 
   const headerPL = useMemo(() => {
     let pl = 0;
+
     if (column.getCanSort()) pl += 1;
+
     if (showColumnActions) pl += 1.75;
+
     if (showDragHandle) pl += 1.5;
+
     return pl;
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- column is the table-column proxy; getCanSort() never changes for a given column instance, so the dep list is intentionally narrow. FOLLOW-UP: verify and possibly inline column.getCanSort() into the dep array.
   }, [showColumnActions, showDragHandle]);
@@ -128,6 +136,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
         ? { borderRight: borderStyle }
         : { borderLeft: borderStyle };
     }
+
     return borderStyle
       ? {
           borderLeft: borderStyle,
@@ -142,11 +151,15 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
     //live reads: a drag can pass over this cell without any of its
     //subscribed projections having changed since its last render
     const { draggingColumn, hoveredColumn } = table.getState();
-    if (enableGrouping && hoveredColumn?.id === 'drop-zone') {
+
+    if (enableGrouping && hoveredColumn?.kind === 'drop-zone') {
       setHoveredColumn(null);
     }
+
     if (enableColumnOrdering && draggingColumn && columnDefType !== 'group') {
-      setHoveredColumn(columnDef.enableColumnOrdering !== false ? column : null);
+      setHoveredColumn(
+        columnDef.enableColumnOrdering !== false ? { kind: 'column', column } : null,
+      );
     }
   };
 
@@ -172,6 +185,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
         if (tableHeadCellRefs.current) {
           tableHeadCellRefs.current[column.id] = node;
         }
+
         if (columnDefType !== 'group') {
           columnVirtualizer?.measureElement?.(node);
         }
@@ -247,12 +261,12 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
         paddingTop,
         userSelect: enableMultiSort && column.getCanSort() ? 'none' : undefined,
         flexDirection: isGrid ? 'column' : undefined,
-        ...(getCommonMRTCellStyles({
+        ...getCommonMRTCellStyles({
           column,
           header,
           table,
           tableCellProps,
-        }) as React.CSSProperties),
+        }),
         ...draggingBorders,
         ...tableCellProps?.style,
       }}
@@ -269,7 +283,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
               className={cn(
                 'SST-TableHeadCell-Content relative w-full flex items-center gap-2',
                 tableCellProps?.style?.textAlign === 'right' ? 'flex-row-reverse' : 'flex-row',
-                columnDefType === 'group' || (tableCellProps as any)?.align === 'center'
+                columnDefType === 'group' || tableCellProps?.align === 'center'
                   ? 'justify-center'
                   : column.getCanResize()
                     ? 'justify-between'
@@ -285,8 +299,7 @@ export const SST_TableHeadCell = <TData extends SST_RowData>({
                   column.getCanSort() && columnDefType !== 'group' && 'cursor-pointer',
                 )}
                 style={{
-                  paddingLeft:
-                    (tableCellProps as any)?.align === 'center' ? `${headerPL}rem` : undefined,
+                  paddingLeft: tableCellProps?.align === 'center' ? `${headerPL}rem` : undefined,
                 }}
                 onClick={column.getToggleSortingHandler()}
               >

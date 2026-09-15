@@ -38,10 +38,12 @@ describe('ShadStackTable — column actions menu', () => {
 
   it('lets a column opt out while its siblings keep the entry', async () => {
     const user = userEvent.setup();
+
     const columns: SST_ColumnDef<Person>[] = [
       { accessorKey: 'firstName', header: 'First name', enableFilterByColumnMenuItem: false },
       { accessorKey: 'lastName', header: 'Last name' },
     ];
+
     render(<ShadStackTable columns={columns} data={people} />);
 
     const buttons = await screen.findAllByRole('button', { name: /column actions/i });
@@ -66,6 +68,7 @@ describe('ShadStackTable — column actions menu', () => {
         data={people}
         renderColumnActionsMenuItems={({ internalColumnMenuItems }) => {
           seenKeys.push(...internalColumnMenuItems.map((item) => item.key));
+
           // No cast needed to reach `.key` — that is the point of the typing.
           return internalColumnMenuItems.filter(
             (item) => item.key !== SST_COLUMN_MENU_ITEM_IDS.hideColumn,

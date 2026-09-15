@@ -27,6 +27,7 @@ export const SST_TableHeadCellColumnActionsButton = <TData extends SST_RowData>(
       slotProps,
     },
   } = table;
+
   const { column } = header;
   const { columnDef } = column;
 
@@ -57,14 +58,11 @@ export const SST_TableHeadCellColumnActionsButton = <TData extends SST_RowData>(
           <Button
             aria-label={localization.columnActions}
             onClick={openColumnActionsMenu}
-            size="icon"
+            size="icon-xs"
+            purpose="column-action"
             variant="ghost"
             {...iconButtonProps}
-            className={cn(
-              'h-6 w-6 opacity-50 transition-opacity duration-150 hover:opacity-100',
-              className,
-              iconButtonProps?.className,
-            )}
+            className={cn(className, iconButtonProps?.className)}
             title={undefined}
           >
             {iconButtonProps?.children ?? <MoreVertIcon className="size-3.5" />}

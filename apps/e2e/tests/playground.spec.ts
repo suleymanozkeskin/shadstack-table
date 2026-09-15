@@ -18,8 +18,10 @@ import { expect, test } from '@playwright/test';
  */
 
 const ROWS_SELECTOR = 'table tbody tr[data-index]:not(.SST-TableBodyCell-DetailPanel)';
+
 // Default page-1 anchor: Ada is the first row in employees.ts.
 const FIRST_PAGE_ROW = 'Ada Lovelace';
+
 // Default page-2 anchor: Radia is index 10 in employees.ts (e011),
 // which makes her the first row of page 2 with pageSize=10.
 const SECOND_PAGE_ROW = 'Radia Perlman';

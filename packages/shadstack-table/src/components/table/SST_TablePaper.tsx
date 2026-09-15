@@ -1,3 +1,4 @@
+import { composeRefs } from '@radix-ui/react-compose-refs';
 import * as React from 'react';
 import { SST_TableContainer } from './SST_TableContainer';
 import { SST_TableContext } from '../../hooks/useSST_TableContext';
@@ -30,6 +31,7 @@ export const SST_TablePaper = <TData extends SST_RowData>({
     },
     refs: { tablePaperRef },
   } = table;
+
   const { isFullScreen } = useSST_TableState(table, (s) => ({ isFullScreen: s.isFullScreen }));
 
   const paperProps = {
@@ -38,17 +40,12 @@ export const SST_TablePaper = <TData extends SST_RowData>({
   };
 
   return (
-    // The provider value is the referentially stable instance, so this never
-    // re-renders consumers by itself.
-    <SST_TableContext.Provider value={table as unknown as SST_TableInstance<SST_RowData>}>
+    <SST_TableContext.Provider value={table}>
       {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- the wrapper <div> is a layout container; the onKeyDown is a global Escape handler for fullscreen exit. Adding a role would mis-announce the wrapper to AT. */}
       <div
         onKeyDown={(e) => e.key === 'Escape' && table.setIsFullScreen(false)}
         {...paperProps}
-        ref={(ref: HTMLDivElement | null) => {
-          tablePaperRef.current = ref!;
-          if (typeof paperProps?.ref === 'function') paperProps.ref(ref!);
-        }}
+        ref={composeRefs(tablePaperRef, paperProps.ref)}
         style={{
           backgroundColor: baseBackgroundColor,
           ...(isFullScreen
@@ -66,7 +63,7 @@ export const SST_TablePaper = <TData extends SST_RowData>({
                 width: '100dvw',
                 zIndex: 50,
               }
-            : {}),
+            : undefined),
           ...paperProps?.style,
         }}
         className={cn(

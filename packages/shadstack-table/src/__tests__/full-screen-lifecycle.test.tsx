@@ -30,12 +30,14 @@ const installHeightWriteSpy = () => {
       original?.set?.call(this, value);
     },
   });
+
   const restore = () => {
     if (original) {
       // Restore the prototype descriptor by deleting the instance override.
-      delete (document.body.style as unknown as Record<string, unknown>).height;
+      Reflect.deleteProperty(document.body.style, 'height');
     }
   };
+
   return { writes, restore };
 };
 

@@ -4,13 +4,9 @@ import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { SST_EditActionButtons } from './SST_EditActionButtons';
 import { Button } from '../../_ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
-import { cn } from '../../lib/utils';
 import { type SST_Cell, type SST_Row, type SST_RowData, type SST_TableInstance } from '../../types';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 import { SST_RowActionMenu } from '../menus/SST_RowActionMenu';
-
-const commonIconButtonClasses =
-  'h-8 w-8 opacity-60 transition-opacity duration-150 hover:opacity-100';
 
 export interface SST_ToggleRowActionMenuButtonProps<
   TData extends SST_RowData,
@@ -83,9 +79,10 @@ export const SST_ToggleRowActionMenuButton = <TData extends SST_RowData>({
               aria-label={localization.edit}
               onClick={handleStartEditMode}
               size="icon"
+              purpose="row-action"
               variant="ghost"
               {...rest}
-              className={cn(commonIconButtonClasses, className)}
+              className={className}
             >
               <EditIcon />
             </Button>
@@ -93,10 +90,11 @@ export const SST_ToggleRowActionMenuButton = <TData extends SST_RowData>({
           <TooltipContent side="right">{localization.edit}</TooltipContent>
         </Tooltip>
       ) : renderRowActionMenuItems?.({
+          closeMenu: () => setAnchorEl(null),
           row,
           staticRowIndex,
           table,
-        } as any)?.length ? (
+        })?.length ? (
         <>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -104,9 +102,10 @@ export const SST_ToggleRowActionMenuButton = <TData extends SST_RowData>({
                 aria-label={localization.rowActions}
                 onClick={handleOpenRowActionMenu}
                 size="icon"
+                purpose="row-action"
                 variant="ghost"
                 {...rest}
-                className={cn(commonIconButtonClasses, className)}
+                className={className}
               >
                 <MoreHorizIcon />
               </Button>

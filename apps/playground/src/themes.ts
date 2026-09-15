@@ -211,6 +211,7 @@ export function applyTheme(
   target: HTMLElement = document.documentElement,
 ) {
   const tokens = mode === 'dark' ? preset.dark : preset.light;
+
   for (const key of TOKEN_KEYS) {
     if (tokens[key]) target.style.setProperty(key, tokens[key]);
     else target.style.removeProperty(key);

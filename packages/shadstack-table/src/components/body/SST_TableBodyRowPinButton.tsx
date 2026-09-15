@@ -21,13 +21,14 @@ export const SST_TableBodyRowPinButton = <TData extends SST_RowData>({
   const {
     options: { enableRowPinning, rowPinningDisplayMode },
   } = table;
+
   const { density } = useSST_TableState(table, (s) => ({
     density: s.density,
     //re-render when this row's pinned state flips
     isRowPinned: !!row.getIsPinned(),
   }));
 
-  const canPin = parseFromValuesOrFunc(enableRowPinning, row as any);
+  const canPin = parseFromValuesOrFunc(enableRowPinning, row);
 
   if (!canPin) return null;
 

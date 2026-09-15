@@ -8,6 +8,7 @@ import { people, personColumns } from './fixtures';
 
 function Harness() {
   const [rowSelection, setRowSelection] = useState<SST_RowSelectionState>({});
+
   return (
     <>
       <ShadStackTable

@@ -10,7 +10,66 @@
     "style": "off"
   },
   "rules": {
-    "react/react-in-jsx-scope": "off"
+    "react/react-in-jsx-scope": "off",
+    "anti-slop/no-array-filter-map": "error",
+    "anti-slop/no-reduce-accumulator-copy": "error",
+    "anti-slop/no-chained-type-assertions": "error",
+    "anti-slop/no-conditional-empty-object-spread": "error",
+    "anti-slop/no-known-value-widening": "error",
+    "anti-slop/no-module-mocking": "error",
+    "anti-slop/no-object-parameters": "error",
+    "anti-slop/no-reflect-apply": "error",
+    "anti-slop/no-reflect-get": "error",
+    "anti-slop/no-runtime-typeof": [
+      "error",
+      {
+        "allowInTypeGuards": true
+      }
+    ],
+    "anti-slop/no-unsafe-dictionary-type": "error",
+    "anti-slop/no-shape-in-symbol-names": "error",
+    "anti-slop/no-unknown-parameters": "error",
+    "anti-slop/no-unknown-returns": "error",
+    "anti-slop/no-unknown-type-aliases": "error",
+    "anti-slop/no-widen-then-assert": "error",
+    "anti-slop/require-readable-spacing": "error",
+    "anti-slop/require-safety-comment-for-type-assertion": "error",
+    "oxc/no-accumulating-spread": "error",
+    "shadcn/no-restyle": [
+      "error",
+      {
+        "componentImports": ["(?:^|/)_ui/button$"],
+        "contracts": [
+          {
+            "pattern": "^Button$",
+            "allow": [
+              "w-full",
+              "m-*",
+              "mx-*",
+              "my-*",
+              "mt-*",
+              "mr-*",
+              "mb-*",
+              "ml-*",
+              "ms-*",
+              "me-*",
+              "shrink-0",
+              "pointer-events-auto"
+            ],
+            "message": {
+              "spacing": "Use a Button size from {{file}}: {{sizes|default, sm, lg, icon, icon-xs, icon-sm, icon-lg, action}}.",
+              "default": "Use Button variant, purpose, emphasis, leadingSpace, or trailingSpace in {{file}}. Use margin or w-full for placement."
+            }
+          }
+        ]
+      }
+    ],
+    "import/no-unassigned-import": [
+      "warn",
+      {
+        "allow": ["**/*.css"]
+      }
+    ]
   },
   "env": {
     "browser": true,
@@ -22,6 +81,33 @@
     "**/node_modules/**",
     "**/build/**",
     "**/coverage/**",
-    "material-react-table/**"
+    "material-react-table/**",
+    ".agent/**",
+    ".agents/**",
+    ".claude/**",
+    ".codex/**",
+    ".continue/**",
+    ".cursor/**",
+    ".gemini/**",
+    ".opencode/**",
+    ".pi/**",
+    ".roo/**",
+    ".windsurf/**",
+    "tools/oxlint/anti-slop/**"
+  ],
+  "jsPlugins": [
+    {
+      "name": "anti-slop",
+      "specifier": "./tools/oxlint/anti-slop/index.ts"
+    },
+    "@shadcn/lint"
+  ],
+  "overrides": [
+    {
+      "files": ["packages/shadstack-table/src/_ui/**"],
+      "rules": {
+        "shadcn/no-restyle": "off"
+      }
+    }
   ]
 }

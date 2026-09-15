@@ -20,6 +20,7 @@ export const SST_TableHeadCellResizeHandle = <TData extends SST_RowData>({
     options: { columnResizeDirection, columnResizeMode },
     setColumnResizing,
   } = table;
+
   const { deltaOffset, density } = useSST_TableState(table, (s) => ({
     //per-mousemove delta subscribed ONLY while this column resizes — other
     //columns' resize ticks do not re-render this handle
@@ -29,6 +30,7 @@ export const SST_TableHeadCellResizeHandle = <TData extends SST_RowData>({
         : 0,
     density: s.density,
   }));
+
   const { column } = header;
 
   const handler = header.getResizeHandler();

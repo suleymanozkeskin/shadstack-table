@@ -34,12 +34,14 @@ export const SST_TableBodyRowGrabHandle = <TData extends SST_RowData>({
 
   const handleDragStart = (event: DragEvent<HTMLButtonElement>) => {
     iconButtonProps?.onDragStart?.(event);
+
     try {
-      event.dataTransfer.setDragImage(rowRef.current as HTMLElement, 0, 0);
+      if (rowRef.current) event.dataTransfer.setDragImage(rowRef.current, 0, 0);
     } catch (e) {
       console.error(e);
     }
-    table.setDraggingRow(row as any);
+
+    table.setDraggingRow(row);
   };
 
   const handleDragEnd = (event: DragEvent<HTMLButtonElement>) => {

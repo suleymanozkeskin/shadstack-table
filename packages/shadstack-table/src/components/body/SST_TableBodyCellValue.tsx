@@ -1,9 +1,12 @@
-import { type ReactNode, type RefObject } from 'react';
+import { getDefaultCellValue } from '../../utils/cell-display';
+import { flexRender } from '../../utils/tanstack.helpers';
+import { type RefObject } from 'react';
 import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { highlightWords } from '../../utils/highlightWords';
 import { type SST_Cell, type SST_RowData, type SST_TableInstance } from '../../types';
 
-const allowedTypes = ['string', 'number'];
+const isTextValue = (value: unknown): value is string | number =>
+  typeof value === 'string' || typeof value === 'number';
 
 export interface SST_TableBodyCellValueProps<TData extends SST_RowData> {
   cell: SST_Cell<TData>;
@@ -26,8 +29,10 @@ export const SST_TableBodyCellValue = <TData extends SST_RowData>({
       mrtTheme: { matchHighlightColor },
     },
   } = table;
+
   const { column, row } = cell;
   const { columnDef } = column;
+
   //highlighting depends on this column's filter value, the global filter,
   //and the resolved filter fn; the projection covers exactly those, so a
   //filter change on ANOTHER column does not re-render this cell value
@@ -39,7 +44,7 @@ export const SST_TableBodyCellValue = <TData extends SST_RowData>({
 
   let renderedCellValue =
     cell.getIsAggregated() && columnDef.AggregatedCell
-      ? columnDef.AggregatedCell({
+      ? flexRender(columnDef.AggregatedCell, {
           cell,
           column,
           row,
@@ -50,7 +55,7 @@ export const SST_TableBodyCellValue = <TData extends SST_RowData>({
       : row.getIsGrouped() && !cell.getIsGrouped()
         ? null
         : cell.getIsGrouped() && columnDef.GroupedCell
-          ? columnDef.GroupedCell({
+          ? flexRender(columnDef.GroupedCell, {
               cell,
               column,
               row,
@@ -63,28 +68,30 @@ export const SST_TableBodyCellValue = <TData extends SST_RowData>({
   const isGroupedValue = renderedCellValue !== undefined;
 
   if (!isGroupedValue) {
-    renderedCellValue = cell.renderValue() as ReactNode | number | string;
+    renderedCellValue =
+      table.getEditedValue(row, column.id) ?? getDefaultCellValue(cell.renderValue());
   }
 
   if (
     enableFilterMatchHighlighting &&
     columnDef.enableFilterMatchHighlighting !== false &&
     String(renderedCellValue) &&
-    allowedTypes.includes(typeof renderedCellValue) &&
+    isTextValue(renderedCellValue) &&
     ((filterValue &&
-      allowedTypes.includes(typeof filterValue) &&
+      isTextValue(filterValue) &&
       ['autocomplete', 'text'].includes(columnDef.filterVariant!)) ||
-      (globalFilter && allowedTypes.includes(typeof globalFilter) && column.getCanGlobalFilter()))
+      (globalFilter && isTextValue(globalFilter) && column.getCanGlobalFilter()))
   ) {
     const chunks = highlightWords({
       // oxlint-disable-next-line no-underscore-dangle -- _filterFn is the canonical internal property carried over from upstream MRT/TanStack column def shape
       matchExactly: (filterValue ? columnDef._filterFn : globalFilterFn) !== 'fuzzy',
       query: (filterValue ?? globalFilter ?? '').toString(),
-      text: renderedCellValue?.toString() as string,
+      text: String(renderedCellValue),
     });
+
     if (chunks.length > 1 || chunks[0]?.match) {
       renderedCellValue = (
-        <span aria-label={renderedCellValue as string} role="note">
+        <span aria-label={String(renderedCellValue)} role="note">
           {chunks.map(({ key, match, text }) => (
             <span
               aria-hidden="true"
@@ -101,7 +108,7 @@ export const SST_TableBodyCellValue = <TData extends SST_RowData>({
   }
 
   if (columnDef.Cell && !isGroupedValue) {
-    renderedCellValue = columnDef.Cell({
+    renderedCellValue = flexRender(columnDef.Cell, {
       cell,
       column,
       renderedCellValue,

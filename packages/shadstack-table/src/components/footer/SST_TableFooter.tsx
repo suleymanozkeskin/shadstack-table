@@ -1,3 +1,4 @@
+import { composeRefs } from '@radix-ui/react-compose-refs';
 import * as React from 'react';
 import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { SST_TableFooterRow } from './SST_TableFooterRow';
@@ -22,6 +23,7 @@ export const SST_TableFooter = <TData extends SST_RowData>({
     options: { enableStickyFooter, layoutMode, slotProps },
     refs: { tableFooterRef },
   } = table;
+
   //getFooterGroups() derives from column order/pinning/visibility/grouping
   const { isFullScreen } = useSST_TableState(table, (s) => ({
     columnOrder: s.columnOrder,
@@ -45,10 +47,7 @@ export const SST_TableFooter = <TData extends SST_RowData>({
   if (
     !footerGroups.some((footerGroup) =>
       footerGroup.headers?.some(
-        (header) =>
-          (typeof header.column.columnDef.footer === 'string' &&
-            !!header.column.columnDef.footer) ||
-          header.column.columnDef.Footer,
+        (header) => !!header.column.columnDef.footer || header.column.columnDef.Footer,
       ),
     )
   ) {
@@ -60,10 +59,7 @@ export const SST_TableFooter = <TData extends SST_RowData>({
   return (
     <tfoot
       {...tableFooterProps}
-      ref={(ref: HTMLTableSectionElement | null) => {
-        tableFooterRef.current = ref!;
-        if (typeof tableFooterProps?.ref === 'function') tableFooterProps.ref(ref!);
-      }}
+      ref={composeRefs(tableFooterRef, tableFooterProps.ref)}
       style={{
         bottom: stickFooter ? 0 : undefined,
         opacity: stickFooter ? 0.97 : undefined,
@@ -80,7 +76,7 @@ export const SST_TableFooter = <TData extends SST_RowData>({
       {footerGroups.map((footerGroup) => (
         <SST_TableFooterRow
           columnVirtualizer={columnVirtualizer}
-          footerGroup={footerGroup as any}
+          footerGroup={footerGroup}
           key={footerGroup.id}
           table={table}
         />

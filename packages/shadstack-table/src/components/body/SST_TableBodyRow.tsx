@@ -6,13 +6,11 @@ import { SST_TableBodyCell, Memo_SST_TableBodyCell } from './SST_TableBodyCell';
 import { SST_TableDetailPanel } from './SST_TableDetailPanel';
 import { cn } from '../../lib/utils';
 import {
-  type SST_Cell,
   type SST_ColumnVirtualizer,
   type SST_Row,
   type SST_RowData,
   type SST_RowVirtualizer,
   type SST_TableInstance,
-  type SST_VirtualItem,
 } from '../../types';
 import { getIsRowSelected } from '../../utils/row.utils';
 import { parseFromValuesOrFunc } from '../../utils/utils';
@@ -58,6 +56,7 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
     refs: { tableFooterRef, tableHeadRef },
     setHoveredRow,
   } = table;
+
   //Per-row projections: this row re-renders only when a value that affects
   //THIS row changes — hovering or dragging over row A no longer re-renders
   //row B. The projections read row APIs (selection/pinning), so the
@@ -110,17 +109,19 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
       !row.getIsPinned()
     )
       return [];
+
     return [[...pinnedRowIds].reverse().indexOf(row.id), pinnedRowIds.indexOf(row.id)];
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- enableRowPinning / rowPinningDisplayMode are per-instance options that don't change at runtime; row is intentionally read by id only when pinnedRowIds identity changes.
   }, [pinnedRowIds]);
 
   const tableHeadHeight =
     ((enableStickyHeader || isFullScreen) && tableHeadRef.current?.clientHeight) || 0;
+
   const tableFooterHeight = (enableStickyFooter && tableFooterRef.current?.clientHeight) || 0;
 
   const defaultRowHeight = density === 'compact' ? 37 : density === 'comfortable' ? 53 : 69;
 
-  const customRowHeight = parseInt((tableRowProps?.style as any)?.height ?? '', 10) || undefined;
+  const customRowHeight = parseInt(String(tableRowProps?.style?.height ?? ''), 10) || undefined;
 
   const rowHeight = customRowHeight || defaultRowHeight;
 
@@ -193,13 +194,14 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
           tableRowProps?.className,
         )}
       >
-        {virtualPaddingLeft ? <td style={{ display: 'flex', width: virtualPaddingLeft }} /> : null}
-        {(virtualColumns ?? visibleCells).map((cellOrVirtualCell, staticColumnIndex) => {
-          let cell = cellOrVirtualCell as SST_Cell<TData>;
-          if (columnVirtualizer) {
-            staticColumnIndex = (cellOrVirtualCell as SST_VirtualItem).index;
-            cell = visibleCells[staticColumnIndex];
-          }
+        {virtualPaddingLeft ? (
+          <td aria-hidden="true" style={{ display: 'flex', width: virtualPaddingLeft }} />
+        ) : null}
+        {(
+          virtualColumns?.map((column) => column.index) ?? visibleCells.map((_, index) => index)
+        ).map((staticColumnIndex) => {
+          const cell = visibleCells[staticColumnIndex];
+
           const props = {
             cell,
             numRows,
@@ -208,7 +210,9 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
             staticRowIndex,
             table,
           };
+
           const key = `${cell.id}-${staticRowIndex}`;
+
           return cell ? (
             memoMode === 'cells' &&
             cell.column.columnDef.columnDefType === 'data' &&
@@ -223,7 +227,7 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
           ) : null;
         })}
         {virtualPaddingRight ? (
-          <td style={{ display: 'flex', width: virtualPaddingRight }} />
+          <td aria-hidden="true" style={{ display: 'flex', width: virtualPaddingRight }} />
         ) : null}
       </tr>
       {renderDetailPanel && !row.getIsGrouped() && (
@@ -240,6 +244,7 @@ export const SST_TableBodyRow = <TData extends SST_RowData>({
   );
 };
 
+// SAFETY: React.memo preserves the wrapped component props and its row-data generic.
 export const Memo_SST_TableBodyRow = memo(
   SST_TableBodyRow,
   (prev, next) => prev.row === next.row && prev.staticRowIndex === next.staticRowIndex,

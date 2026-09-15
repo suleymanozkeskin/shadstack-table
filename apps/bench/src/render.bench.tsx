@@ -31,13 +31,14 @@ import { benchColumns, type BenchPerson, makePeople } from './fixtures';
 // happy-dom carries DOM state across iterations within the same process.
 // Each bench cycle mounts fresh into a brand-new container so we measure
 // initial-render cost, not re-render-into-existing-tree cost.
-const mount = (element: ReactElement): { root: Root; container: HTMLDivElement } => {
+const mount = (element: ReactElement) => {
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root = createRoot(container);
   act(() => {
     root.render(element);
   });
+
   return { root, container };
 };
 
@@ -102,6 +103,7 @@ for (const { label, n } of SIZES) {
         const handle = mount(
           <ShadStackTable columns={benchColumns} data={data} enableRowVirtualization />,
         );
+
         teardown(handle);
       },
       benchOpts,

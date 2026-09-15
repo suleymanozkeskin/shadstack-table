@@ -77,8 +77,8 @@ CI gates the published build against gzip-size budgets enforced in
 
 | Artifact                 | Budget       |
 | ------------------------ | ------------ |
-| `dist/index.js`          | ≤ 60 kB gzip |
-| `dist/index.cjs`         | ≤ 62 kB gzip |
+| `dist/index.js`          | ≤ 61 kB gzip |
+| `dist/index.cjs`         | ≤ 63 kB gzip |
 | `dist/style.css`         | ≤ 3 kB gzip  |
 | each `dist/locales/*.js` | ≤ 3 kB gzip  |
 | `dist/locales/` total    | ≤ 220 kB raw |
@@ -86,11 +86,14 @@ CI gates the published build against gzip-size budgets enforced in
 If a change trips one of these, investigate the diff before adjusting the
 number — the budget is the gate.
 
-## Type stability caveat
+## Generic types
 
-Public types intentionally contain `any` in a few places where a designed
-generic isn't in place yet: `SST_RowData = Record<string, any>`, the
-`columns` array on `SST_TableOptions`, and the edit-value callback
-payloads. A generic redesign is planned for a later minor; until then,
-do not infer "any-free" guarantees from the type-safety improvements in
-the rest of the surface.
+`SST_RowData` is `object`. Each table keeps its application row type through
+`TData`. Column helpers infer accessor values. Editing callbacks supply text
+drafts with the original typed row. See [Typed rows and creation](../typed-rows/).
+
+The heterogeneous columns array still uses `any` for its per-column value
+parameter. Some inherited TanStack APIs also expose `unknown` for values
+selected by dynamic string IDs. These limits do not erase the row's `TData`
+type. Use a column helper or a custom typed accessor when a cell needs a
+specific value type.

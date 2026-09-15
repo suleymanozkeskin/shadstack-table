@@ -42,18 +42,18 @@ export type SST_DisplayColumnIds =
   | 'sst-row-select'
   | 'sst-row-spacer';
 
+export type SST_AccessorValue<TData extends SST_RowData, TAccessor> =
+  TAccessor extends AccessorFn<TData, infer TValue>
+    ? TValue
+    : TAccessor extends DeepKeys<TData>
+      ? DeepValue<TData, TAccessor>
+      : never;
+
 export type SST_ColumnHelper<TData extends SST_RowData> = {
-  accessor: <
-    TAccessor extends AccessorFn<TData> | DeepKeys<TData>,
-    TValue extends TAccessor extends AccessorFn<TData, infer TReturn>
-      ? TReturn
-      : TAccessor extends DeepKeys<TData>
-        ? DeepValue<TData, TAccessor>
-        : never,
-  >(
+  accessor: <TAccessor extends AccessorFn<TData> | DeepKeys<TData>>(
     accessor: TAccessor,
-    column: SST_DisplayColumnDef<TData, TValue>,
-  ) => SST_ColumnDef<TData, TValue>;
+    column: SST_DisplayColumnDef<TData, SST_AccessorValue<TData, TAccessor>>,
+  ) => SST_ColumnDef<TData, SST_AccessorValue<TData, TAccessor>>;
   display: (column: SST_DisplayColumnDef<TData>) => SST_ColumnDef<TData>;
   group: (column: SST_GroupColumnDef<TData>) => SST_ColumnDef<TData>;
 };
@@ -77,7 +77,7 @@ export interface SST_ColumnDef<TData extends SST_RowData, TValue = unknown> exte
    *
    * @example accessorFn: (row) => row.username
    */
-  accessorFn?: (originalRow: TData) => TValue;
+  accessorFn?: AccessorFn<TData, TValue>;
   /**
    * Either an `accessorKey` or a combination of an `accessorFn` and `id` are required for a data column definition.
    * Specify which key in the row this column should use to access the correct data.
@@ -277,10 +277,8 @@ export type SST_Column<TData extends SST_RowData, TValue = unknown> = Omit<
   'columnDef' | 'columns' | 'filterFn' | 'footer' | 'header'
 > & {
   columnDef: SST_DefinedColumnDef<TData, TValue>;
-  columns?: SST_Column<TData, TValue>[];
+  columns: SST_Column<TData, TValue>[];
   filterFn?: SST_FilterFn<TData>;
-  footer: string;
-  header: string;
 };
 
 export type SST_Header<TData extends SST_RowData> = Omit<

@@ -31,7 +31,7 @@ const restoreClipboard = () => {
   if (originalClipboardDescriptor) {
     Object.defineProperty(globalThis.navigator, 'clipboard', originalClipboardDescriptor);
   } else {
-    delete (globalThis.navigator as { clipboard?: unknown }).clipboard;
+    Reflect.deleteProperty(globalThis.navigator, 'clipboard');
   }
 };
 
@@ -108,7 +108,7 @@ describe('clipboard — SST_CopyButton', () => {
     });
     const [error, context] = onCopyError.mock.calls[0];
     expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toMatch(/Clipboard API unavailable/);
+    expect(error instanceof Error ? error.message : '').toMatch(/Clipboard API unavailable/);
     expect(context).toMatchObject({ value: 'Ada', source: 'button' });
   });
 });
@@ -124,6 +124,7 @@ describe('clipboard — SST_CopyButton', () => {
 const installPlatform = (value: string) => {
   const original = Object.getOwnPropertyDescriptor(globalThis.navigator, 'platform');
   Object.defineProperty(globalThis.navigator, 'platform', { configurable: true, value });
+
   return () => {
     if (original) Object.defineProperty(globalThis.navigator, 'platform', original);
   };

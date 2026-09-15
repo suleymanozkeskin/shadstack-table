@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
   ShadStackTable,
   SST_GlobalFilterTextField,
@@ -22,103 +21,103 @@ const usd = (n: number) =>
 // chart-* data-viz colors.
 const salaryTier = (n: number) => {
   if (n < 100_000) return 'bg-muted text-muted-foreground';
+
   if (n < 180_000) return 'bg-secondary text-secondary-foreground';
+
   return 'bg-primary/10 text-foreground border border-primary/20';
 };
 
-export function AdvancedExample() {
-  const columns = useMemo<SST_ColumnDef<Employee>[]>(
-    () => [
+const columns: SST_ColumnDef<Employee>[] = [
+  {
+    id: 'employee',
+    header: 'Employee',
+    columns: [
       {
-        id: 'employee',
-        header: 'Employee',
-        columns: [
-          {
-            id: 'name',
-            accessorFn: (row) => `${row.firstName} ${row.lastName}`,
-            header: 'Name',
-            size: 240,
-            Cell: ({ renderedCellValue, row }) => (
-              <div className="flex items-center gap-3">
-                <img
-                  alt=""
-                  src={row.original.avatar}
-                  width={32}
-                  height={32}
-                  loading="lazy"
-                  className="size-8 rounded-full border bg-muted"
-                />
-                {/* renderedCellValue preserves match-highlight markup when global filter is active */}
-                <span className="truncate">{renderedCellValue}</span>
-              </div>
-            ),
-          },
-          {
-            accessorKey: 'email',
-            header: 'Email',
-            size: 260,
-            enableClickToCopy: true,
-            // TODO(post-v1): filterVariant 'autocomplete' is a deferred feature.
-            // Falls back to Input text filter for now.
-            filterVariant: 'autocomplete',
-          },
-        ],
+        id: 'name',
+        accessorFn: (row) => `${row.firstName} ${row.lastName}`,
+        header: 'Name',
+        size: 240,
+        Cell: ({ renderedCellValue, row }) => (
+          <div className="flex items-center gap-3">
+            <img
+              alt=""
+              src={row.original.avatar}
+              width={32}
+              height={32}
+              loading="lazy"
+              className="size-8 rounded-full border bg-muted"
+            />
+            {/* renderedCellValue preserves match-highlight markup when global filter is active */}
+            <span className="truncate">{renderedCellValue}</span>
+          </div>
+        ),
       },
       {
-        id: 'position',
-        header: 'Position',
-        columns: [
-          {
-            accessorKey: 'salary',
-            header: 'Salary',
-            size: 140,
-            filterFn: 'between',
-            Cell: ({ cell }) => {
-              const v = cell.getValue<number>();
-              return (
-                <span
-                  className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${salaryTier(v)}`}
-                >
-                  {usd(v)}
-                </span>
-              );
-            },
-          },
-          {
-            accessorKey: 'jobTitle',
-            header: 'Job Title',
-            size: 220,
-          },
-          {
-            id: 'startDate',
-            accessorFn: (row) => new Date(row.startDate),
-            header: 'Start Date',
-            size: 160,
-            sortFn: 'datetime',
-            filterVariant: 'date',
-            filterFn: 'lessThan',
-            Cell: ({ cell }) => cell.getValue<Date>()?.toLocaleDateString(),
-            // Custom Header renderer — italicizes the column title.
-            Header: ({ column }) => <em>{column.columnDef.header as string}</em>,
-          },
-        ],
-      },
-      {
-        id: 'org',
-        header: 'Org',
-        columns: [
-          {
-            accessorKey: 'department',
-            header: 'Department',
-            size: 160,
-            filterVariant: 'multi-select',
-          },
-        ],
+        accessorKey: 'email',
+        header: 'Email',
+        size: 260,
+        enableClickToCopy: true,
+        // TODO(post-v1): filterVariant 'autocomplete' is a deferred feature.
+        // Falls back to Input text filter for now.
+        filterVariant: 'autocomplete',
       },
     ],
-    [],
-  );
+  },
+  {
+    id: 'position',
+    header: 'Position',
+    columns: [
+      {
+        accessorKey: 'salary',
+        header: 'Salary',
+        size: 140,
+        filterFn: 'between',
+        Cell: ({ cell }) => {
+          const v = cell.getValue<number>();
 
+          return (
+            <span
+              className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${salaryTier(v)}`}
+            >
+              {usd(v)}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: 'jobTitle',
+        header: 'Job Title',
+        size: 220,
+      },
+      {
+        id: 'startDate',
+        accessorFn: (row) => new Date(row.startDate),
+        header: 'Start Date',
+        size: 160,
+        sortFn: 'datetime',
+        filterVariant: 'date',
+        filterFn: 'lessThan',
+        Cell: ({ cell }) => cell.getValue<Date>()?.toLocaleDateString(),
+        // Custom Header renderer — italicizes the column title.
+        Header: ({ column }) => <em>{column.columnDef.header}</em>,
+      },
+    ],
+  },
+  {
+    id: 'org',
+    header: 'Org',
+    columns: [
+      {
+        accessorKey: 'department',
+        header: 'Department',
+        size: 160,
+        filterVariant: 'multi-select',
+      },
+    ],
+  },
+];
+
+export function AdvancedExample() {
   const table = useShadStackTable({
     columns,
     data: employees,
@@ -198,8 +197,9 @@ export function AdvancedExample() {
       const onBulk = (label: string) => () => {
         const names = t
           .getSelectedRowModel()
-          .flatRows.map((r) => r.getValue('name') as string)
+          .flatRows.map((r) => String(r.getValue('name')))
           .join(', ');
+
         // Stubbed bulk action — alert is fine for a demo
         alert(`${label}: ${names}`);
       };

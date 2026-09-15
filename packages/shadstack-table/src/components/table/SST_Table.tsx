@@ -23,6 +23,7 @@ export const SST_Table = <TData extends SST_RowData>({
     getFlatHeaders,
     options: { columns, enableTableFooter, enableTableHead, layoutMode, renderCaption, slotProps },
   } = table;
+
   const { columnSizing, columnResizing, columnVisibility } = useSST_TableState(table, (s) => ({
     columnSizing: s.columnSizing,
     columnResizing: s.columnResizing,
@@ -48,12 +49,14 @@ export const SST_Table = <TData extends SST_RowData>({
   const columnSizeVars = useMemo(() => {
     const headers = getFlatHeaders();
     const colSizes: { [key: string]: number } = {};
+
     for (let i = 0; i < headers.length; i++) {
       const header = headers[i];
       const colSize = header.getSize();
       colSizes[`--header-${parseCSSVarId(header.id)}-size`] = colSize;
       colSizes[`--col-${parseCSSVarId(header.column.id)}-size`] = colSize;
     }
+
     return colSizes;
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- deps are accessor-driven invalidation keys; see comment above for the accessor each slice triggers.
   }, [columns, columnSizing, columnResizing, columnVisibility]);

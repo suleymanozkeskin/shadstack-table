@@ -1,15 +1,12 @@
-import { useCallback, useMemo } from 'react';
-import { type Range, useVirtualizer } from '@tanstack/react-virtual';
+import { useSST_Virtualizer } from './useSST_Virtualizer';
+import { useCallback, useMemo, useLayoutEffect } from 'react';
+import { type Range } from '@tanstack/react-virtual';
 import { useSST_TableState } from './useSST_TableState';
 import { type SST_ColumnVirtualizer, type SST_RowData, type SST_TableInstance } from '../types';
 import { parseFromValuesOrFunc } from '../utils/utils';
 import { extraIndexRangeExtractor } from '../utils/virtualization.utils';
 
-export const useSST_ColumnVirtualizer = <
-  TData extends SST_RowData,
-  TScrollElement extends Element | Window = HTMLDivElement,
-  TItemElement extends Element = HTMLTableCellElement,
->(
+export const useSST_ColumnVirtualizer = <TData extends SST_RowData>(
   table: SST_TableInstance<TData>,
 ): SST_ColumnVirtualizer | undefined => {
   const {
@@ -21,14 +18,13 @@ export const useSST_ColumnVirtualizer = <
     },
     refs: { tableContainerRef },
   } = table;
+
   const { columnPinning, columnVisibility, draggingColumn } = useSST_TableState(table, (s) => ({
     columnOrder: s.columnOrder,
     columnPinning: s.columnPinning,
     columnVisibility: s.columnVisibility,
     draggingColumn: s.draggingColumn,
   }));
-
-  if (!enableColumnVirtualization) return undefined;
 
   const columnVirtualizerProps = parseFromValuesOrFunc(columnVirtualizerOptions, {
     table,
@@ -61,7 +57,7 @@ export const useSST_ColumnVirtualizer = <
     [draggingColumn?.id],
   );
 
-  const columnVirtualizer = useVirtualizer({
+  const instance = useSST_Virtualizer<HTMLDivElement, HTMLTableCellElement>({
     count: visibleColumns.length,
     estimateSize: (index) => visibleColumns[index].getSize(),
     getScrollElement: () => tableContainerRef.current,
@@ -70,23 +66,29 @@ export const useSST_ColumnVirtualizer = <
     rangeExtractor: useCallback(
       (range: Range) => {
         const newIndexes = extraIndexRangeExtractor(range, draggingColumnIndex);
+
         if (!numPinnedLeft && !numPinnedRight) {
           return newIndexes;
         }
+
         return [...new Set([...leftPinnedIndexes, ...newIndexes, ...rightPinnedIndexes])];
       },
       // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: numPinnedLeft/numPinnedRight are derived (length of the array deps) so changes flow through leftPinnedIndexes/rightPinnedIndexes; adding them explicitly would duplicate the trigger.
       [leftPinnedIndexes, rightPinnedIndexes, draggingColumnIndex],
     ),
     ...columnVirtualizerProps,
-  }) as unknown as SST_ColumnVirtualizer<TScrollElement, TItemElement>;
+    enabled: !!enableColumnVirtualization,
+  });
 
-  const virtualColumns = columnVirtualizer.getVirtualItems();
-  columnVirtualizer.virtualColumns = virtualColumns as any;
+  const virtualColumns = instance.getVirtualItems();
+
+  let virtualPaddingLeft = 0;
+  let virtualPaddingRight = 0;
+
   const numColumns = virtualColumns.length;
 
   if (numColumns) {
-    const totalSize = columnVirtualizer.getTotalSize();
+    const totalSize = instance.getTotalSize();
 
     const leftNonPinnedStart = virtualColumns[numPinnedLeft]?.start || 0;
     const leftNonPinnedEnd = virtualColumns[leftPinnedIndexes.length - 1]?.end || 0;
@@ -94,16 +96,27 @@ export const useSST_ColumnVirtualizer = <
     const rightNonPinnedStart = virtualColumns[numColumns - numPinnedRight]?.start || 0;
     const rightNonPinnedEnd = virtualColumns[numColumns - numPinnedRight - 1]?.end || 0;
 
-    columnVirtualizer.virtualPaddingLeft = leftNonPinnedStart - leftNonPinnedEnd;
+    virtualPaddingLeft = leftNonPinnedStart - leftNonPinnedEnd;
 
-    columnVirtualizer.virtualPaddingRight =
+    virtualPaddingRight =
       totalSize - rightNonPinnedEnd - (numPinnedRight ? totalSize - rightNonPinnedStart : 0);
   }
 
-  if (columnVirtualizerInstanceRef) {
-    // @ts-expect-error -- columnVirtualizer is widened with our augmented .virtualColumns / padding fields; the public types don't yet model the augmentation
-    columnVirtualizerInstanceRef.current = columnVirtualizer;
-  }
+  const columnVirtualizer = Object.freeze({
+    ...instance,
+    virtualColumns,
+    virtualPaddingLeft,
+    virtualPaddingRight,
+  });
 
-  return columnVirtualizer as any;
+  useLayoutEffect(() => {
+    if (!columnVirtualizerInstanceRef) return;
+    columnVirtualizerInstanceRef.current = enableColumnVirtualization ? columnVirtualizer : null;
+
+    return () => {
+      columnVirtualizerInstanceRef.current = null;
+    };
+  }, [columnVirtualizerInstanceRef, enableColumnVirtualization, columnVirtualizer]);
+
+  return enableColumnVirtualization ? columnVirtualizer : undefined;
 };

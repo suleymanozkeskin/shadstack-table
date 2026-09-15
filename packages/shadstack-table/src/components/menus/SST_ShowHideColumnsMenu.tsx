@@ -48,6 +48,7 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
       mrtTheme: { menuBackgroundColor },
     },
   } = table;
+
   const { columnOrder, density } = useSST_TableState(table, (s) => ({
     columnOrder: s.columnOrder,
     density: s.density,
@@ -55,7 +56,8 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
     columnPinning: s.columnPinning,
     columnVisibility: s.columnVisibility,
   }));
-  const virtualRef = useMemo<React.RefObject<HTMLElement | null> | undefined>(
+
+  const virtualRef = useMemo<React.RefObject<HTMLElement> | undefined>(
     () => (anchorEl ? { current: anchorEl } : undefined),
     [anchorEl],
   );
@@ -63,16 +65,18 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
   const handleToggleAllColumns = (value?: boolean) => {
     const updates = getAllLeafColumns()
       .filter((column) => column.columnDef.enableHiding !== false)
-      .reduce((acc, column) => {
+      .reduce<SST_VisibilityState>((acc, column) => {
         acc[column.id] = value ?? !column.getIsVisible();
+
         return acc;
-      }, {} as SST_VisibilityState);
+      }, {});
 
     table.setColumnVisibility((old) => ({ ...old, ...updates }));
   };
 
   const allColumns = useMemo(() => {
     const columns = getAllColumns();
+
     if (columnOrder.length > 0 && !columns.some((col) => col.columnDef.columnDefType === 'group')) {
       return [
         ...getStartLeafColumns(),
@@ -80,8 +84,9 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
           getCenterLeafColumns().find((col) => col?.id === colId),
         ),
         ...getEndLeafColumns(),
-      ].filter(Boolean);
+      ].filter((column) => column !== undefined);
     }
+
     return columns;
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional: snapshot the row-model column accessors as deps so identity changes (re-sort/re-filter) re-fire the memo.
   }, [
@@ -94,7 +99,7 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
     getStartLeafColumns(),
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional accessor snapshot, see above
     getEndLeafColumns(),
-  ]) as SST_Column<TData>[];
+  ]);
 
   const isNestedColumns = allColumns.some((col) => col.columnDef.columnDefType === 'group');
 
@@ -117,7 +122,7 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
         if (!open) setAnchorEl(null);
       }}
     >
-      {virtualRef && <PopoverAnchor virtualRef={virtualRef as any} />}
+      {virtualRef && <PopoverAnchor virtualRef={virtualRef} />}
       <PopoverContent
         align="start"
         sideOffset={4}
@@ -145,12 +150,7 @@ export const SST_ShowHideColumnsMenu = <TData extends SST_RowData>({
                 //order derivation needs the live state for its display-column
                 //predicates
                 table.setColumnOrder(
-                  getDefaultColumnOrderIds(
-                    { ...table.options, state: table.getState() } as Parameters<
-                      typeof getDefaultColumnOrderIds<TData>
-                    >[0],
-                    true,
-                  ),
+                  getDefaultColumnOrderIds({ ...table.options, state: table.getState() }, true),
                 )
               }
               disabled={!hasColumnOrderChanged}

@@ -18,10 +18,12 @@ export const isCellEditable = <TData extends SST_RowData>({
   table: SST_TableInstance<TData>;
 }) => {
   const { enableEditing } = table.options;
+
   const {
     column: { columnDef },
     row,
   } = cell;
+
   return (
     !cell.getIsPlaceholder() &&
     parseFromValuesOrFunc(enableEditing, row) &&
@@ -40,15 +42,18 @@ export const openEditingCell = <TData extends SST_RowData>({
     options: { editDisplayMode },
     refs: { editInputRefs },
   } = table;
+
   const { column } = cell;
 
   if (isCellEditable({ cell, table }) && editDisplayMode === 'cell') {
     table.setEditingCell(cell);
     queueMicrotask(() => {
       const textField = editInputRefs.current?.[column.id];
+
       if (textField) {
         textField.focus();
-        textField.select?.();
+
+        if ('select' in textField) textField.select();
       }
     });
   }
@@ -74,6 +79,7 @@ export const cellKeyboardShortcuts = <TData extends SST_RowData = SST_RowData>({
   table: SST_TableInstance<TData>;
 }) => {
   if (!table.options.enableKeyboardShortcuts) return;
+
   if (event.isPropagationStopped()) return;
   const currentCell = event.currentTarget;
 
@@ -88,14 +94,13 @@ export const cellKeyboardShortcuts = <TData extends SST_RowData = SST_RowData>({
       getSST_RowSelectionHandler({
         row: cell.row,
         table,
-        // @ts-expect-error -- event.target on a synthetic React keyboard event is typed as EventTarget; we know it's an Element with data-index here because this branch only fires from sst-row-select cells
-        staticRowIndex: +event.target.getAttribute('data-index'),
-      })(event as any);
+        staticRowIndex: Number(event.currentTarget.getAttribute('data-index')),
+      })(event);
     } else if (header?.column?.id === 'sst-row-select' && table.options.enableSelectAll) {
       event.preventDefault();
       getSST_SelectAllHandler({
         table,
-      })(event as any);
+      })(event);
     } else if (
       cell?.column?.id === 'sst-row-expand' &&
       //Mirrors the disabled rule in `SST_ExpandButton`. When `renderDetailPanel`
@@ -112,17 +117,19 @@ export const cellKeyboardShortcuts = <TData extends SST_RowData = SST_RowData>({
       table.toggleAllRowsExpanded();
     } else if (cell?.column.id === 'sst-row-pin') {
       event.preventDefault();
+
       if (cell.row.getIsPinned()) {
         cell.row.pin(false);
       } else {
         cell.row.pin(table.options.rowPinningDisplayMode?.includes('bottom') ? 'bottom' : 'top');
       }
     } else if (header && isWinCtrlMacMeta(event)) {
-      const actionsButton = currentCell.querySelector(
+      const actionsButton = currentCell.querySelector<HTMLButtonElement>(
         `button[aria-label="${table.options.localization.columnActions}"]`,
       );
+
       if (actionsButton) {
-        (actionsButton as HTMLButtonElement).click();
+        actionsButton.click();
       }
     } else if (header?.column?.getCanSort()) {
       event.preventDefault();
@@ -144,7 +151,11 @@ export const cellKeyboardShortcuts = <TData extends SST_RowData = SST_RowData>({
 
     const currentRow = parentElement || currentCell.closest('tr');
     const tableElement = containerElement || currentCell.closest('table');
-    const allCells = cellElements || Array.from(tableElement?.querySelectorAll('th, td') || []);
+
+    const allCells =
+      cellElements ||
+      Array.from(tableElement?.querySelectorAll<HTMLTableCellElement>('th, td') || []);
+
     const currentCellIndex = allCells.indexOf(currentCell);
 
     const currentIndex = parseInt(currentCell.getAttribute('data-index') || '0');
@@ -158,9 +169,11 @@ export const cellKeyboardShortcuts = <TData extends SST_RowData = SST_RowData>({
           : rowIndex === 'f'
             ? tableElement?.querySelector('tr')
             : tableElement?.lastElementChild?.lastElementChild;
+
       const rowCells = Array.from(row?.children || []);
       const targetCell = edge === 'f' ? rowCells[0] : rowCells[rowCells.length - 1];
-      return targetCell as HTMLElement;
+
+      return targetCell instanceof HTMLElement ? targetCell : undefined;
     };
 
     //page up/down first or last cell in column
@@ -169,9 +182,11 @@ export const cellKeyboardShortcuts = <TData extends SST_RowData = SST_RowData>({
         edge === 't'
           ? tableElement?.querySelector('tr')
           : tableElement?.lastElementChild?.lastElementChild;
+
       const rowCells = Array.from(row?.children || []);
       const targetCell = rowCells[columnIndex];
-      return targetCell as HTMLElement;
+
+      return targetCell instanceof HTMLElement ? targetCell : undefined;
     };
 
     const findAdjacentCell = (columnIndex: number, searchDirection: 'f' | 'b') => {
@@ -179,9 +194,8 @@ export const cellKeyboardShortcuts = <TData extends SST_RowData = SST_RowData>({
         searchDirection === 'f'
           ? allCells.slice(currentCellIndex + 1)
           : allCells.slice(0, currentCellIndex).reverse();
-      return searchArray.find((c) => c.matches(`[data-index="${columnIndex}"]`)) as
-        | HTMLElement
-        | undefined;
+
+      return searchArray.find((c) => c.matches(`[data-index="${columnIndex}"]`));
     };
 
     switch (event.key) {
@@ -215,4 +229,12 @@ export const cellKeyboardShortcuts = <TData extends SST_RowData = SST_RowData>({
       nextCell.focus();
     }
   }
+};
+
+/** Closes the menu and clears its DOM anchor. */
+export const closeCellActionMenu = <TData extends SST_RowData>(
+  table: SST_TableInstance<TData>,
+): void => {
+  table.setActionCell(null);
+  table.refs.actionCellRef.current = null;
 };

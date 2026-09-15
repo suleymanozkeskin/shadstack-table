@@ -1,3 +1,4 @@
+import { useLayoutEffect } from 'react';
 import { act, render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { ShadStackTable } from '../components/ShadStackTable';
@@ -12,6 +13,7 @@ import { people, personColumns, type Person } from './fixtures';
 // test-only instrumentation.
 
 let capturedTable: SST_TableInstance<Person>;
+
 let harnessRenders = 0;
 
 const makeCounters = () => {
@@ -19,34 +21,46 @@ const makeCounters = () => {
   const cellRenders = new Map<string, number>();
   const headCellRenders = new Map<string, number>();
   const bump = (map: Map<string, number>, key: string) => map.set(key, (map.get(key) ?? 0) + 1);
+
   const slotProps: SST_TableOptions<Person>['slotProps'] = {
     tableBodyCell: ({ cell }) => {
       bump(cellRenders, cell.id);
+
       return {};
     },
     tableBodyRow: ({ row }) => {
       bump(rowRenders, row.id);
+
       return {};
     },
     tableHeadCell: ({ column }) => {
       bump(headCellRenders, column.id);
+
       return {};
     },
   };
+
   const snapshot = (map: Map<string, number>) => new Map(map);
+
   const delta = (map: Map<string, number>, before: Map<string, number>, key: string) =>
     (map.get(key) ?? 0) - (before.get(key) ?? 0);
+
   return { cellRenders, delta, headCellRenders, rowRenders, slotProps, snapshot };
 };
 
 const Harness = (options: Partial<SST_TableOptions<Person>>) => {
   harnessRenders++;
+
   const table = useShadStackTable<Person>({
     columns: personColumns,
     data: people,
     ...options,
   });
-  capturedTable = table;
+
+  useLayoutEffect(() => {
+    capturedTable = table;
+  });
+
   return <ShadStackTable table={table} />;
 };
 
@@ -63,6 +77,7 @@ describe('render granularity — writes reach only their subscribers', () => {
     act(() => capturedTable.setHoveredRow(rows[2]!));
 
     expect(c.delta(c.rowRenders, before, rows[2]!.id)).toBe(1);
+
     for (const row of rows) {
       if (row.id === rows[2]!.id) continue;
       expect(
@@ -84,6 +99,7 @@ describe('render granularity — writes reach only their subscribers', () => {
     act(() => capturedTable.setEditingCell(targetCell));
 
     expect(c.delta(c.cellRenders, beforeCells, targetCell.id)).toBe(1);
+
     for (const [cellId] of c.cellRenders) {
       if (cellId === targetCell.id) continue;
       expect(
@@ -91,6 +107,7 @@ describe('render granularity — writes reach only their subscribers', () => {
         `cell ${cellId} re-rendered on another cell's edit`,
       ).toBe(0);
     }
+
     for (const [rowId] of c.rowRenders) {
       expect(c.delta(c.rowRenders, beforeRows, rowId), `row ${rowId} re-rendered on edit`).toBe(0);
     }
@@ -115,10 +132,12 @@ describe('render granularity — writes reach only their subscribers', () => {
         `head cell ${columnId} re-rendered on page change`,
       ).toBe(0);
     }
+
     //the body really did re-render with the next page's rows
     const rowDeltas = [...c.rowRenders.keys()].map((rowId) =>
       c.delta(c.rowRenders, beforeRows, rowId),
     );
+
     expect(rowDeltas.some((rowDelta) => rowDelta > 0)).toBe(true);
     expect(capturedTable.getState().pagination.pageIndex).toBe(1);
   });

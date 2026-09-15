@@ -14,7 +14,7 @@ hero:
       link: '#live-demo'
 ---
 
-import { Playground } from '@playground/Playground';
+import LiveDemo from '../../components/LiveDemo.astro';
 
 ## Why this exists
 
@@ -37,7 +37,7 @@ import { Playground } from '@playground/Playground';
 ## Live demo
 
 <div class="not-content sst-playground-host">
-  <Playground client:only="react" modeSource="host" />
+  <LiveDemo />
 </div>
 
 ### Acknowledgment

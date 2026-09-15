@@ -1,3 +1,4 @@
+import { createRow } from '../utils/tanstack.helpers';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -80,12 +81,9 @@ describe('ShadStackTable — editing (modal mode)', () => {
     await expect(screen.findByRole('dialog')).rejects.toBeTruthy();
   });
 
-  // Create flow: setCreatingRow(true) opens an empty-row modal. The dialog
-  // title is exercised by create-row-modal-title.test.tsx; here we verify
-  // the save side — onCreatingRowSave fires with the typed values and the
-  // exitCreatingMode helper closes the dialog.
   it('opens create modal and calls onCreatingRowSave with typed values', async () => {
     const user = userEvent.setup();
+
     const onCreatingRowSave = vi.fn(({ exitCreatingMode }) => {
       exitCreatingMode();
     });
@@ -99,7 +97,14 @@ describe('ShadStackTable — editing (modal mode)', () => {
         getRowId={(row) => row.id}
         onCreatingRowSave={onCreatingRowSave}
         renderTopToolbarCustomActions={({ table }) => (
-          <button type="button" onClick={() => table.setCreatingRow(true)}>
+          <button
+            type="button"
+            onClick={() =>
+              table.setCreatingRow(
+                createRow(table, { id: '', firstName: '', lastName: '', age: 0 }),
+              )
+            }
+          >
             New person
           </button>
         )}
@@ -143,7 +148,14 @@ describe('ShadStackTable — editing (modal mode)', () => {
         onCreatingRowCancel={onCreatingRowCancel}
         onCreatingRowSave={onCreatingRowSave}
         renderTopToolbarCustomActions={({ table }) => (
-          <button type="button" onClick={() => table.setCreatingRow(true)}>
+          <button
+            type="button"
+            onClick={() =>
+              table.setCreatingRow(
+                createRow(table, { id: '', firstName: '', lastName: '', age: 0 }),
+              )
+            }
+          >
             New person
           </button>
         )}

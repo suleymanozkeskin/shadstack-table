@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useSST_TableState } from '../../hooks/useSST_TableState';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../../_ui/dialog';
 import { cn } from '../../lib/utils';
-import { type SST_Row, type SST_RowData, type SST_TableInstance } from '../../types';
+import { type SST_RowData, type SST_TableInstance } from '../../types';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 import { SST_EditActionButtons } from '../buttons/SST_EditActionButtons';
 import { SST_EditCellTextField } from '../inputs/SST_EditCellTextField';
@@ -38,11 +38,15 @@ export const SST_EditRowModal = <TData extends SST_RowData>({
     setCreatingRow,
     setEditingRow,
   } = table;
+
   const { creatingRow, editingRow } = useSST_TableState(table, (s) => ({
     creatingRow: s.creatingRow,
     editingRow: s.editingRow,
   }));
-  const row = (creatingRow ?? editingRow) as SST_Row<TData>;
+
+  const row = creatingRow ?? editingRow;
+
+  if (!row) return null;
 
   // slotProps.editRowDialog / slotProps.createRowDialog flow onto DialogContent,
   // where Tailwind className overrides (e.g. `h-[60vh] sm:max-w-[60vw]`) actually
@@ -51,13 +55,15 @@ export const SST_EditRowModal = <TData extends SST_RowData>({
     ...parseFromValuesOrFunc(slotProps?.editRowDialog, { row, table }),
     ...(creatingRow && parseFromValuesOrFunc(slotProps?.createRowDialog, { row, table })),
   };
+
   const { className: slotClassName, ...slotContentRest } = slotContentProps ?? {};
 
   const internalEditComponents: React.ReactNode[] = [];
+
   for (const cell of row.getAllCells()) {
     if (cell.column.columnDef.columnDefType === 'data') {
       internalEditComponents.push(
-        <SST_EditCellTextField cell={cell as any} key={cell.id} table={table as any} />,
+        <SST_EditCellTextField cell={cell} key={cell.id} table={table} />,
       );
     }
   }
@@ -74,9 +80,10 @@ export const SST_EditRowModal = <TData extends SST_RowData>({
             onEditingRowCancel?.({ row, table });
             setEditingRow(null);
           }
-          // oxlint-disable-next-line no-underscore-dangle -- _valuesCache is the documented internal property on TanStack Row used by upstream MRT for the same purpose
-          row._valuesCache = {} as any;
+
+          table.clearEditValues(row);
         }
+
         rest.onOpenChange?.(nextOpen);
       }}
       {...rest}

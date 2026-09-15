@@ -103,6 +103,7 @@ describe('ShadStackTable — filter mode menu dividers', () => {
         initialState={{ showColumnFilters: true }}
         renderColumnFilterModeMenuItems={({ internalFilterOptions }) => {
           seen = internalFilterOptions;
+
           return internalFilterOptions.map((option) => (
             <div key={option.option}>{option.label}</div>
           ));

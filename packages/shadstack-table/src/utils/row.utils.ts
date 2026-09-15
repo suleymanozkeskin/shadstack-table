@@ -22,11 +22,13 @@ export const getSST_Rows = <TData extends SST_RowData>(
       rowPinningDisplayMode,
     },
   } = table;
+
   const { creatingRow, pagination } = getState();
 
   const isRankingRows = getIsRankingRows(table);
 
   let rows: SST_Row<TData>[] = [];
+
   if (!isRankingRows) {
     rows =
       !enableRowPinning || rowPinningDisplayMode?.includes('sticky')
@@ -38,21 +40,25 @@ export const getSST_Rows = <TData extends SST_RowData>(
     // fuzzy ranking adjustments — clone before sorting so TanStack's
     // internal row-model array isn't mutated by reorder
     rows = [...getPrePaginatedRowModel().rows].sort((a, b) => rankGlobalFuzzy(a, b));
+
     if (enablePagination && !manualPagination && !all) {
       const start = pagination.pageIndex * pagination.pageSize;
       rows = rows.slice(start, start + pagination.pageSize);
     }
+
     if (enableRowPinning && !rowPinningDisplayMode?.includes('sticky')) {
       // "re-center-ize" the rows (no top or bottom pinned rows unless sticky)
       rows = rows.filter((row) => !row.getIsPinned());
     }
   }
+
   // row pinning adjustments
   if (enableRowPinning && rowPinningDisplayMode?.includes('sticky')) {
     const centerPinnedRowIds = rows.filter((row) => row.getIsPinned()).map((r) => r.id);
 
     rows = [...getTopRows().filter((row) => !centerPinnedRowIds.includes(row.id)), ...rows];
   }
+
   // blank inserted creating row adjustments
   if (positionCreatingRow !== undefined && creatingRow && createDisplayMode === 'row') {
     const creatingRowIndex = !isNaN(+positionCreatingRow)
@@ -60,6 +66,7 @@ export const getSST_Rows = <TData extends SST_RowData>(
       : positionCreatingRow === 'top'
         ? 0
         : rows.length;
+
     rows = [...rows.slice(0, creatingRowIndex), creatingRow, ...rows.slice(creatingRowIndex)];
   }
 
@@ -77,6 +84,7 @@ export const getCanRankRows = <TData extends SST_RowData>(table: SST_TableInstan
       manualSorting,
     },
   } = table;
+
   const { expanded, globalFilterFn } = getState();
 
   return (
@@ -126,7 +134,13 @@ export const getSST_RowSelectionHandler =
     staticRowIndex?: number;
     table: SST_TableInstance<TData>;
   }) =>
-  (event: ChangeEvent<HTMLInputElement> | MouseEvent<HTMLTableRowElement>, value?: boolean) => {
+  (
+    event:
+      | ChangeEvent<HTMLInputElement>
+      | MouseEvent<HTMLElement>
+      | React.KeyboardEvent<HTMLTableCellElement>,
+    value?: boolean,
+  ) => {
     const {
       getState,
       options: {
@@ -138,6 +152,7 @@ export const getSST_RowSelectionHandler =
       },
       refs: { lastSelectedRowId },
     } = table;
+
     const {
       pagination: { pageIndex, pageSize },
     } = getState();
@@ -155,7 +170,8 @@ export const getSST_RowSelectionHandler =
     if (
       enableBatchRowSelection &&
       enableMultiRowSelection &&
-      (event as any).nativeEvent.shiftKey &&
+      'shiftKey' in event.nativeEvent &&
+      event.nativeEvent.shiftKey &&
       lastSelectedRowId.current !== null
     ) {
       const rows = getSST_Rows(table, true);
@@ -169,6 +185,7 @@ export const getSST_RowSelectionHandler =
         });
 
         const currentIndex = staticRowIndex + paginationOffset;
+
         const [start, end] =
           lastIndex < currentIndex ? [lastIndex, currentIndex] : [currentIndex, lastIndex];
 
@@ -185,11 +202,6 @@ export const getSST_RowSelectionHandler =
 
     // record the last selected row id
     lastSelectedRowId.current = row.id;
-
-    // if all sub rows were selected, unselect them
-    if (row.getCanSelectSubRows() && row.getIsAllSubRowsSelected()) {
-      row.subRows?.forEach((r) => r.toggleSelected(false));
-    }
 
     if (enableRowPinning && rowPinningDisplayMode?.includes('select')) {
       changedRowIds.forEach((rowId) => {
@@ -208,7 +220,10 @@ export const getSST_RowSelectionHandler =
 export const getSST_SelectAllHandler =
   <TData extends SST_RowData>({ table }: { table: SST_TableInstance<TData> }) =>
   (
-    event: ChangeEvent<HTMLInputElement> | MouseEvent<HTMLButtonElement>,
+    event:
+      | ChangeEvent<HTMLInputElement>
+      | MouseEvent<HTMLButtonElement>
+      | React.KeyboardEvent<HTMLTableCellElement>,
     value?: boolean,
     forceAll?: boolean,
   ) => {
@@ -218,12 +233,18 @@ export const getSST_SelectAllHandler =
     } = table;
 
     if (selectAllMode === 'all' || forceAll) {
-      table.toggleAllRowsSelected(value ?? (event as any).target.checked);
+      table.toggleAllRowsSelected(
+        value ?? ('checked' in event.currentTarget ? event.currentTarget.checked : undefined),
+      );
     } else {
-      table.toggleAllPageRowsSelected(value ?? (event as any).target.checked);
+      table.toggleAllPageRowsSelected(
+        value ?? ('checked' in event.currentTarget ? event.currentTarget.checked : undefined),
+      );
     }
+
     if (enableRowPinning && rowPinningDisplayMode?.includes('select')) {
       table.setRowPinning({ bottom: [], top: [] });
     }
+
     lastSelectedRowId.current = null;
   };

@@ -18,6 +18,7 @@ export function debounce<F extends (...args: any[]) => void>(
   ms: number,
 ): SST_DebouncedFunction<F> {
   let timer: ReturnType<typeof setTimeout> | null = null;
+
   const debounced = (...args: Parameters<F>) => {
     if (timer) clearTimeout(timer);
     timer = setTimeout(() => {
@@ -25,9 +26,11 @@ export function debounce<F extends (...args: any[]) => void>(
       fn(...args);
     }, ms);
   };
+
   debounced.cancel = () => {
     if (timer) clearTimeout(timer);
     timer = null;
   };
-  return debounced as SST_DebouncedFunction<F>;
+
+  return debounced;
 }

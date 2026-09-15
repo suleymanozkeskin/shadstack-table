@@ -13,14 +13,9 @@
  * that return to a steady shape, so samples stay comparable.
  */
 
-import { act } from 'react';
+import { act, useLayoutEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import {
-  ShadStackTable,
-  type SST_Row,
-  type SST_TableInstance,
-  useShadStackTable,
-} from 'shadstack-table';
+import { ShadStackTable, type SST_TableInstance, useShadStackTable } from 'shadstack-table';
 import { bench, describe } from 'vitest';
 import { benchColumns, type BenchPerson, makePeople } from './fixtures';
 
@@ -29,8 +24,9 @@ const benchOpts = { time: 1_000, iterations: 20, warmupIterations: 3, warmupTime
 const setup = (n: number) => {
   const data = makePeople(n);
   let table!: SST_TableInstance<BenchPerson>;
+
   const Harness = () => {
-    table = useShadStackTable<BenchPerson>({
+    const currentTable = useShadStackTable<BenchPerson>({
       columns: benchColumns,
       data,
       enableEditing: true,
@@ -39,14 +35,21 @@ const setup = (n: number) => {
       enableRowVirtualization: true,
       editDisplayMode: 'cell',
     });
-    return <ShadStackTable table={table} />;
+
+    useLayoutEffect(() => {
+      table = currentTable;
+    });
+
+    return <ShadStackTable table={currentTable} />;
   };
+
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root = createRoot(container);
   act(() => {
     root.render(<Harness />);
   });
+
   return { rows: () => table.getRowModel().rows, table: () => table };
 };
 
@@ -60,8 +63,8 @@ for (const n of [10_000, 50_000]) {
       () => {
         const rows = h.rows();
         const table = h.table();
-        act(() => table.setDraggingRow(rows[0] as SST_Row<BenchPerson>));
-        act(() => table.setHoveredRow(rows[++i % 8] as SST_Row<BenchPerson>));
+        act(() => table.setDraggingRow(rows[0]));
+        act(() => table.setHoveredRow(rows[++i % 8]));
         act(() => {
           table.setDraggingRow(null);
           table.setHoveredRow(null);
@@ -121,11 +124,13 @@ for (const n of [10_000, 50_000]) {
       () => {
         const rows = h.rows();
         const table = h.table();
+
         if (!dragStarted) {
           dragStarted = true;
-          act(() => table.setDraggingRow(rows[0] as SST_Row<BenchPerson>));
+          act(() => table.setDraggingRow(rows[0]));
         }
-        act(() => table.setHoveredRow(rows[++i % 8] as SST_Row<BenchPerson>));
+
+        act(() => table.setHoveredRow(rows[++i % 8]));
       },
       benchOpts,
     );

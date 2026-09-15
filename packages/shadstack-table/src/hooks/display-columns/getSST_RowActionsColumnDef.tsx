@@ -2,18 +2,25 @@ import { SST_ToggleRowActionMenuButton } from '../../components/buttons/SST_Togg
 import { type SST_ColumnDef, type SST_RowData, type SST_StatefulTableOptions } from '../../types';
 import { defaultDisplayColumnProps } from '../../utils/displayColumn.utils';
 
+const RowActionsCell = <TData extends SST_RowData>({
+  cell,
+  row,
+  staticRowIndex,
+  table,
+}: Parameters<NonNullable<SST_ColumnDef<TData>['Cell']>>[0]) => (
+  <SST_ToggleRowActionMenuButton
+    cell={cell}
+    row={row}
+    staticRowIndex={staticRowIndex}
+    table={table}
+  />
+);
+
 export const getSST_RowActionsColumnDef = <TData extends SST_RowData>(
   tableOptions: SST_StatefulTableOptions<TData>,
 ): SST_ColumnDef<TData> => {
   return {
-    Cell: ({ cell, row, staticRowIndex, table }) => (
-      <SST_ToggleRowActionMenuButton
-        cell={cell}
-        row={row}
-        staticRowIndex={staticRowIndex}
-        table={table}
-      />
-    ),
+    Cell: RowActionsCell,
     grow: false,
     ...defaultDisplayColumnProps({
       header: 'actions',

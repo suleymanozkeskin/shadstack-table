@@ -30,6 +30,7 @@ export const SST_SelectCheckbox = <TData extends SST_RowData>({
   const {
     options: { enableMultiRowSelection, localization, selectAllMode, slotProps },
   } = table;
+
   const { density, isLoading } = useSST_TableState(table, (s) => ({
     density: s.density,
     isLoading: s.isLoading,
@@ -80,8 +81,9 @@ export const SST_SelectCheckbox = <TData extends SST_RowData>({
   const tooltipTitle = checkboxProps?.title ?? ariaLabel;
   const disabled = isLoading || (row && !row.getCanSelect()) || row?.id === 'sst-row-create';
 
-  const handleChange = (event: any) => {
+  const handleChange = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
+
     if (selectAll) {
       onSelectAllChange(event);
     } else {
@@ -91,6 +93,8 @@ export const SST_SelectCheckbox = <TData extends SST_RowData>({
 
   const forwardCheckboxClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
+
+    if (enableMultiRowSelection === false || !checkboxProps.onCheckedChange) handleChange(e);
     checkboxProps?.onClick?.(e);
   };
 
@@ -101,12 +105,7 @@ export const SST_SelectCheckbox = <TData extends SST_RowData>({
       <TooltipTrigger asChild>
         <span className={cn('inline-flex shrink-0 items-center justify-center', sizeClasses)}>
           {enableMultiRowSelection === false ? (
-            <RadioGroup
-              value={isChecked ? 'on' : ''}
-              onValueChange={() =>
-                handleChange({ target: { checked: !isChecked }, stopPropagation: () => {} })
-              }
-            >
+            <RadioGroup value={isChecked ? 'on' : ''}>
               <RadioGroupItem
                 aria-label={ariaLabel}
                 disabled={disabled}
@@ -128,12 +127,6 @@ export const SST_SelectCheckbox = <TData extends SST_RowData>({
                     : !!isChecked
               }
               disabled={disabled}
-              onCheckedChange={(_value) =>
-                handleChange({
-                  target: { checked: !isChecked },
-                  stopPropagation: () => {},
-                })
-              }
               onClick={forwardCheckboxClick}
               {...checkboxProps}
               className={cn(className, checkboxProps?.className)}

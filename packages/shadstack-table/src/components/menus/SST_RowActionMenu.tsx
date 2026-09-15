@@ -38,14 +38,17 @@ export const SST_RowActionMenu = <TData extends SST_RowData>({
       renderRowActionMenuItems,
     },
   } = table;
+
   const { density } = useSST_TableState(table, (s) => ({ density: s.density }));
-  const virtualRef = useMemo<React.RefObject<HTMLElement | null> | undefined>(
+
+  const virtualRef = useMemo<React.RefObject<HTMLElement> | undefined>(
     () => (anchorEl ? { current: anchorEl } : undefined),
     [anchorEl],
   );
 
   const menuItems = useMemo(() => {
     const items: ReactNode[] = [];
+
     const editItem = parseFromValuesOrFunc(enableEditing, row) &&
       ['modal', 'row'].includes(editDisplayMode!) && (
         <SST_ActionMenuItem
@@ -56,14 +59,18 @@ export const SST_RowActionMenu = <TData extends SST_RowData>({
           table={table}
         />
       );
+
     if (editItem) items.push(editItem);
+
     const rowActionMenuItems = renderRowActionMenuItems?.({
       closeMenu: () => setAnchorEl(null),
       row,
       staticRowIndex,
       table,
     });
+
     if (rowActionMenuItems?.length) items.push(...rowActionMenuItems);
+
     return items;
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional narrow deps; localization/enableEditing/handleEdit/setAnchorEl/editDisplayMode/EditIcon are stable per cell-lifetime (per-instance config from the table options). FOLLOW-UP: verify all listed "stable" deps are truly stable.
   }, [renderRowActionMenuItems, row, staticRowIndex, table]);
@@ -77,7 +84,7 @@ export const SST_RowActionMenu = <TData extends SST_RowData>({
         if (!open) setAnchorEl(null);
       }}
     >
-      {virtualRef && <PopoverAnchor virtualRef={virtualRef as any} />}
+      {virtualRef && <PopoverAnchor virtualRef={virtualRef} />}
       <PopoverContent
         align="start"
         sideOffset={4}

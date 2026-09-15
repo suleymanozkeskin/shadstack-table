@@ -3,7 +3,6 @@ import { type MouseEvent, useState } from 'react';
 import { type RowPinningPosition } from '@tanstack/react-table';
 import { Button } from '../../_ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../_ui/tooltip';
-import { cn } from '../../lib/utils';
 import { type SST_Row, type SST_RowData, type SST_TableInstance } from '../../types';
 
 export interface SST_RowPinButtonProps<TData extends SST_RowData> extends React.ComponentProps<
@@ -49,10 +48,10 @@ export const SST_RowPinButton = <TData extends SST_RowData>({
           onFocus={() => setTooltipOpened(true)}
           onMouseEnter={() => setTooltipOpened(true)}
           onMouseLeave={() => setTooltipOpened(false)}
-          size="icon"
+          size="icon-xs"
           variant="ghost"
           {...rest}
-          className={cn('h-6 w-6', className)}
+          className={className}
         >
           {isPinned ? (
             <CloseIcon />

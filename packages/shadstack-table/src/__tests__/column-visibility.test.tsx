@@ -18,7 +18,7 @@ describe('ShadStackTable — column visibility', () => {
 
     // Switches are labeled by the column header text. Pick the "Age" toggle.
     const ageLabel = await screen.findByText('Age', { selector: 'label span, span' });
-    const ageSwitch = within(ageLabel.closest('label') as HTMLElement).getByRole('switch');
+    const ageSwitch = within(ageLabel.closest('label')!).getByRole('switch');
 
     await user.click(ageSwitch);
 
