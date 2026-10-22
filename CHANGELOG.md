@@ -4,6 +4,12 @@ All notable changes to `shadstack-table` are recorded here. The format is based 
 
 ## [Unreleased]
 
+## [0.3.2] — 2026-10-22
+
+### Fixed
+
+- Sorting, filtering, grouping and pagination work on a table whose rows arrive after its first render. A table rendered with empty `data` sets the `manual*` flags for that render, and the row-model slots of those stages were left out of the TanStack feature set. TanStack v9 keeps the feature set from table construction, so the stages stayed off after the rows arrived: the sort indicator changed while the rows kept their order, column and global filters had no effect, and all rows rendered on one page. An explicit `manualSorting: false` did not prevent it. The same applied when `manualFiltering`, `manualGrouping`, `manualPagination`, `manualSorting`, `enableColumnFilters`, `enableExpanding`, `enableFilters`, `enableGlobalFilter`, `enableGrouping`, `enablePagination` or `enableSorting` changed after mount. Every pipeline row model is now registered at construction, and its enable flag is read from the current options on each row-model read, as TanStack reads the `manual*` flags. `enableFacetedValues` still takes effect at mount only.
+
 ## [0.3.1] — 2026-08-12
 
 ### Fixed
@@ -287,6 +293,7 @@ First public pre-release. The full `material-react-table` feature surface is por
 - Column drag-reorder.
 - `filterVariant: 'time' | 'datetime' | 'time-range' | 'datetime-range'` — native `<input>` is used until a shadcn time picker recipe lands.
 
+[0.3.2]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/suleymanozkeskin/shadstack-table/compare/v0.2.0...v0.2.1
