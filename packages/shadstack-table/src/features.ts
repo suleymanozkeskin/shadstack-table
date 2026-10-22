@@ -130,6 +130,61 @@ const shadstackCoreFeature: TableFeature = {
 };
 
 /**
+ * The table options that switch a row-model stage on or off. Declared here
+ * rather than picked from `SST_DefinedTableOptions`, which is itself typed
+ * from {@link SST_Features}.
+ */
+type SST_RowModelStageOptions = {
+  enableColumnFilters?: boolean;
+  enableExpanding?: boolean;
+  enableFilters?: boolean;
+  enableGlobalFilter?: boolean;
+  enableGrouping?: boolean;
+  enablePagination?: boolean;
+  enableSorting?: boolean;
+};
+
+/**
+ * Wraps a row-model factory so the table's current options decide, on every
+ * read, whether its stage runs.
+ *
+ * TanStack v9 keeps the `features` object passed at table construction and
+ * drops every later one in `table_mergeOptions`. A row-model slot left out at
+ * mount therefore never comes back — a table first rendered with no rows, or
+ * with a stage disabled, would keep that stage off for its whole life. Every
+ * stage is registered instead, and `isEnabled` applies the enable flags each
+ * time the stage is read. The `manual*` flags are not checked here: TanStack
+ * checks them itself on every read.
+ *
+ * - `isEnabled` receives the live table options.
+ * - `passThrough` returns the stage's input unchanged, which is what TanStack
+ *   returns for a stage with no slot.
+ *
+ * The wrapped factory runs once per table, on the stage's first read, as
+ * TanStack's own factories do. The cast reads shadstack's keys off the options
+ * TanStack holds: `useSST_TableInstance` passes the full
+ * `SST_DefinedTableOptions` to `useTable`, whose types cannot know them.
+ */
+const gateRowModel =
+  <TTable extends { options: object }, TRowModel>(
+    createRowModel: (table: TTable) => () => TRowModel,
+    {
+      isEnabled,
+      passThrough,
+    }: {
+      isEnabled: (options: SST_RowModelStageOptions) => boolean;
+      passThrough: (table: TTable) => TRowModel;
+    },
+  ) =>
+  (table: TTable): (() => TRowModel) => {
+    const getStageRowModel = createRowModel(table);
+    return () =>
+      isEnabled(table.options as SST_RowModelStageOptions)
+        ? getStageRowModel()
+        : passThrough(table);
+  };
+
+/**
  * The TanStack feature set every shadstack table is built on.
  *
  * shadstack-table exposes the full data-table surface, so the feature set is
@@ -167,14 +222,31 @@ const SST_stockFeatures = tableFeatures({
   rowSelectionFeature,
   rowSortingFeature,
   // Row models. The core row model is created automatically in v9 and has no slot.
-  expandedRowModel: createExpandedRowModel(),
+  // The pipeline stages are gated on the live options; see `gateRowModel`.
+  expandedRowModel: gateRowModel(createExpandedRowModel(), {
+    isEnabled: ({ enableExpanding, enableGrouping }) => !!(enableExpanding || enableGrouping),
+    passThrough: (table) => table.getPreExpandedRowModel(),
+  }),
   facetedMinMaxValues: createFacetedMinMaxValues(),
   facetedRowModel: createFacetedRowModel(),
   facetedUniqueValues: createFacetedUniqueValues(),
-  filteredRowModel: createFilteredRowModel(),
-  groupedRowModel: createGroupedRowModel(),
-  paginatedRowModel: createPaginatedRowModel(),
-  sortedRowModel: createSortedRowModel(),
+  filteredRowModel: gateRowModel(createFilteredRowModel(), {
+    isEnabled: ({ enableColumnFilters, enableFilters, enableGlobalFilter }) =>
+      !!(enableColumnFilters || enableGlobalFilter || enableFilters),
+    passThrough: (table) => table.getPreFilteredRowModel(),
+  }),
+  groupedRowModel: gateRowModel(createGroupedRowModel(), {
+    isEnabled: ({ enableGrouping }) => !!enableGrouping,
+    passThrough: (table) => table.getPreGroupedRowModel(),
+  }),
+  paginatedRowModel: gateRowModel(createPaginatedRowModel(), {
+    isEnabled: ({ enablePagination }) => !!enablePagination,
+    passThrough: (table) => table.getPrePaginatedRowModel(),
+  }),
+  sortedRowModel: gateRowModel(createSortedRowModel(), {
+    isEnabled: ({ enableSorting }) => !!enableSorting,
+    passThrough: (table) => table.getPreSortedRowModel(),
+  }),
   // Function registries, replacing the v8 top-level `filterFns` / `sortingFns`
   // / `aggregationFns` table options.
   aggregationFns: SST_AggregationFns,
@@ -203,16 +275,12 @@ export const SST_features = {
 
 export type SST_Features = typeof SST_features;
 
-/** Row-model slots that {@link createSST_features} can switch off. */
-type SST_RowModelSlot =
-  | 'expandedRowModel'
-  | 'facetedMinMaxValues'
-  | 'facetedRowModel'
-  | 'facetedUniqueValues'
-  | 'filteredRowModel'
-  | 'groupedRowModel'
-  | 'paginatedRowModel'
-  | 'sortedRowModel';
+/** Faceted row-model slots, which {@link createSST_features} can switch off. */
+const facetedRowModelSlots = [
+  'facetedMinMaxValues',
+  'facetedRowModel',
+  'facetedUniqueValues',
+] as const satisfies readonly (keyof SST_Features)[];
 
 /**
  * Builds the feature set backing one table.
@@ -220,10 +288,12 @@ type SST_RowModelSlot =
  * Two things vary per table, so the feature set cannot simply be the module
  * constant:
  *
- * - **Row models are conditional.** Under v8 a disabled feature meant omitting
- *   its `get*RowModel` option, which left those rows unprocessed. The v9
- *   equivalent is omitting the row-model slot, so the enable flags are applied
- *   here.
+ * - **Faceted row models are conditional.** Filter inputs read faceted values
+ *   on every column, so their slots are registered only when
+ *   `enableFacetedValues` is on. TanStack keeps the feature set from table
+ *   construction, so this flag takes effect at mount only. The pipeline
+ *   stages are always registered and switch with the live options instead
+ *   (see `gateRowModel`).
  * - **Consumers can extend the function registries** through the `filterFns`,
  *   `sortFns` and `aggregationFns` table options, which v9 moved off table
  *   options and into the feature set.
@@ -234,19 +304,19 @@ type SST_RowModelSlot =
  */
 export const createSST_features = ({
   aggregationFns,
-  enabledRowModels,
+  enableFacetedValues,
   filterFns,
   sortFns,
 }: {
   aggregationFns?: Record<string, unknown>;
-  enabledRowModels: Record<SST_RowModelSlot, boolean>;
+  enableFacetedValues: boolean;
   filterFns?: Record<string, unknown>;
   sortFns?: Record<string, unknown>;
 }): SST_Features => {
   const features: Record<string, unknown> = { ...SST_features };
 
-  for (const [slot, enabled] of Object.entries(enabledRowModels)) {
-    if (!enabled) delete features[slot];
+  if (!enableFacetedValues) {
+    for (const slot of facetedRowModelSlots) delete features[slot];
   }
 
   if (aggregationFns) features.aggregationFns = aggregationFns;

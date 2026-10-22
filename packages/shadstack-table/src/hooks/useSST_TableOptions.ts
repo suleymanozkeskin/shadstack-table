@@ -173,6 +173,8 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
     manualPagination = true;
   }
 
+  //TanStack reads the `manual*` flags on every row-model read, so this holds
+  //only while `data` is empty: the stages run again once rows arrive.
   if (!rest.data?.length) {
     manualFiltering = true;
     manualGrouping = true;
@@ -197,44 +199,19 @@ export const useSST_TableOptions: <TData extends SST_RowData>(
   }
 
   //TanStack v9 registers row models as feature-set slots rather than
-  //`get*RowModel` table options, so the enable flags that used to decide
-  //whether to pass a factory now decide whether to register the slot. The
-  //conditions are unchanged from v8.
+  //`get*RowModel` table options, and keeps the feature set from table
+  //construction. The pipeline stages are therefore always registered and
+  //switched by the live enable and `manual*` options; only the faceted slots
+  //depend on a flag here, read at mount.
   const features = useMemo(
     () =>
       createSST_features({
         aggregationFns,
-        enabledRowModels: {
-          expandedRowModel: !!(enableExpanding || enableGrouping),
-          facetedMinMaxValues: enableFacetedValues,
-          facetedRowModel: enableFacetedValues,
-          facetedUniqueValues: enableFacetedValues,
-          filteredRowModel:
-            (enableColumnFilters || enableGlobalFilter || enableFilters) && !manualFiltering,
-          groupedRowModel: enableGrouping && !manualGrouping,
-          paginatedRowModel: enablePagination && !manualPagination,
-          sortedRowModel: enableSorting && !manualSorting,
-        },
+        enableFacetedValues,
         filterFns,
         sortFns,
       }),
-    [
-      aggregationFns,
-      enableColumnFilters,
-      enableExpanding,
-      enableFacetedValues,
-      enableFilters,
-      enableGlobalFilter,
-      enableGrouping,
-      enablePagination,
-      enableSorting,
-      filterFns,
-      manualFiltering,
-      manualGrouping,
-      manualPagination,
-      manualSorting,
-      sortFns,
-    ],
+    [aggregationFns, enableFacetedValues, filterFns, sortFns],
   );
 
   return {
